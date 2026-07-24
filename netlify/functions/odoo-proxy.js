@@ -1,5 +1,4 @@
-// netlify/functions/odoo-proxy.js
-// Proxy entre la PWA y Odoo para evitar CORS
+// netlify/functions/odoo-proxy.js — v3 con firma + validación + contactos
 
 const https = require('https');
 
@@ -24,18 +23,11 @@ function odooRequest(cfg, path, payload) {
     const body = JSON.stringify(payload);
     const url  = new URL(cfg.url + path);
     const opts = {
-      hostname: url.hostname,
-      port:     443,
-      path:     url.pathname,
-      method:   'POST',
-      headers: {
-        'Content-Type':   'application/json',
-        'Content-Length': Buffer.byteLength(body),
-        ...(cfg.cookie ? { 'Cookie': cfg.cookie } : {}),
-      },
+      hostname: url.hostname, port: 443, path: url.pathname, method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(body),
+        ...(cfg.cookie ? { 'Cookie': cfg.cookie } : {}) },
     };
     if (cfg.rejectUnauthorized === false) opts.rejectUnauthorized = false;
-
     const req = https.request(opts, (res) => {
       const cookie = res.headers['set-cookie']?.map(c => c.split(';')[0]).join('; ') || '';
       let data = '';
@@ -45,9 +37,7 @@ function odooRequest(cfg, path, payload) {
         catch(e) { reject(new Error('Parse error: ' + data.slice(0, 200))); }
       });
     });
-    req.on('error', reject);
-    req.write(body);
-    req.end();
+    req.on('error', reject); req.write(body); req.end();
   });
 }
 
@@ -57,15 +47,12 @@ async function odooLogin(cfg) {
     params: { db: cfg.db, login: cfg.user, password: cfg.password },
   });
   if (!json.result?.uid) throw new Error('Login Odoo fallido');
-  return cookie;
+  return { cookie, uid: json.result.uid };
 }
 
 async function odooCallKw(cfg, cookie, model, method, args, kwargs = {}) {
-  const { json } = await odooRequest(
-    { ...cfg, cookie },
-    '/web/dataset/call_kw',
-    { jsonrpc: '2.0', method: 'call', id: 1, params: { model, method, args, kwargs } }
-  );
+  const { json } = await odooRequest({ ...cfg, cookie }, '/web/dataset/call_kw',
+    { jsonrpc: '2.0', method: 'call', id: 1, params: { model, method, args, kwargs } });
   if (json.error) throw new Error(json.error.data?.message || JSON.stringify(json.error));
   return json.result;
 }
@@ -76,39 +63,28 @@ exports.handler = async (event) => {
     'Access-Control-Allow-Headers': 'Content-Type',
     'Content-Type': 'application/json',
   };
-
-  if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 204, headers, body: '' };
-  }
+  if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
 
   try {
     const { empresa, action, params } = JSON.parse(event.body || '{}');
     const cfg = ODOOS[empresa];
     if (!cfg) throw new Error('Empresa no válida: ' + empresa);
 
-    const cookie = await odooLogin(cfg);
-
+    const { cookie, uid } = await odooLogin(cfg);
     let result;
 
     if (action === 'get_pickings_hoy') {
       const { rutaNombre, fecha } = params;
-
-      // Buscar ruta por nombre
       const rutas = await odooCallKw(cfg, cookie, 'stock.location.route', 'search_read',
-        [[['name', 'ilike', rutaNombre]]],
-        { fields: ['id', 'name'], limit: 5 }
-      );
+        [[['name', 'ilike', rutaNombre]]], { fields: ['id', 'name'], limit: 5 });
       if (!rutas.length) throw new Error(`Ruta "${rutaNombre}" no encontrada en Odoo`);
       const rutaId = rutas[0].id;
 
-      // Buscar sale.orders con esa ruta
       const orders = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
         [[['route_id', '=', rutaId], ['state', 'in', ['sale', 'done']]]],
-        { fields: ['id', 'name'], limit: 500 }
-      );
+        { fields: ['id', 'name'], limit: 500 });
       const orderIds = orders.map(o => o.id);
 
-      // Buscar pickings de esas sale orders con estado assigned y fecha hoy
       const domain = [
         ['state', '=', 'assigned'],
         ['picking_type_code', '=', 'outgoing'],
@@ -116,19 +92,49 @@ exports.handler = async (event) => {
         ['scheduled_date', '<=', fecha + ' 23:59:59'],
       ];
       if (orderIds.length > 0) domain.push(['sale_id', 'in', orderIds]);
-      else domain.push(['sale_id', '=', false]); // si no hay orders, no hay pickings
+      else domain.push(['id', '=', -1]);
 
       const pickings = await odooCallKw(cfg, cookie, 'stock.picking', 'search_read',
-        [domain],
-        { fields: ['id', 'name', 'partner_id', 'scheduled_date', 'move_ids_without_package', 'sale_id', 'note'], limit: 100 }
-      );
+        [domain], { fields: ['id', 'name', 'partner_id', 'scheduled_date', 'move_ids_without_package', 'sale_id', 'note'], limit: 100 });
       result = { rutas, orders: orders.length, pickings };
 
-    } else if (action === 'write_picking') {
-      const { pickingId, vals } = params;
-      result = await odooCallKw(cfg, cookie, 'stock.picking', 'write',
-        [[pickingId], vals], {}
-      );
+    } else if (action === 'entregar_picking') {
+      // Firma + validación en un solo paso
+      const { pickingId, firmaBase64 } = params;
+
+      // 1. Guardar firma si la hay
+      if (firmaBase64) {
+        try {
+          await odooCallKw(cfg, cookie, 'stock.picking', 'write',
+            [[pickingId], { signature: firmaBase64 }], {});
+        } catch(e) {
+          // Si falla la firma, continuamos igualmente con la validación
+          console.log('Firma no guardada:', e.message);
+        }
+      }
+
+      // 2. Validar el albarán (button_validate)
+      try {
+        const res = await odooCallKw(cfg, cookie, 'stock.picking', 'button_validate',
+          [[pickingId]], {});
+        // Si devuelve un wizard (backorder), lo confirmamos automáticamente
+        if (res && typeof res === 'object' && res.res_model) {
+          if (res.res_model === 'stock.backorder.confirmation') {
+            const wizardId = await odooCallKw(cfg, cookie, 'stock.backorder.confirmation', 'create',
+              [{ pick_ids: [[4, pickingId]] }], {});
+            await odooCallKw(cfg, cookie, 'stock.backorder.confirmation', 'process',
+              [[wizardId]], {});
+          } else if (res.res_model === 'stock.immediate.transfer') {
+            const wizardId = await odooCallKw(cfg, cookie, 'stock.immediate.transfer', 'create',
+              [{ pick_ids: [[4, pickingId]] }], {});
+            await odooCallKw(cfg, cookie, 'stock.immediate.transfer', 'process',
+              [[wizardId]], {});
+          }
+        }
+        result = { ok: true, validated: true };
+      } catch(e) {
+        result = { ok: false, validated: false, error: e.message };
+      }
 
     } else if (action === 'search_read') {
       const { model, domain, fields, limit } = params;
@@ -139,12 +145,7 @@ exports.handler = async (event) => {
     }
 
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, result }) };
-
-  } catch (e) {
-    return {
-      statusCode: 200,
-      headers,
-      body: JSON.stringify({ ok: false, error: e.message }),
-    };
+  } catch(e) {
+    return { statusCode: 200, headers, body: JSON.stringify({ ok: false, error: e.message }) };
   }
 };
