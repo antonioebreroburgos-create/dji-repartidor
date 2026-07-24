@@ -124,6 +124,12 @@ exports.handler = async (event) => {
       );
       result = { rutas, orders: orders.length, pickings };
 
+    } else if (action === 'write_picking') {
+      const { pickingId, vals } = params;
+      result = await odooCallKw(cfg, cookie, 'stock.picking', 'write',
+        [[pickingId], vals], {}
+      );
+
     } else if (action === 'search_read') {
       const { model, domain, fields, limit } = params;
       result = await odooCallKw(cfg, cookie, model, 'search_read', [domain], { fields, limit: limit || 100 });
