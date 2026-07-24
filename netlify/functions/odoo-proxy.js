@@ -100,12 +100,13 @@ exports.handler = async (event) => {
       if (!rutas.length) throw new Error(`Ruta "${rutaNombre}" no encontrada en Odoo`);
       const rutaId = rutas[0].id;
 
-      // Buscar pickings
+      // Buscar pickings — en Odoo 15 la ruta puede estar en stock.move, no en picking
+      // Buscamos por move_ids → route_ids
       const pickings = await odooCallKw(cfg, cookie, 'stock.picking', 'search_read',
         [[
           ['state', '=', 'assigned'],
           ['picking_type_code', '=', 'outgoing'],
-          ['route_id', '=', rutaId],
+          ['move_ids.route_ids', 'in', [rutaId]],
           ['scheduled_date', '>=', fecha + ' 00:00:00'],
           ['scheduled_date', '<=', fecha + ' 23:59:59'],
         ]],
