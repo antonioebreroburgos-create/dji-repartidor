@@ -1,0 +1,1141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0f2027" />
+  <title>DJI Reparto</title>
+  <link rel="manifest" href="manifest.json" />
+  <style>
+    /* ── TOKENS ─────────────────────────────────────────── */
+    :root {
+      --bg:        #0f2027;
+      --bg2:       #1a3a4a;
+      --bg3:       #1e4a5c;
+      --card:      #162e3a;
+      --border:    #2a5066;
+      --accent:    #00c9a7;
+      --accent2:   #00a888;
+      --warn:      #f59e0b;
+      --danger:    #ef4444;
+      --success:   #22c55e;
+      --text:      #e8f4f8;
+      --text2:     #8ab4c4;
+      --text3:     #5a8a9a;
+      --radius:    14px;
+      --radius-sm: 8px;
+      --shadow:    0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    /* ── PANTALLAS ──────────────────────────────────────── */
+    .screen { display: none; min-height: 100dvh; flex-direction: column; }
+    .screen.active { display: flex; }
+
+    /* ── HEADER ─────────────────────────────────────────── */
+    .header {
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-logo {
+      width: 32px; height: 32px;
+      background: var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; color: var(--bg);
+    }
+    .header h1 { font-size: 17px; font-weight: 700; color: var(--text); }
+    .header-sub { font-size: 12px; color: var(--text2); margin-left: auto; }
+    .btn-back {
+      background: none; border: none; color: var(--accent);
+      font-size: 15px; cursor: pointer; padding: 4px 0;
+      display: flex; align-items: center; gap: 4px;
+    }
+
+    /* ── CONTENIDO ───────────────────────────────────────── */
+    .content {
+      flex: 1;
+      padding: 20px 16px;
+      overflow-y: auto;
+    }
+
+    /* ── BOTONES ─────────────────────────────────────────── */
+    .btn {
+      width: 100%; padding: 16px;
+      border: none; border-radius: var(--radius);
+      font-size: 16px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent); color: var(--bg); }
+    .btn-primary:hover { background: var(--accent2); }
+    .btn-secondary { background: var(--bg3); color: var(--text); border: 1px solid var(--border); }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-warn { background: var(--warn); color: var(--bg); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    /* ── CARDS ───────────────────────────────────────────── */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    /* ── TOAST ───────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+      background: var(--bg2); color: var(--text); border: 1px solid var(--border);
+      padding: 12px 20px; border-radius: 30px;
+      font-size: 14px; font-weight: 600;
+      box-shadow: var(--shadow); z-index: 999;
+      transition: transform 0.3s ease;
+      white-space: nowrap;
+    }
+    #toast.show { transform: translateX(-50%) translateY(0); }
+    #toast.ok { border-color: var(--accent); color: var(--accent); }
+    #toast.err { border-color: var(--danger); color: var(--danger); }
+
+    /* ── SPINNER ─────────────────────────────────────────── */
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 32px auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ═══════════════════════════════════════════════════════
+       PANTALLA 1 — LOGIN
+    ═══════════════════════════════════════════════════════ */
+    #screen-login .content {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      min-height: calc(100dvh - 61px);
+      gap: 0;
+    }
+    .login-logo {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, var(--accent), var(--bg3));
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px; margin-bottom: 12px;
+      box-shadow: 0 8px 32px rgba(0,201,167,0.25);
+    }
+    .login-title { font-size: 24px; font-weight: 800; margin-bottom: 4px; }
+    .login-sub { font-size: 14px; color: var(--text2); margin-bottom: 32px; }
+
+    .repartidores-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; width: 100%; margin-bottom: 28px;
+    }
+    .rep-btn {
+      background: var(--bg2); border: 2px solid var(--border);
+      border-radius: var(--radius); padding: 14px 10px;
+      font-size: 13px; font-weight: 700; color: var(--text);
+      cursor: pointer; transition: all 0.15s;
+      text-align: center; letter-spacing: 0.3px;
+    }
+    .rep-btn:active { transform: scale(0.96); }
+    .rep-btn.selected {
+      border-color: var(--accent); color: var(--accent);
+      background: rgba(0,201,167,0.08);
+    }
+
+    .pin-label {
+      font-size: 13px; color: var(--text2); margin-bottom: 12px;
+      text-align: center; letter-spacing: 0.5px; text-transform: uppercase;
+    }
+    .pin-dots {
+      display: flex; gap: 12px; justify-content: center; margin-bottom: 24px;
+    }
+    .pin-dot {
+      width: 18px; height: 18px; border-radius: 50%;
+      border: 2px solid var(--border); background: transparent;
+      transition: all 0.2s;
+    }
+    .pin-dot.filled { background: var(--accent); border-color: var(--accent); }
+
+    .pin-teclado {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px; width: 100%;
+    }
+    .pin-key {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 10px;
+      font-size: 22px; font-weight: 700; color: var(--text);
+      cursor: pointer; text-align: center; transition: all 0.12s;
+      user-select: none;
+    }
+    .pin-key:active { background: var(--bg3); transform: scale(0.94); }
+    .pin-key.del { font-size: 18px; color: var(--text2); }
+    .pin-key.empty { background: transparent; border-color: transparent; cursor: default; }
+
+    /* ═══════════════════════════════════════════════════════
+       PANTALLA 2 — MENÚ PRINCIPAL
+    ═══════════════════════════════════════════════════════ */
+    .usuario-card {
+      background: linear-gradient(135deg, var(--bg3), var(--bg2));
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .usuario-avatar {
+      width: 52px; height: 52px; border-radius: 50%;
+      background: var(--accent); color: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; font-weight: 800; flex-shrink: 0;
+    }
+    .usuario-nombre { font-size: 20px; font-weight: 800; }
+    .usuario-sub { font-size: 13px; color: var(--text2); margin-top: 2px; }
+
+    .menu-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 18px 16px;
+      margin-bottom: 10px; cursor: pointer;
+      display: flex; align-items: center; gap: 14px;
+      transition: all 0.15s;
+    }
+    .menu-item:active { transform: scale(0.98); background: var(--bg3); }
+    .menu-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px; flex-shrink: 0;
+    }
+    .menu-icon.green { background: rgba(34,197,94,0.15); }
+    .menu-icon.blue  { background: rgba(0,201,167,0.12); }
+    .menu-text h3 { font-size: 16px; font-weight: 700; }
+    .menu-text p  { font-size: 13px; color: var(--text2); margin-top: 2px; }
+    .menu-arrow { margin-left: auto; color: var(--text3); font-size: 18px; }
+
+    .btn-cerrar-sesion {
+      background: none; border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px;
+      color: var(--text2); font-size: 14px; cursor: pointer;
+      width: 100%; margin-top: 8px; transition: all 0.15s;
+    }
+    .btn-cerrar-sesion:active { background: var(--bg2); }
+
+    /* ═══════════════════════════════════════════════════════
+       PANTALLA 3 — LISTA CLIENTES
+    ═══════════════════════════════════════════════════════ */
+    .search-box {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 14px;
+      color: var(--text); font-size: 16px; width: 100%;
+      margin-bottom: 16px; outline: none;
+    }
+    .search-box::placeholder { color: var(--text3); }
+    .search-box:focus { border-color: var(--accent); }
+
+    .cliente-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px 16px;
+      margin-bottom: 8px; cursor: pointer;
+      display: flex; align-items: center; gap: 12px;
+      transition: all 0.15s;
+    }
+    .cliente-item:active { transform: scale(0.98); }
+    .cliente-estado {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    }
+    .cliente-estado.ok { background: var(--success); }
+    .cliente-estado.pendiente { background: var(--warn); }
+    .cliente-nombre { font-size: 15px; font-weight: 600; }
+    .cliente-dir { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .cliente-arrow { margin-left: auto; color: var(--text3); }
+
+    .filtros {
+      display: flex; gap: 8px; margin-bottom: 14px; overflow-x: auto;
+      padding-bottom: 4px; scrollbar-width: none;
+    }
+    .filtro-btn {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 6px 14px;
+      font-size: 13px; color: var(--text2); cursor: pointer;
+      white-space: nowrap; transition: all 0.15s;
+    }
+    .filtro-btn.active {
+      background: rgba(0,201,167,0.12); border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       PANTALLA 4 — FICHA CLIENTE
+    ═══════════════════════════════════════════════════════ */
+    .ficha-header {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px;
+      margin-bottom: 16px;
+    }
+    .ficha-nombre { font-size: 20px; font-weight: 800; margin-bottom: 4px; }
+    .ficha-dir { font-size: 13px; color: var(--text2); }
+
+    .section-label {
+      font-size: 11px; font-weight: 700; color: var(--accent);
+      text-transform: uppercase; letter-spacing: 1px;
+      margin: 20px 0 10px;
+    }
+
+    /* GPS */
+    .gps-card {
+      background: var(--bg2); border: 2px dashed var(--border);
+      border-radius: var(--radius); padding: 20px;
+      text-align: center; margin-bottom: 4px;
+    }
+    .gps-card.has-coords { border-style: solid; border-color: var(--success); background: rgba(34,197,94,0.05); }
+    .gps-icon { font-size: 32px; margin-bottom: 8px; }
+    .gps-coords { font-size: 14px; font-weight: 700; color: var(--success); font-family: monospace; }
+    .gps-label { font-size: 12px; color: var(--text2); margin-top: 4px; }
+    .btn-gps {
+      width: 100%; padding: 14px; border: none;
+      border-radius: var(--radius); font-size: 15px; font-weight: 700;
+      cursor: pointer; transition: all 0.15s; margin-top: 12px;
+      background: var(--accent); color: var(--bg);
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .btn-gps:active { transform: scale(0.97); }
+    .btn-gps:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+
+    /* Checklist */
+    .check-item {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 14px;
+      margin-bottom: 8px; cursor: pointer;
+      display: flex; align-items: flex-start; gap: 12px;
+      transition: all 0.15s;
+    }
+    .check-item:active { transform: scale(0.98); }
+    .check-item.checked { border-color: var(--accent); background: rgba(0,201,167,0.06); }
+    .check-box {
+      width: 22px; height: 22px; border-radius: 6px;
+      border: 2px solid var(--border); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s; margin-top: 1px;
+    }
+    .check-item.checked .check-box { background: var(--accent); border-color: var(--accent); }
+    .check-tick { color: var(--bg); font-size: 13px; font-weight: 900; display: none; }
+    .check-item.checked .check-tick { display: block; }
+    .check-label { font-size: 15px; font-weight: 600; }
+    .check-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+    /* Input hora */
+    .hora-input-wrap { margin-top: 8px; display: none; }
+    .check-item.checked .hora-input-wrap { display: block; }
+    .hora-input {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 10px 12px;
+      color: var(--text); font-size: 16px; width: 100%;
+      outline: none;
+    }
+    .hora-input:focus { border-color: var(--accent); }
+
+    /* Días */
+    .dias-wrap { margin-top: 8px; display: none; flex-wrap: wrap; gap: 6px; }
+    .check-item.checked .dias-wrap { display: flex; }
+    .dia-btn {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 20px; padding: 6px 12px;
+      font-size: 13px; color: var(--text2); cursor: pointer;
+      transition: all 0.15s;
+    }
+    .dia-btn.active {
+      background: rgba(245,158,11,0.15); border-color: var(--warn);
+      color: var(--warn); font-weight: 700;
+    }
+
+    /* Notas */
+    .notas-input {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 14px;
+      color: var(--text); font-size: 15px;
+      width: 100%; min-height: 100px; resize: vertical;
+      outline: none; font-family: inherit;
+    }
+    .notas-input:focus { border-color: var(--accent); }
+
+    /* Tiempo descarga */
+    .tiempo-row {
+      display: flex; align-items: center; gap: 12px;
+    }
+    .tiempo-input {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 12px;
+      color: var(--text); font-size: 18px; font-weight: 700;
+      width: 90px; text-align: center; outline: none;
+    }
+    .tiempo-input:focus { border-color: var(--accent); }
+    .tiempo-label { font-size: 14px; color: var(--text2); }
+
+    /* Botón guardar flotante */
+    .guardar-bar {
+      padding: 16px;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      position: sticky; bottom: 0;
+    }
+
+    /* ── EMPTY STATE ──────────────────────────────────────── */
+    .empty-state {
+      text-align: center; padding: 48px 24px;
+    }
+    .empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .empty-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+    .empty-sub { font-size: 14px; color: var(--text2); }
+
+    /* ── BADGE ───────────────────────────────────────────── */
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+    }
+    .badge-ok  { background: rgba(34,197,94,0.15); color: var(--success); }
+    .badge-pend { background: rgba(245,158,11,0.15); color: var(--warn); }
+
+    /* ── STATS BAR ───────────────────────────────────────── */
+    .stats-bar {
+      display: flex; gap: 8px; margin-bottom: 16px;
+    }
+    .stat-box {
+      flex: 1; background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 12px;
+      text-align: center;
+    }
+    .stat-num { font-size: 22px; font-weight: 800; color: var(--accent); }
+    .stat-lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════
+     PANTALLA 1 — LOGIN
+══════════════════════════════════════════════════════ -->
+<div id="screen-login" class="screen active">
+  <div class="content">
+    <div class="login-logo">🚚</div>
+    <div class="login-title">DJI Reparto</div>
+    <div class="login-sub">Distribuciones Joaquín Infante</div>
+
+    <div class="repartidores-grid" id="repartidores-grid"></div>
+
+    <div class="pin-label">Introduce tu PIN</div>
+    <div class="pin-dots" id="pin-dots">
+      <div class="pin-dot" id="dot-0"></div>
+      <div class="pin-dot" id="dot-1"></div>
+      <div class="pin-dot" id="dot-2"></div>
+      <div class="pin-dot" id="dot-3"></div>
+    </div>
+
+    <div class="pin-teclado">
+      <div class="pin-key" onclick="pinKey('1')">1</div>
+      <div class="pin-key" onclick="pinKey('2')">2</div>
+      <div class="pin-key" onclick="pinKey('3')">3</div>
+      <div class="pin-key" onclick="pinKey('4')">4</div>
+      <div class="pin-key" onclick="pinKey('5')">5</div>
+      <div class="pin-key" onclick="pinKey('6')">6</div>
+      <div class="pin-key" onclick="pinKey('7')">7</div>
+      <div class="pin-key" onclick="pinKey('8')">8</div>
+      <div class="pin-key" onclick="pinKey('9')">9</div>
+      <div class="pin-key empty"></div>
+      <div class="pin-key" onclick="pinKey('0')">0</div>
+      <div class="pin-key del" onclick="pinDel()">⌫</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PANTALLA 2 — MENÚ PRINCIPAL
+══════════════════════════════════════════════════════ -->
+<div id="screen-menu" class="screen">
+  <div class="header">
+    <div class="header-logo">DJI</div>
+    <h1>DJI Reparto</h1>
+  </div>
+  <div class="content">
+    <div class="usuario-card">
+      <div class="usuario-avatar" id="menu-avatar">J</div>
+      <div>
+        <div class="usuario-nombre" id="menu-nombre">NOMBRE</div>
+        <div class="usuario-sub" id="menu-fecha"></div>
+      </div>
+    </div>
+
+    <div class="menu-item" onclick="irAClientes('todos')">
+      <div class="menu-icon green">📍</div>
+      <div class="menu-text">
+        <h3>Recoger datos de clientes</h3>
+        <p>Ubicación, horarios y características</p>
+      </div>
+      <div class="menu-arrow">›</div>
+    </div>
+
+    <div class="menu-item" onclick="irAClientes('pendientes')">
+      <div class="menu-icon blue">⏳</div>
+      <div class="menu-text">
+        <h3>Clientes pendientes</h3>
+        <p>Sin ubicación registrada todavía</p>
+      </div>
+      <div class="menu-arrow">›</div>
+    </div>
+
+    <button class="btn-cerrar-sesion" onclick="cerrarSesion()">
+      Cerrar sesión
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PANTALLA 3 — LISTA CLIENTES
+══════════════════════════════════════════════════════ -->
+<div id="screen-clientes" class="screen">
+  <div class="header">
+    <button class="btn-back" onclick="irA('menu')">‹ Volver</button>
+    <h1 id="clientes-titulo">Clientes</h1>
+    <span class="header-sub" id="clientes-count"></span>
+  </div>
+  <div class="content">
+    <div class="stats-bar">
+      <div class="stat-box">
+        <div class="stat-num" id="stat-total">0</div>
+        <div class="stat-lbl">Total</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="stat-ok" style="color:var(--success)">0</div>
+        <div class="stat-lbl">Con ubicación</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="stat-pend" style="color:var(--warn)">0</div>
+        <div class="stat-lbl">Pendientes</div>
+      </div>
+    </div>
+
+    <input class="search-box" id="search-input" type="search"
+      placeholder="🔍  Buscar cliente..." oninput="filtrarClientes()" />
+
+    <div class="filtros">
+      <button class="filtro-btn active" onclick="setFiltro('todos', this)">Todos</button>
+      <button class="filtro-btn" onclick="setFiltro('pendientes', this)">Pendientes</button>
+      <button class="filtro-btn" onclick="setFiltro('completados', this)">Con ubicación</button>
+    </div>
+
+    <div id="clientes-lista"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     PANTALLA 4 — FICHA CLIENTE
+══════════════════════════════════════════════════════ -->
+<div id="screen-ficha" class="screen">
+  <div class="header">
+    <button class="btn-back" onclick="irA('clientes')">‹ Volver</button>
+    <h1>Ficha cliente</h1>
+    <span class="header-sub" id="ficha-badge"></span>
+  </div>
+  <div class="content" style="padding-bottom: 0;">
+    <div class="ficha-header">
+      <div class="ficha-nombre" id="ficha-nombre"></div>
+      <div class="ficha-dir" id="ficha-dir"></div>
+    </div>
+
+    <!-- GPS -->
+    <div class="section-label">📍 Ubicación GPS</div>
+    <div class="gps-card" id="gps-card">
+      <div class="gps-icon">🗺️</div>
+      <div class="gps-label" id="gps-label-text">Sin ubicación registrada</div>
+      <div class="gps-coords" id="gps-coords"></div>
+    </div>
+    <button class="btn-gps" id="btn-gps" onclick="capturarGPS()">
+      📍 Guardar ubicación actual
+    </button>
+
+    <!-- Características -->
+    <div class="section-label">⚙️ Características</div>
+
+    <div class="check-item" id="check-no-firma" onclick="toggleCheck('no-firma')">
+      <div class="check-box"><span class="check-tick">✓</span></div>
+      <div>
+        <div class="check-label">No firma en el móvil</div>
+        <div class="check-sub">El cliente rechaza firmar digitalmente</div>
+      </div>
+    </div>
+
+    <div class="check-item" id="check-quiere-factura" onclick="toggleCheck('quiere-factura')">
+      <div class="check-box"><span class="check-tick">✓</span></div>
+      <div>
+        <div class="check-label">Quiere siempre factura</div>
+        <div class="check-sub">Llevar factura impresa en cada entrega</div>
+      </div>
+    </div>
+
+    <div class="check-item" id="check-hora-max" onclick="toggleCheck('hora-max')">
+      <div class="check-box"><span class="check-tick">✓</span></div>
+      <div style="flex:1">
+        <div class="check-label">Hora máxima de llegada</div>
+        <div class="check-sub">No llegar más tarde de esta hora</div>
+        <div class="hora-input-wrap">
+          <input class="hora-input" type="time" id="input-hora-max"
+            onclick="event.stopPropagation()" />
+        </div>
+      </div>
+    </div>
+
+    <div class="check-item" id="check-no-recibe-desde" onclick="toggleCheck('no-recibe-desde')">
+      <div class="check-box"><span class="check-tick">✓</span></div>
+      <div style="flex:1">
+        <div class="check-label">No recibe pedidos desde</div>
+        <div class="check-sub">A partir de esta hora no aceptan entregas</div>
+        <div class="hora-input-wrap">
+          <input class="hora-input" type="time" id="input-no-recibe-desde"
+            onclick="event.stopPropagation()" />
+        </div>
+      </div>
+    </div>
+
+    <div class="check-item" id="check-cocina" onclick="toggleCheck('cocina')">
+      <div class="check-box"><span class="check-tick">✓</span></div>
+      <div>
+        <div class="check-label">Descarga por cocina</div>
+        <div class="check-sub">Entrada de mercancía por la cocina / trastienda</div>
+      </div>
+    </div>
+
+    <div class="check-item" id="check-repasar-nota" onclick="toggleCheck('repasar-nota')">
+      <div class="check-box"><span class="check-tick">✓</span></div>
+      <div>
+        <div class="check-label">Repasar nota con el cliente</div>
+        <div class="check-sub">Confirmar pedido ítem a ítem al entregar</div>
+      </div>
+    </div>
+
+    <div class="check-item" id="check-dias-cerrado" onclick="toggleCheck('dias-cerrado')">
+      <div class="check-box"><span class="check-tick">✓</span></div>
+      <div style="flex:1">
+        <div class="check-label">Días que cierra</div>
+        <div class="check-sub">Selecciona los días que no abre</div>
+        <div class="dias-wrap" id="dias-wrap">
+          <button class="dia-btn" data-dia="lunes"    onclick="toggleDia(this, event)">Lun</button>
+          <button class="dia-btn" data-dia="martes"   onclick="toggleDia(this, event)">Mar</button>
+          <button class="dia-btn" data-dia="miercoles" onclick="toggleDia(this, event)">Mié</button>
+          <button class="dia-btn" data-dia="jueves"   onclick="toggleDia(this, event)">Jue</button>
+          <button class="dia-btn" data-dia="viernes"  onclick="toggleDia(this, event)">Vie</button>
+          <button class="dia-btn" data-dia="sabado"   onclick="toggleDia(this, event)">Sáb</button>
+          <button class="dia-btn" data-dia="domingo"  onclick="toggleDia(this, event)">Dom</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tiempo de descarga -->
+    <div class="section-label">⏱️ Tiempo de descarga</div>
+    <div class="card" style="margin-bottom:0">
+      <div class="tiempo-row">
+        <input class="tiempo-input" type="number" id="input-tiempo"
+          placeholder="15" min="1" max="120" />
+        <div class="tiempo-label">minutos estimados</div>
+      </div>
+    </div>
+
+    <!-- Notas libres -->
+    <div class="section-label">📝 Notas adicionales</div>
+    <textarea class="notas-input" id="input-notas"
+      placeholder="Tocar timbre, preguntar por Juan, aparcar en calle lateral..."></textarea>
+
+    <div style="height: 16px;"></div>
+  </div>
+
+  <div class="guardar-bar">
+    <button class="btn btn-primary" id="btn-guardar" onclick="guardarFicha()">
+      💾 Guardar ficha
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// CONFIGURACIÓN
+// ══════════════════════════════════════════════════════════
+const SUPABASE_URL = 'https://pkxjsbgizxntmgtixbwt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_7RsdYecYwSQhsI_PAbhczQ_49wMNVID';
+
+const REPARTIDORES = [
+  { nombre: 'JUAN PEDRO',    pin: '1947' },
+  { nombre: 'JAVIER',        pin: '2583' },
+  { nombre: 'ALFONSO',       pin: '3614' },
+  { nombre: 'JUANLU',        pin: '4829' },
+  { nombre: 'JUANJOROBLEDO', pin: '5731' },
+  { nombre: 'ZEKY',          pin: '6248' },
+];
+
+// ══════════════════════════════════════════════════════════
+// ESTADO GLOBAL
+// ══════════════════════════════════════════════════════════
+let estado = {
+  usuario: null,
+  pin: '',
+  repSeleccionado: null,
+  clientes: [],
+  clienteActual: null,
+  filtroActivo: 'todos',
+  coordsActuales: null,
+};
+
+// ══════════════════════════════════════════════════════════
+// SUPABASE HELPERS
+// ══════════════════════════════════════════════════════════
+async function supaFetch(path, method = 'GET', body = null) {
+  const opts = {
+    method,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=representation' : '',
+    },
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+  if (!r.ok) {
+    const err = await r.text();
+    throw new Error(err);
+  }
+  if (r.status === 204) return null;
+  return r.json();
+}
+
+// ══════════════════════════════════════════════════════════
+// NAVEGACIÓN
+// ══════════════════════════════════════════════════════════
+function irA(pantalla) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + pantalla).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+// ══════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════
+let toastTimer;
+function toast(msg, tipo = 'ok') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show ' + tipo;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = '', 3000);
+}
+
+// ══════════════════════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════════════════════
+function initLogin() {
+  const grid = document.getElementById('repartidores-grid');
+  grid.innerHTML = REPARTIDORES.map((r, i) =>
+    `<button class="rep-btn" onclick="seleccionarRep(${i})">${r.nombre}</button>`
+  ).join('');
+}
+
+function seleccionarRep(idx) {
+  estado.repSeleccionado = idx;
+  estado.pin = '';
+  actualizarDots();
+  document.querySelectorAll('.rep-btn').forEach((b, i) => {
+    b.classList.toggle('selected', i === idx);
+  });
+}
+
+function pinKey(k) {
+  if (estado.repSeleccionado === null) {
+    toast('Selecciona tu nombre primero', 'err'); return;
+  }
+  if (estado.pin.length >= 4) return;
+  estado.pin += k;
+  actualizarDots();
+  if (estado.pin.length === 4) comprobarPin();
+}
+
+function pinDel() {
+  estado.pin = estado.pin.slice(0, -1);
+  actualizarDots();
+}
+
+function actualizarDots() {
+  for (let i = 0; i < 4; i++) {
+    document.getElementById('dot-' + i).classList.toggle('filled', i < estado.pin.length);
+  }
+}
+
+async function comprobarPin() {
+  const rep = REPARTIDORES[estado.repSeleccionado];
+  if (estado.pin === rep.pin) {
+    estado.usuario = rep;
+    await entrarMenu();
+  } else {
+    toast('PIN incorrecto', 'err');
+    setTimeout(() => { estado.pin = ''; actualizarDots(); }, 600);
+  }
+}
+
+async function entrarMenu() {
+  document.getElementById('menu-nombre').textContent = estado.usuario.nombre;
+  document.getElementById('menu-avatar').textContent = estado.usuario.nombre[0];
+  const hoy = new Date().toLocaleDateString('es-ES', {weekday:'long', day:'numeric', month:'long'});
+  document.getElementById('menu-fecha').textContent = hoy.charAt(0).toUpperCase() + hoy.slice(1);
+  irA('menu');
+}
+
+function cerrarSesion() {
+  estado.usuario = null;
+  estado.repSeleccionado = null;
+  estado.pin = '';
+  actualizarDots();
+  document.querySelectorAll('.rep-btn').forEach(b => b.classList.remove('selected'));
+  irA('login');
+}
+
+// ══════════════════════════════════════════════════════════
+// CLIENTES — CARGA
+// ══════════════════════════════════════════════════════════
+async function irAClientes(filtroInicial = 'todos') {
+  irA('clientes');
+  document.getElementById('clientes-lista').innerHTML = '<div class="spinner"></div>';
+  estado.filtroActivo = filtroInicial;
+
+  try {
+    // Traemos clientes y sus puntos de entrega
+    const [clientes, puntos] = await Promise.all([
+      supaFetch('rutas_clientes?select=*&activo=eq.true&order=nombre'),
+      supaFetch('rutas_puntos_entrega?select=*'),
+    ]);
+
+    // Enriquecemos cada cliente con sus puntos
+    estado.clientes = clientes.map(c => ({
+      ...c,
+      puntos: puntos.filter(p => p.cliente_id === c.id),
+      geocodificado: puntos.filter(p => p.cliente_id === c.id).some(p => p.geocodificado),
+    }));
+
+    actualizarStats();
+    renderClientes();
+  } catch (e) {
+    document.getElementById('clientes-lista').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">⚠️</div>
+       <div class="empty-title">Error al cargar</div>
+       <div class="empty-sub">${e.message}</div></div>`;
+  }
+}
+
+function actualizarStats() {
+  const total = estado.clientes.length;
+  const ok    = estado.clientes.filter(c => c.geocodificado).length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-ok').textContent    = ok;
+  document.getElementById('stat-pend').textContent  = total - ok;
+}
+
+function setFiltro(filtro, btn) {
+  estado.filtroActivo = filtro;
+  document.querySelectorAll('.filtro-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderClientes();
+}
+
+function filtrarClientes() { renderClientes(); }
+
+function renderClientes() {
+  const busq = document.getElementById('search-input').value.toLowerCase();
+  let lista = estado.clientes;
+
+  if (estado.filtroActivo === 'pendientes')   lista = lista.filter(c => !c.geocodificado);
+  if (estado.filtroActivo === 'completados')  lista = lista.filter(c => c.geocodificado);
+  if (busq) lista = lista.filter(c => c.nombre.toLowerCase().includes(busq));
+
+  document.getElementById('clientes-count').textContent = lista.length + ' clientes';
+
+  if (!lista.length) {
+    document.getElementById('clientes-lista').innerHTML =
+      `<div class="empty-state"><div class="empty-icon">🔍</div>
+       <div class="empty-title">Sin resultados</div>
+       <div class="empty-sub">Prueba con otro término de búsqueda</div></div>`;
+    return;
+  }
+
+  document.getElementById('clientes-lista').innerHTML = lista.map(c => `
+    <div class="cliente-item" onclick="abrirFicha('${c.id}')">
+      <div class="cliente-estado ${c.geocodificado ? 'ok' : 'pendiente'}"></div>
+      <div style="flex:1">
+        <div class="cliente-nombre">${c.nombre}</div>
+        <div class="cliente-dir">${c.puntos.length} dirección${c.puntos.length !== 1 ? 'es' : ''} · ${c.geocodificado ? '<span style="color:var(--success)">✓ Con ubicación</span>' : '<span style="color:var(--warn)">Sin ubicación</span>'}</div>
+      </div>
+      <div class="cliente-arrow">›</div>
+    </div>
+  `).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+// FICHA CLIENTE
+// ══════════════════════════════════════════════════════════
+async function abrirFicha(clienteId) {
+  irA('ficha');
+  const cliente = estado.clientes.find(c => c.id === clienteId);
+  if (!cliente) return;
+  estado.clienteActual = cliente;
+
+  document.getElementById('ficha-nombre').textContent = cliente.nombre;
+  document.getElementById('ficha-badge').innerHTML = cliente.geocodificado
+    ? '<span class="badge badge-ok">✓ Completado</span>'
+    : '<span class="badge badge-pend">Pendiente</span>';
+
+  // Primer punto de entrega (si hay varios, usamos el primero para esta vista)
+  const punto = cliente.puntos[0] || null;
+
+  if (punto) {
+    document.getElementById('ficha-dir').textContent = punto.direccion_texto || 'Sin dirección en Odoo';
+    cargarPunto(punto);
+  } else {
+    document.getElementById('ficha-dir').textContent = 'Sin dirección registrada';
+    resetFicha();
+  }
+}
+
+function cargarPunto(punto) {
+  // GPS
+  if (punto.latitud && punto.longitud) {
+    mostrarCoordsEnCard(punto.latitud, punto.longitud);
+    estado.coordsActuales = { lat: punto.latitud, lng: punto.longitud };
+  } else {
+    resetGPS();
+  }
+
+  // Checks
+  setCheck('no-firma',       punto.notas_logisticas?.includes('NO_FIRMA'));
+  setCheck('quiere-factura', punto.notas_logisticas?.includes('FACTURA'));
+  setCheck('cocina',         punto.notas_logisticas?.includes('COCINA'));
+  setCheck('repasar-nota',   punto.notas_logisticas?.includes('REPASAR_NOTA'));
+
+  // Hora máxima
+  if (punto.hora_max_llegada) {
+    setCheck('hora-max', true);
+    document.getElementById('input-hora-max').value = punto.hora_max_llegada.slice(0,5);
+  } else {
+    setCheck('hora-max', false);
+  }
+
+  // No recibe desde
+  if (punto.hora_no_recibe_desde) {
+    setCheck('no-recibe-desde', true);
+    document.getElementById('input-no-recibe-desde').value = punto.hora_no_recibe_desde.slice(0,5);
+  } else {
+    setCheck('no-recibe-desde', false);
+  }
+
+  // Días cerrado
+  const dias = punto.dias_cerrado || [];
+  setCheck('dias-cerrado', dias.length > 0);
+  document.querySelectorAll('.dia-btn').forEach(b => {
+    b.classList.toggle('active', dias.includes(b.dataset.dia));
+  });
+
+  // Tiempo descarga
+  document.getElementById('input-tiempo').value = punto.tiempo_descarga_min || '';
+
+  // Notas
+  const notas = (punto.notas_logisticas || '')
+    .replace(/NO_FIRMA\|?/g, '').replace(/FACTURA\|?/g, '')
+    .replace(/COCINA\|?/g, '').replace(/REPASAR_NOTA\|?/g, '').trim();
+  document.getElementById('input-notas').value = notas;
+}
+
+function setCheck(id, val) {
+  const el = document.getElementById('check-' + id);
+  if (val) el.classList.add('checked');
+  else el.classList.remove('checked');
+}
+
+function resetFicha() {
+  resetGPS();
+  ['no-firma','quiere-factura','hora-max','no-recibe-desde','cocina','repasar-nota','dias-cerrado']
+    .forEach(id => setCheck(id, false));
+  document.querySelectorAll('.dia-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('input-tiempo').value = '';
+  document.getElementById('input-notas').value = '';
+}
+
+function resetGPS() {
+  estado.coordsActuales = null;
+  const card = document.getElementById('gps-card');
+  card.classList.remove('has-coords');
+  card.innerHTML = `<div class="gps-icon">🗺️</div>
+    <div class="gps-label" id="gps-label-text">Sin ubicación registrada</div>
+    <div class="gps-coords" id="gps-coords"></div>`;
+}
+
+function mostrarCoordsEnCard(lat, lng) {
+  const card = document.getElementById('gps-card');
+  card.classList.add('has-coords');
+  card.innerHTML = `<div class="gps-icon">✅</div>
+    <div class="gps-coords">${lat.toFixed(6)}, ${lng.toFixed(6)}</div>
+    <div class="gps-label">Ubicación guardada · <a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" style="color:var(--accent)">Ver en mapa</a></div>`;
+}
+
+// ── TOGGLE CHECKS ─────────────────────────────────────────
+function toggleCheck(id) {
+  const el = document.getElementById('check-' + id);
+  el.classList.toggle('checked');
+}
+
+function toggleDia(btn, e) {
+  e.stopPropagation();
+  btn.classList.toggle('active');
+}
+
+// ── GPS ───────────────────────────────────────────────────
+async function capturarGPS() {
+  const btn = document.getElementById('btn-gps');
+  btn.disabled = true;
+  btn.textContent = '📡 Obteniendo ubicación...';
+
+  if (!navigator.geolocation) {
+    toast('Tu móvil no soporta GPS', 'err');
+    btn.disabled = false; btn.textContent = '📍 Guardar ubicación actual';
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      estado.coordsActuales = { lat, lng };
+      mostrarCoordsEnCard(lat, lng);
+      btn.disabled = false;
+      btn.textContent = '📍 Actualizar ubicación';
+      toast('Ubicación capturada ✓', 'ok');
+    },
+    (err) => {
+      toast('No se pudo obtener la ubicación', 'err');
+      btn.disabled = false;
+      btn.textContent = '📍 Guardar ubicación actual';
+    },
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+}
+
+// ── GUARDAR FICHA ─────────────────────────────────────────
+async function guardarFicha() {
+  const btn = document.getElementById('btn-guardar');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  const cliente = estado.clienteActual;
+  if (!cliente) { btn.disabled = false; return; }
+
+  // Construir flags de notas
+  const flags = [];
+  if (document.getElementById('check-no-firma').classList.contains('checked'))       flags.push('NO_FIRMA');
+  if (document.getElementById('check-quiere-factura').classList.contains('checked')) flags.push('FACTURA');
+  if (document.getElementById('check-cocina').classList.contains('checked'))         flags.push('COCINA');
+  if (document.getElementById('check-repasar-nota').classList.contains('checked'))   flags.push('REPASAR_NOTA');
+  const notasLibres = document.getElementById('input-notas').value.trim();
+  const notasLogisticas = [...flags, notasLibres].filter(Boolean).join('|');
+
+  // Días cerrado
+  const dias = [...document.querySelectorAll('.dia-btn.active')].map(b => b.dataset.dia);
+
+  // Hora máx
+  const horaMax = document.getElementById('check-hora-max').classList.contains('checked')
+    ? document.getElementById('input-hora-max').value || null
+    : null;
+
+  // No recibe desde
+  const horaNoRecibe = document.getElementById('check-no-recibe-desde').classList.contains('checked')
+    ? document.getElementById('input-no-recibe-desde').value || null
+    : null;
+
+  const tiempo = parseInt(document.getElementById('input-tiempo').value) || 15;
+
+  try {
+    if (cliente.puntos.length > 0) {
+      // Actualizar punto existente
+      const puntoId = cliente.puntos[0].id;
+      const update = {
+        notas_logisticas: notasLogisticas || null,
+        hora_max_llegada: horaMax,
+        hora_no_recibe_desde: horaNoRecibe,
+        dias_cerrado: dias,
+        tiempo_descarga_min: tiempo,
+        geocodificado: !!estado.coordsActuales,
+      };
+      if (estado.coordsActuales) {
+        update.latitud  = estado.coordsActuales.lat;
+        update.longitud = estado.coordsActuales.lng;
+      }
+      await supaFetch(`rutas_puntos_entrega?id=eq.${puntoId}`, 'PATCH', update);
+    } else {
+      // Crear punto nuevo
+      await supaFetch('rutas_puntos_entrega', 'POST', {
+        cliente_id: cliente.id,
+        odoo_delivery_id: cliente.odoo_partner_id,
+        nombre_punto: 'Principal',
+        direccion_texto: '',
+        latitud:  estado.coordsActuales?.lat || null,
+        longitud: estado.coordsActuales?.lng || null,
+        geocodificado: !!estado.coordsActuales,
+        notas_logisticas: notasLogisticas || null,
+        hora_max_llegada: horaMax,
+        hora_no_recibe_desde: horaNoRecibe,
+        dias_cerrado: dias,
+        tiempo_descarga_min: tiempo,
+      });
+    }
+
+    toast('Ficha guardada ✓', 'ok');
+
+    // Actualizar estado local
+    const idx = estado.clientes.findIndex(c => c.id === cliente.id);
+    if (idx >= 0) estado.clientes[idx].geocodificado = !!estado.coordsActuales;
+    actualizarStats();
+
+    document.getElementById('ficha-badge').innerHTML = estado.coordsActuales
+      ? '<span class="badge badge-ok">✓ Completado</span>'
+      : '<span class="badge badge-pend">Pendiente</span>';
+
+  } catch (e) {
+    toast('Error al guardar: ' + e.message, 'err');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '💾 Guardar ficha';
+}
+
+// ══════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════
+initLogin();
+</script>
+</body>
+</html>
