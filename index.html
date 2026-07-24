@@ -711,7 +711,7 @@ async function marcarEntregado(){
       // Subir a Odoo (campo signature del picking)
       await odooProxy('write_picking', {
         pickingId: p.id,
-        vals: { signature: firmaB64, signed_by: p.partnerNombre }
+        vals: { signature: firmaB64 }
       });
       // Subir copia a Supabase Storage
       const blob=await(await fetch('data:image/png;base64,'+firmaB64)).blob();
