@@ -91,8 +91,9 @@ exports.handler = async (event) => {
     let result;
 
     if (action === 'get_pickings_hoy') {
-      // Buscar ruta por nombre
       const { rutaNombre, fecha } = params;
+
+      // Buscar ruta por nombre
       const rutas = await odooCallKw(cfg, cookie, 'stock.location.route', 'search_read',
         [[['name', 'ilike', rutaNombre]]],
         { fields: ['id', 'name'], limit: 5 }
@@ -100,19 +101,28 @@ exports.handler = async (event) => {
       if (!rutas.length) throw new Error(`Ruta "${rutaNombre}" no encontrada en Odoo`);
       const rutaId = rutas[0].id;
 
-      // Buscar pickings — en Odoo 15 la ruta puede estar en stock.move, no en picking
-      // Buscamos por move_ids → route_ids
+      // Buscar sale.orders con esa ruta
+      const orders = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
+        [[['route_id', '=', rutaId], ['state', 'in', ['sale', 'done']]]],
+        { fields: ['id', 'name'], limit: 500 }
+      );
+      const orderIds = orders.map(o => o.id);
+
+      // Buscar pickings de esas sale orders con estado assigned y fecha hoy
+      const domain = [
+        ['state', '=', 'assigned'],
+        ['picking_type_code', '=', 'outgoing'],
+        ['scheduled_date', '>=', fecha + ' 00:00:00'],
+        ['scheduled_date', '<=', fecha + ' 23:59:59'],
+      ];
+      if (orderIds.length > 0) domain.push(['sale_id', 'in', orderIds]);
+      else domain.push(['sale_id', '=', false]); // si no hay orders, no hay pickings
+
       const pickings = await odooCallKw(cfg, cookie, 'stock.picking', 'search_read',
-        [[
-          ['state', '=', 'assigned'],
-          ['picking_type_code', '=', 'outgoing'],
-          ['move_ids.route_ids', 'in', [rutaId]],
-          ['scheduled_date', '>=', fecha + ' 00:00:00'],
-          ['scheduled_date', '<=', fecha + ' 23:59:59'],
-        ]],
+        [domain],
         { fields: ['id', 'name', 'partner_id', 'scheduled_date', 'move_ids_without_package', 'sale_id', 'note'], limit: 100 }
       );
-      result = { rutas, pickings };
+      result = { rutas, orders: orders.length, pickings };
 
     } else if (action === 'search_read') {
       const { model, domain, fields, limit } = params;
