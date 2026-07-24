@@ -372,10 +372,7 @@
 // ═══════════════════════════════════════════
 const SUPABASE_URL = 'https://pkxjsbgizxntmgtixbwt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_7RsdYecYwSQhsI_PAbhczQ_49wMNVID';
-const ODOO_URL     = 'https://distribucionesjoaquininfante.es';
-const ODOO_DB      = 'dji15';
-const ODOO_USER    = 'aebrero.jinfante@amh.es';
-const ODOO_PASS    = '123456Zx@@';
+const PROXY_URL    = '/.netlify/functions/odoo-proxy';
 const EMPRESA      = 'DJI';
 
 const REPARTIDORES = [
@@ -425,29 +422,16 @@ async function supaUpsert(table,rows,conflict){
 }
 
 // ═══════════════════════════════════════════
-// ODOO SESSION
+// ODOO VÍA PROXY
 // ═══════════════════════════════════════════
-async function odooLogin(){
-  const r=await fetch(ODOO_URL+'/web/session/authenticate',{
-    method:'POST',credentials:'include',
+async function odooProxy(action, params){
+  const r=await fetch(PROXY_URL,{
+    method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({jsonrpc:'2.0',method:'call',id:1,params:{db:ODOO_DB,login:ODOO_USER,password:ODOO_PASS}}),
+    body:JSON.stringify({empresa:EMPRESA, action, params}),
   });
   const j=await r.json();
-  if(!j.result?.uid) throw new Error('Login Odoo fallido');
-  E.odooSession=j.result;
-  return j.result;
-}
-
-async function odooCall(model,method,args,kwargs={}){
-  if(!E.odooSession) await odooLogin();
-  const r=await fetch(ODOO_URL+'/web/dataset/call_kw',{
-    method:'POST',credentials:'include',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({jsonrpc:'2.0',method:'call',id:1,params:{model,method,args,kwargs}}),
-  });
-  const j=await r.json();
-  if(j.error) throw new Error(j.error.data?.message||JSON.stringify(j.error));
+  if(!j.ok) throw new Error(j.error||'Error en proxy');
   return j.result;
 }
 
@@ -489,23 +473,8 @@ async function cargarPedidosHoy(){
   document.getElementById('pedidos-lista').innerHTML='<div class="spinner"></div>';
 
   try {
-    await odooLogin();
     const rutaNombre=E.usuario.rutaOdoo;
-
-    // Buscar route_id por nombre
-    const rutas=await odooCall('stock.location.route','search_read',
-      [[['name','ilike',rutaNombre]]],{fields:['id','name'],limit:5});
-    if(!rutas.length) throw new Error(`No se encontró la ruta "${rutaNombre}" en Odoo`);
-    const rutaId=rutas[0].id;
-
-    // Buscar pickings assigned + outgoing + hoy + esta ruta
-    const pickings=await odooCall('stock.picking','search_read',[[
-      ['state','=','assigned'],
-      ['picking_type_code','=','outgoing'],
-      ['route_id','=',rutaId],
-      ['scheduled_date','>=',hoy+' 00:00:00'],
-      ['scheduled_date','<=',hoy+' 23:59:59'],
-    ]],{fields:['id','name','partner_id','scheduled_date','move_ids_without_package','sale_id'],limit:100});
+    const { rutas, pickings } = await odooProxy('get_pickings_hoy', { rutaNombre, fecha: hoy });
 
     // Enriquecer con datos de Supabase (coordenadas, alertas)
     E.pedidos=await Promise.all(pickings.map(async p=>{
