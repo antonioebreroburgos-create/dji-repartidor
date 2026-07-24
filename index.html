@@ -237,10 +237,11 @@
 
     <div id="parada-alertas"></div>
 
-    <button class="btn-navegar" id="btn-navegar" onclick="navegarCliente()">
+    <button class="btn-navegar" onclick="navegarCliente()">
       🗺️ Navegar con Google Maps
     </button>
 
+    <!-- FOTO -->
     <div class="section-label">📷 Foto de la entrega</div>
     <div class="foto-preview" id="foto-preview"></div>
     <input type="file" id="input-foto" accept="image/*" capture="environment" style="display:none" onchange="procesarFoto(this)"/>
@@ -248,13 +249,33 @@
       📷 Hacer foto
     </button>
 
+    <!-- FIRMA -->
+    <div class="section-label">✍️ Firma del cliente</div>
+    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:8px;margin-bottom:8px">
+      <canvas id="firma-canvas" style="width:100%;height:180px;display:block;cursor:crosshair;touch-action:none;background:#fff;border-radius:8px"></canvas>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:12px">
+      <button class="btn btn-secondary" style="flex:1;padding:10px" onclick="borrarFirma()">🗑️ Borrar firma</button>
+      <div id="firma-ok" style="display:none;flex:1;background:rgba(34,197,94,.12);border:1px solid var(--success);border-radius:var(--radius);padding:10px;text-align:center;font-size:13px;font-weight:700;color:var(--success)">✓ Firma capturada</div>
+    </div>
+
+    <!-- COMENTARIO -->
     <div class="section-label">💬 Comentario</div>
     <textarea class="comentario-input" id="parada-comentario" placeholder="Observaciones de la entrega..."></textarea>
 
+    <!-- ACCIONES -->
     <div class="acciones-grid">
-      <button class="btn btn-success" onclick="marcarEstado('entregada')">✅ Entregado</button>
+      <button class="btn btn-success" onclick="marcarEntregado()">✅ Entregado</button>
       <button class="btn btn-danger" onclick="marcarEstado('fallida')">❌ No entregado</button>
     </div>
+
+    <!-- WHATSAPP — aparece tras entrega -->
+    <div id="btn-whatsapp-wrap" style="display:none;margin-bottom:16px">
+      <button class="btn" style="background:#25D366;color:#fff" onclick="enviarWhatsApp()">
+        📱 Enviar albarán por WhatsApp
+      </button>
+    </div>
+
     <div style="height:16px"></div>
   </div>
 </div>
@@ -373,6 +394,7 @@
 const SUPABASE_URL = 'https://pkxjsbgizxntmgtixbwt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_7RsdYecYwSQhsI_PAbhczQ_49wMNVID';
 const PROXY_URL    = '/.netlify/functions/odoo-proxy';
+const ODOO_URL     = 'https://distribucionesjoaquininfante.es';
 const EMPRESA      = 'DJI';
 
 const REPARTIDORES = [
@@ -541,9 +563,76 @@ function getAlertas(punto){
   return alertas;
 }
 
+// ── FIRMA CANVAS ──────────────────────────────────────────
+let firmaActiva=false, firmaUltimoX=0, firmaUltimoY=0, firmaTieneDatos=false;
+
+function initFirma(){
+  const canvas=document.getElementById('firma-canvas');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d');
+
+  // Ajustar resolución real del canvas
+  function resizeCanvas(){
+    const rect=canvas.getBoundingClientRect();
+    canvas.width=rect.width*window.devicePixelRatio;
+    canvas.height=rect.height*window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio,window.devicePixelRatio);
+    ctx.strokeStyle='#1a3a5c';
+    ctx.lineWidth=2.5;
+    ctx.lineCap='round';
+    ctx.lineJoin='round';
+  }
+  resizeCanvas();
+
+  function getPos(e){
+    const rect=canvas.getBoundingClientRect();
+    const src=e.touches?e.touches[0]:e;
+    return {x:src.clientX-rect.left, y:src.clientY-rect.top};
+  }
+
+  canvas.addEventListener('mousedown', e=>{firmaActiva=true; const p=getPos(e); firmaUltimoX=p.x; firmaUltimoY=p.y;});
+  canvas.addEventListener('mousemove', e=>{
+    if(!firmaActiva) return;
+    const p=getPos(e);
+    ctx.beginPath(); ctx.moveTo(firmaUltimoX,firmaUltimoY); ctx.lineTo(p.x,p.y); ctx.stroke();
+    firmaUltimoX=p.x; firmaUltimoY=p.y; firmaTieneDatos=true;
+  });
+  canvas.addEventListener('mouseup', ()=>{firmaActiva=false; mostrarFirmaOk();});
+
+  canvas.addEventListener('touchstart', e=>{e.preventDefault(); firmaActiva=true; const p=getPos(e); firmaUltimoX=p.x; firmaUltimoY=p.y;},{passive:false});
+  canvas.addEventListener('touchmove', e=>{
+    e.preventDefault();
+    if(!firmaActiva) return;
+    const p=getPos(e);
+    ctx.beginPath(); ctx.moveTo(firmaUltimoX,firmaUltimoY); ctx.lineTo(p.x,p.y); ctx.stroke();
+    firmaUltimoX=p.x; firmaUltimoY=p.y; firmaTieneDatos=true;
+  },{passive:false});
+  canvas.addEventListener('touchend', ()=>{firmaActiva=false; mostrarFirmaOk();});
+}
+
+function mostrarFirmaOk(){
+  if(firmaTieneDatos) document.getElementById('firma-ok').style.display='flex';
+}
+
+function borrarFirma(){
+  const canvas=document.getElementById('firma-canvas');
+  const ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  firmaTieneDatos=false;
+  document.getElementById('firma-ok').style.display='none';
+}
+
+function getFirmaBase64(){
+  if(!firmaTieneDatos) return null;
+  const canvas=document.getElementById('firma-canvas');
+  return canvas.toDataURL('image/png').split(',')[1];
+}
+
 function abrirParada(i){
   E.pedidoActual=i;
   E.fotos=[];
+  E.fotoUrls=[];
+  firmaTieneDatos=false;
   const p=E.pedidos[i];
   document.getElementById('parada-progreso').textContent=`${i+1}/${E.pedidos.length}`;
   document.getElementById('parada-num').textContent=p.name;
@@ -551,13 +640,12 @@ function abrirParada(i){
   document.getElementById('parada-dir').textContent=p.punto?.direccion_texto||'Sin dirección registrada';
   document.getElementById('parada-comentario').value='';
   document.getElementById('foto-preview').innerHTML='';
+  document.getElementById('btn-whatsapp-wrap').style.display='none';
+  document.getElementById('firma-ok').style.display='none';
 
-  // Alertas
   const alertas=getAlertas(p.punto);
   document.getElementById('parada-alertas').innerHTML=alertas.map(a=>
     `<div class="alerta-item">⚠️ ${a}</div>`).join('');
-
-  // Notas libres
   if(p.punto?.notas_logisticas){
     const notas=p.punto.notas_logisticas
       .replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'')
@@ -567,6 +655,7 @@ function abrirParada(i){
   }
 
   irA('parada');
+  setTimeout(initFirma, 100);
 }
 
 function navegarCliente(){
@@ -590,29 +679,95 @@ async function procesarFoto(input){
 
 function renderFotos(){
   document.getElementById('foto-preview').innerHTML=E.fotos.map((f,i)=>
-    `<img class="foto-thumb" src="${f.dataUrl}" onclick="verFoto(${i})"/>`).join('');
+    `<img class="foto-thumb" src="${f.dataUrl}"/>`).join('');
+}
+
+async function marcarEntregado(){
+  const p=E.pedidos[E.pedidoActual];
+  p.comentario=document.getElementById('parada-comentario').value;
+  E.fotoUrls=[];
+
+  const btn=document.querySelector('.btn-success');
+  btn.disabled=true; btn.textContent='Guardando...';
+
+  try{
+    // 1. Subir fotos a Supabase Storage (bucket público)
+    for(const foto of E.fotos){
+      const nombre=`${EMPRESA}/${p.name.replace(/\//g,'_')}_${Date.now()}.jpg`;
+      const r=await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombre}`,{
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'image/jpeg'},
+        body:foto.file,
+      });
+      if(r.ok){
+        const url=`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`;
+        E.fotoUrls.push(url);
+      }
+    }
+
+    // 2. Subir firma a Odoo y Supabase
+    const firmaB64=getFirmaBase64();
+    if(firmaB64){
+      // Subir a Odoo (campo signature del picking)
+      await odooProxy('write_picking', {
+        pickingId: p.id,
+        vals: { signature: firmaB64, signed_by: p.partnerNombre }
+      });
+      // Subir copia a Supabase Storage
+      const blob=await(await fetch('data:image/png;base64,'+firmaB64)).blob();
+      const nombreFirma=`${EMPRESA}/firma_${p.name.replace(/\//g,'_')}_${Date.now()}.png`;
+      const rf=await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombreFirma}`,{
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'image/png'},
+        body:blob,
+      });
+      if(rf.ok) E.firmaUrl=`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombreFirma}`;
+    }
+
+    p.estado='entregada';
+    p.fotoUrls=E.fotoUrls;
+    p.firmaUrl=E.firmaUrl||null;
+
+    toast('✓ Entrega registrada','ok');
+    renderPedidos();
+
+    // Mostrar botón WhatsApp si hay teléfono
+    if(p.punto?.telefono_recepcion){
+      document.getElementById('btn-whatsapp-wrap').style.display='block';
+    }
+
+  }catch(e){
+    toast('Error: '+e.message,'err');
+  }
+
+  btn.disabled=false; btn.textContent='✅ Entregado';
 }
 
 async function marcarEstado(estado){
   const p=E.pedidos[E.pedidoActual];
   p.estado=estado;
   p.comentario=document.getElementById('parada-comentario').value;
-
-  // Subir fotos a Supabase Storage
-  for(const foto of E.fotos){
-    try{
-      const nombre=`${EMPRESA}/${p.name.replace('/','_')}_${Date.now()}.jpg`;
-      await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombre}`,{
-        method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'image/jpeg'},
-        body:foto.file,
-      });
-    }catch(_){}
-  }
-
-  toast(estado==='entregada'?'✓ Marcado como entregado':'✗ Marcado como fallido', estado==='entregada'?'ok':'err');
+  toast('✗ Marcado como no entregado','err');
   renderPedidos();
   irA('pedidos');
+}
+
+function enviarWhatsApp(){
+  const p=E.pedidos[E.pedidoActual];
+  const tel=(p.punto?.telefono_recepcion||'').replace(/\D/g,'');
+  if(!tel){ toast('Sin teléfono de recepción','err'); return; }
+
+  const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${p.id}`;
+  let msg=`Hola, le confirmamos la entrega de hoy.\n\n`;
+  msg+=`📦 Albarán: ${p.name}\n`;
+  msg+=`🏢 Cliente: ${p.partnerNombre}\n`;
+  msg+=`✅ Entregado y firmado\n\n`;
+  msg+=`📄 Ver albarán: ${albaranUrl}\n`;
+  if(E.fotoUrls?.length) msg+=`📷 Foto entrega: ${E.fotoUrls[0]}\n`;
+  msg+=`\nUn saludo,\nDistribuciones Joaquín Infante`;
+
+  const url=`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`;
+  window.open(url,'_blank');
 }
 
 // ═══════════════════════════════════════════
