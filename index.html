@@ -468,6 +468,11 @@ function entrarMenu(){
   document.getElementById('menu-avatar').textContent=E.usuario.nombre[0];
   const hoy=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
   document.getElementById('menu-fecha').textContent=hoy.charAt(0).toUpperCase()+hoy.slice(1);
+  // Restaurar pedidos del día si existen en sessionStorage
+  try{
+    const saved=sessionStorage.getItem('dji_pedidos_'+E.usuario.rutaOdoo);
+    if(saved){ E.pedidos=JSON.parse(saved); }
+  }catch(_){}
   irA('menu');
 }
 function cerrarSesion(){ E.usuario=null; E.repIdx=null; E.pin=''; actualizarDots(); document.querySelectorAll('.rep-btn').forEach(b=>b.classList.remove('selected')); irA('login'); }
@@ -499,6 +504,8 @@ async function cargarPedidosHoy(){
       }catch(_){}
       return{...p,partnerNombre,partnerId,deliveryId,deliveryNombre,punto,estado:'pendiente'};
     }));
+    // Persistir en sessionStorage para sobrevivir recarga de pestaña
+    try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo, JSON.stringify(E.pedidos)); }catch(_){}
     renderPedidos();
   }catch(e){
     document.getElementById('pedidos-lista').innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error</div><div class="empty-sub">${e.message}</div></div>`;
@@ -882,6 +889,8 @@ async function marcarEntregado(){
       if(r.ok) E.fotoUrls.push(`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`);
     }
     p.estado='entregada'; p.fotoUrls=E.fotoUrls;
+    // Persistir estado actualizado
+    try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo, JSON.stringify(E.pedidos)); }catch(_){}
     toast('✓ Entrega registrada');
     renderPedidos();
     mostrarBotonesWhatsApp(p);
