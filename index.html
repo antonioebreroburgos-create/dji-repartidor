@@ -700,12 +700,31 @@ async function guardarFichaIntegrada(){
       await supaFetch(`rutas_puntos_entrega?id=eq.${p.punto.id}`,'PATCH',datos);
       Object.assign(p.punto, datos);
     } else {
-      // Buscar el cliente en Supabase por odoo_partner_id
+      // Buscar cliente_id — primero por odoo_partner_id directo, luego por odoo_delivery_id
       let clienteId=null;
       try{
+        // Intento 1: el partnerId puede ser el mismo que odoo_partner_id del cliente
         const clientes=await supaFetch(`rutas_clientes?odoo_partner_id=eq.${p.partnerId}&empresa=eq.${EMPRESA}&select=id`);
         clienteId=clientes?.[0]?.id||null;
       }catch(_){}
+
+      if(!clienteId){
+        try{
+          // Intento 2: buscar por parent_id — el picking tiene la dirección de entrega,
+          // su cliente padre está en rutas_clientes
+          const parentRes=await odooProxy('search_read',{
+            model:'res.partner',
+            domain:[['id','=',p.partnerId]],
+            fields:['id','parent_id'],
+            limit:1,
+          });
+          const parentId=parentRes?.[0]?.parent_id?.[0];
+          if(parentId){
+            const clientes2=await supaFetch(`rutas_clientes?odoo_partner_id=eq.${parentId}&empresa=eq.${EMPRESA}&select=id`);
+            clienteId=clientes2?.[0]?.id||null;
+          }
+        }catch(_){}
+      }
 
       const bodyNuevo={
         ...datos,
