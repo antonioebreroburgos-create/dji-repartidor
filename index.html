@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="theme-color" content="#0f2027"/>
@@ -13,6 +14,7 @@
       --bg:#0f2027;--bg2:#1a3a4a;--bg3:#1e4a5c;--card:#162e3a;
       --border:#2a5066;--accent:#00c9a7;--accent2:#00a888;
       --warn:#f59e0b;--danger:#ef4444;--success:#22c55e;
+      --morado:#7c3aed;
       --text:#e8f4f8;--text2:#8ab4c4;--text3:#5a8a9a;
       --radius:14px;--radius-sm:8px;--shadow:0 4px 24px rgba(0,0,0,0.4);
     }
@@ -40,6 +42,7 @@
     #toast.err{border-color:var(--danger);color:var(--danger)}
     .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:32px auto}
     @keyframes spin{to{transform:rotate(360deg)}}
+
     /* LOGIN */
     #screen-login .content{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100dvh - 61px)}
     .login-logo{width:72px;height:72px;background:linear-gradient(135deg,var(--accent),var(--bg3));border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:12px;box-shadow:0 8px 32px rgba(0,201,167,.25)}
@@ -58,6 +61,7 @@
     .pin-key:active{background:var(--bg3);transform:scale(0.94)}
     .pin-key.del{font-size:18px;color:var(--text2)}
     .pin-key.empty{background:transparent;border-color:transparent;cursor:default}
+
     /* MENU */
     .usuario-card{background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px;display:flex;align-items:center;gap:14px}
     .usuario-avatar{width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0}
@@ -73,9 +77,11 @@
     .menu-text p{font-size:13px;color:var(--text2);margin-top:2px}
     .menu-arrow{margin-left:auto;color:var(--text3);font-size:18px}
     .btn-cerrar-sesion{background:none;border:1px solid var(--border);border-radius:var(--radius);padding:14px;color:var(--text2);font-size:14px;cursor:pointer;width:100%;margin-top:8px;transition:all .15s}
-    /* PEDIDOS DEL DIA */
+
+    /* PEDIDOS */
     .pedido-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;cursor:pointer;transition:all .15s}
     .pedido-card:active{transform:scale(0.98)}
+    .pedido-card.entregado{opacity:.6;border-color:var(--success)}
     .pedido-num{font-size:13px;color:var(--accent);font-weight:700;margin-bottom:4px}
     .pedido-cliente{font-size:17px;font-weight:800;margin-bottom:4px}
     .pedido-dir{font-size:13px;color:var(--text2);margin-bottom:8px}
@@ -85,69 +91,78 @@
     .badge-warn{background:rgba(245,158,11,.15);color:var(--warn)}
     .badge-ok{background:rgba(34,197,94,.15);color:var(--success)}
     .badge-gray{background:var(--bg2);color:var(--text2)}
+    .badge-red{background:rgba(239,68,68,.15);color:var(--danger)}
     .stats-bar{display:flex;gap:8px;margin-bottom:16px}
     .stat-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center}
     .stat-num{font-size:22px;font-weight:800;color:var(--accent)}
     .stat-lbl{font-size:11px;color:var(--text2);margin-top:2px}
-    /* PARADA ACTIVA */
-    .parada-header{background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+
+    /* PARADA */
+    .parada-header{background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px}
     .parada-num{font-size:13px;color:var(--accent);font-weight:700;margin-bottom:4px}
-    .parada-cliente{font-size:22px;font-weight:800;margin-bottom:4px}
+    .parada-cliente{font-size:20px;font-weight:800;margin-bottom:4px}
     .parada-dir{font-size:13px;color:var(--text2)}
-    .alerta-item{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600;color:var(--warn)}
+    .alerta-item{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--warn)}
     .btn-navegar{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;width:100%;font-size:15px;font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;transition:all .15s}
     .btn-navegar:active{transform:scale(0.97)}
-    .foto-preview{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-    .foto-thumb{width:80px;height:80px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border)}
-    .comentario-input{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;color:var(--text);font-size:15px;width:100%;min-height:80px;resize:none;outline:none;font-family:inherit;margin-bottom:12px}
+    .foto-preview{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+    .foto-thumb{width:72px;height:72px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border)}
+    .comentario-input{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;color:var(--text);font-size:15px;width:100%;min-height:70px;resize:none;outline:none;font-family:inherit;margin-bottom:12px}
     .comentario-input:focus{border-color:var(--accent)}
-    .acciones-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
-    /* CLIENTES */
-    .search-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;color:var(--text);font-size:16px;width:100%;margin-bottom:16px;outline:none}
-    .search-box:focus{border-color:var(--accent)}
-    .cliente-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all .15s}
-    .cliente-item:active{transform:scale(0.98)}
-    .cliente-estado{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-    .cliente-estado.ok{background:var(--success)}
-    .cliente-estado.pendiente{background:var(--warn)}
-    .cliente-nombre{font-size:15px;font-weight:600}
-    .cliente-dir{font-size:12px;color:var(--text2);margin-top:2px}
-    .filtros{display:flex;gap:8px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
-    .filtro-btn{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap;transition:all .15s}
-    .filtro-btn.active{background:rgba(0,201,167,.12);border-color:var(--accent);color:var(--accent)}
-    /* FICHA */
-    .ficha-header{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
-    .ficha-nombre{font-size:20px;font-weight:800;margin-bottom:4px}
-    .ficha-dir{font-size:13px;color:var(--text2)}
-    .section-label{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin:20px 0 10px}
-    .gps-card{background:var(--bg2);border:2px dashed var(--border);border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:4px}
-    .gps-card.has-coords{border-style:solid;border-color:var(--success);background:rgba(34,197,94,.05)}
-    .gps-icon{font-size:32px;margin-bottom:8px}
-    .gps-coords{font-size:14px;font-weight:700;color:var(--success);font-family:monospace}
-    .gps-label{font-size:12px;color:var(--text2);margin-top:4px}
-    .btn-gps{width:100%;padding:14px;border:none;border-radius:var(--radius);font-size:15px;font-weight:700;cursor:pointer;transition:all .15s;margin-top:12px;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;gap:8px}
-    .btn-gps:active{transform:scale(0.97)}
-    .btn-gps:disabled{opacity:.45;cursor:not-allowed;transform:none}
-    .check-item{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:flex-start;gap:12px;transition:all .15s}
-    .check-item.checked{border-color:var(--accent);background:rgba(0,201,167,.06)}
-    .check-box{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s;margin-top:1px}
-    .check-item.checked .check-box{background:var(--accent);border-color:var(--accent)}
-    .check-tick{color:var(--bg);font-size:13px;font-weight:900;display:none}
-    .check-item.checked .check-tick{display:block}
-    .check-label{font-size:15px;font-weight:600}
-    .check-sub{font-size:12px;color:var(--text2);margin-top:3px}
-    .hora-input-wrap{margin-top:8px;display:none}
-    .check-item.checked .hora-input-wrap{display:block}
+    .acciones-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+    .section-label{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px}
+
+    /* FICHA DESPLEGABLE */
+    .ficha-toggle{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;transition:all .15s}
+    .ficha-toggle:active{background:var(--bg3)}
+    .ficha-toggle-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+    .ficha-toggle-arrow{font-size:18px;color:var(--text3);transition:transform .2s}
+    .ficha-toggle.open .ficha-toggle-arrow{transform:rotate(180deg)}
+    .ficha-body{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+    .ficha-body.open{display:block}
+
+    /* INPUTS FICHA */
     .hora-input{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-size:16px;width:100%;outline:none}
-    .dias-wrap{margin-top:8px;display:none;flex-wrap:wrap;gap:6px}
-    .check-item.checked .dias-wrap{display:flex}
-    .dia-btn{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:6px 12px;font-size:13px;color:var(--text2);cursor:pointer;transition:all .15s}
-    .dia-btn.active{background:rgba(245,158,11,.15);border-color:var(--warn);color:var(--warn);font-weight:700}
-    .notas-input{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;color:var(--text);font-size:15px;width:100%;min-height:100px;resize:vertical;outline:none;font-family:inherit}
+    .hora-input:focus{border-color:var(--accent)}
+    .tiempo-input{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;color:var(--text);font-size:18px;font-weight:700;width:80px;text-align:center;outline:none}
+    .notas-input{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;color:var(--text);font-size:14px;width:100%;min-height:70px;resize:none;outline:none;font-family:inherit}
     .notas-input:focus{border-color:var(--accent)}
-    .tiempo-row{display:flex;align-items:center;gap:12px}
-    .tiempo-input{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;color:var(--text);font-size:18px;font-weight:700;width:90px;text-align:center;outline:none}
-    .guardar-bar{padding:16px;background:var(--bg);border-top:1px solid var(--border);position:sticky;bottom:0}
+    .dias-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+    .dia-btn{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s}
+    .dia-btn.active{background:rgba(245,158,11,.15);border-color:var(--warn);color:var(--warn);font-weight:700}
+
+    /* TOGGLE SWITCH */
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+    .toggle-row:last-child{border-bottom:none}
+    .toggle-label{font-size:14px;font-weight:600}
+    .toggle-sub{font-size:12px;color:var(--text2);margin-top:2px}
+    .toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
+    .toggle-switch input{opacity:0;width:0;height:0}
+    .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:24px;transition:.2s;cursor:pointer}
+    .toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+    input:checked+.toggle-slider{background:var(--accent)}
+    input:checked+.toggle-slider:before{transform:translateX(20px)}
+
+    /* GPS */
+    .gps-card{background:var(--bg);border:2px dashed var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;margin-bottom:8px}
+    .gps-card.ok{border-style:solid;border-color:var(--success);background:rgba(34,197,94,.05)}
+    .gps-coords{font-size:13px;font-weight:700;color:var(--success);font-family:monospace}
+    .gps-label{font-size:11px;color:var(--text2);margin-top:4px}
+
+    /* CONTACTOS */
+    .contacto-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+    .contacto-info{flex:1}
+    .contacto-nombre{font-size:14px;font-weight:700}
+    .contacto-tel{font-size:12px;color:var(--text2)}
+    .contacto-del{background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:4px}
+    .input-row{display:flex;gap:6px;margin-bottom:6px}
+    .input-small{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;color:var(--text);font-size:14px;flex:1;outline:none}
+    .input-small:focus{border-color:var(--accent)}
+
+    /* WHATSAPP */
+    .whatsapp-btn{background:#25D366;color:#fff;border:none;border-radius:var(--radius);padding:14px;width:100%;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;transition:all .15s}
+    .whatsapp-btn:active{transform:scale(0.97)}
+
     .empty-state{text-align:center;padding:48px 24px}
     .empty-icon{font-size:48px;margin-bottom:12px}
     .empty-title{font-size:18px;font-weight:700;margin-bottom:6px}
@@ -187,35 +202,25 @@
     </div>
     <div class="menu-item" onclick="cargarPedidosHoy()">
       <div class="menu-icon orange">📦</div>
-      <div class="menu-text"><h3>Mis pedidos de hoy</h3><p>Cargar ruta del día desde Odoo</p></div>
-      <div class="menu-arrow">›</div>
-    </div>
-    <div class="menu-item" onclick="irAClientes('todos')">
-      <div class="menu-icon green">📍</div>
-      <div class="menu-text"><h3>Recoger datos de clientes</h3><p>Ubicación, horarios y características</p></div>
-      <div class="menu-arrow">›</div>
-    </div>
-    <div class="menu-item" onclick="irAClientes('pendientes')">
-      <div class="menu-icon blue">⏳</div>
-      <div class="menu-text"><h3>Clientes pendientes</h3><p>Sin ubicación registrada todavía</p></div>
+      <div class="menu-text"><h3>Mis pedidos pendientes</h3><p>Pickings listos para entregar</p></div>
       <div class="menu-arrow">›</div>
     </div>
     <button class="btn-cerrar-sesion" onclick="cerrarSesion()">Cerrar sesión</button>
   </div>
 </div>
 
-<!-- PEDIDOS DEL DÍA -->
+<!-- PEDIDOS -->
 <div id="screen-pedidos" class="screen">
   <div class="header">
     <button class="btn-back" onclick="irA('menu')">‹ Volver</button>
     <h1>Mis pedidos</h1>
-    <span class="header-sub" id="pedidos-fecha"></span>
+    <span class="header-sub" id="pedidos-sub"></span>
   </div>
   <div class="content">
     <div class="stats-bar">
-      <div class="stat-box"><div class="stat-num" id="stat-pedidos">0</div><div class="stat-lbl">Pedidos</div></div>
-      <div class="stat-box"><div class="stat-num" id="stat-bultos" style="color:var(--warn)">0</div><div class="stat-lbl">Bultos</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-pedidos">0</div><div class="stat-lbl">Total</div></div>
       <div class="stat-box"><div class="stat-num" id="stat-entregados" style="color:var(--success)">0</div><div class="stat-lbl">Entregados</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-pendientes" style="color:var(--warn)">0</div><div class="stat-lbl">Pendientes</div></div>
     </div>
     <div id="pedidos-lista"></div>
   </div>
@@ -224,38 +229,136 @@
 <!-- PARADA ACTIVA -->
 <div id="screen-parada" class="screen">
   <div class="header">
-    <button class="btn-back" onclick="irA('pedidos')">‹ Volver</button>
+    <button class="btn-back" onclick="irA('pedidos')">‹ Pedidos</button>
     <h1>Entrega</h1>
     <span class="header-sub" id="parada-progreso"></span>
   </div>
-  <div class="content" style="padding-bottom:0">
+  <div class="content">
+
+    <!-- Cabecera cliente -->
     <div class="parada-header">
       <div class="parada-num" id="parada-num"></div>
       <div class="parada-cliente" id="parada-cliente"></div>
       <div class="parada-dir" id="parada-dir"></div>
     </div>
 
+    <!-- Alertas -->
     <div id="parada-alertas"></div>
 
-    <button class="btn-navegar" onclick="navegarCliente()">
-      🗺️ Navegar con Google Maps
-    </button>
+    <!-- Navegar -->
+    <button class="btn-navegar" onclick="navegarCliente()">🗺️ Navegar con Google Maps</button>
+
+    <!-- FICHA CLIENTE DESPLEGABLE -->
+    <div class="ficha-toggle" id="ficha-toggle" onclick="toggleFicha()">
+      <div class="ficha-toggle-title">📋 Ficha del cliente <span id="ficha-badge-mini" style="font-size:11px;font-weight:400;color:var(--text2)"></span></div>
+      <span class="ficha-toggle-arrow">▼</span>
+    </div>
+    <div class="ficha-body" id="ficha-body">
+
+      <!-- GPS -->
+      <div class="section-label" style="margin-top:0">📍 Ubicación GPS</div>
+      <div class="gps-card" id="ficha-gps-card">
+        <div style="font-size:12px;color:var(--text3)">Sin ubicación registrada</div>
+      </div>
+      <button class="btn btn-secondary" style="padding:10px;margin-bottom:12px;font-size:14px" onclick="capturarGPSFicha()">
+        📍 Capturar ubicación actual
+      </button>
+
+      <!-- Contactos -->
+      <div class="section-label">📱 Contactos de recepción</div>
+      <div id="ficha-contactos"></div>
+      <div class="input-row">
+        <input class="input-small" id="fc-nombre" placeholder="Nombre" onclick="event.stopPropagation()"/>
+        <input class="input-small" id="fc-tel" placeholder="Teléfono (34...)" type="tel" onclick="event.stopPropagation()"/>
+      </div>
+      <button class="btn btn-secondary" style="padding:10px;margin-bottom:12px;font-size:13px" onclick="añadirContactoFicha()">+ Añadir contacto</button>
+
+      <!-- Horarios -->
+      <div class="section-label">⏰ Horarios</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Apertura</div>
+          <input class="hora-input" type="time" id="fc-apertura"/>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Cierre</div>
+          <input class="hora-input" type="time" id="fc-cierre"/>
+        </div>
+      </div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Hora límite de entrega</div>
+        <input class="hora-input" type="time" id="fc-hora-max"/>
+      </div>
+
+      <!-- Días cerrado -->
+      <div class="section-label">📅 Días de cierre</div>
+      <div class="dias-wrap">
+        <button class="dia-btn" data-dia="lunes" onclick="toggleDiaFicha(this)">Lun</button>
+        <button class="dia-btn" data-dia="martes" onclick="toggleDiaFicha(this)">Mar</button>
+        <button class="dia-btn" data-dia="miercoles" onclick="toggleDiaFicha(this)">Mié</button>
+        <button class="dia-btn" data-dia="jueves" onclick="toggleDiaFicha(this)">Jue</button>
+        <button class="dia-btn" data-dia="viernes" onclick="toggleDiaFicha(this)">Vie</button>
+        <button class="dia-btn" data-dia="sabado" onclick="toggleDiaFicha(this)">Sáb</button>
+        <button class="dia-btn" data-dia="domingo" onclick="toggleDiaFicha(this)">Dom</button>
+      </div>
+
+      <!-- Características toggles -->
+      <div class="section-label">⚙️ Características</div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 12px;margin-bottom:8px">
+        <div class="toggle-row">
+          <div><div class="toggle-label">⚡ Descargar primero</div><div class="toggle-sub">Prioritario sobre otros en la misma zona</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="fc-primero"/><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">🕐 Estricto con horarios</div><div class="toggle-sub">No admite entregas fuera de hora</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="fc-estricto"/><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">🍳 Descarga por cocina</div><div class="toggle-sub">Entrada por cocina o trastienda</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="fc-cocina"/><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">✍️ No firma en móvil</div><div class="toggle-sub">Rechaza firma digital</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="fc-no-firma"/><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">🧾 Quiere factura siempre</div><div class="toggle-sub">Llevar factura impresa</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="fc-factura"/><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">📋 Repasar nota con él</div><div class="toggle-sub">Confirmar pedido al entregar</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="fc-repasar"/><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+
+      <!-- Tiempo descarga -->
+      <div class="section-label">⏱️ Tiempo de descarga</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <input class="tiempo-input" type="number" id="fc-tiempo" placeholder="15" min="1" max="120"/>
+        <span style="font-size:13px;color:var(--text2)">minutos estimados</span>
+      </div>
+
+      <!-- Notas -->
+      <div class="section-label">📝 Notas</div>
+      <textarea class="notas-input" id="fc-notas" placeholder="Tocar timbre, preguntar por Juan..."></textarea>
+
+      <button class="btn btn-primary" style="margin-top:12px" onclick="guardarFichaIntegrada()">💾 Guardar ficha</button>
+    </div>
 
     <!-- FOTO -->
     <div class="section-label">📷 Foto de la entrega</div>
     <div class="foto-preview" id="foto-preview"></div>
     <input type="file" id="input-foto" accept="image/*" capture="environment" style="display:none" onchange="procesarFoto(this)"/>
-    <button class="btn btn-secondary" onclick="document.getElementById('input-foto').click()" style="margin-bottom:12px">
+    <button class="btn btn-secondary" onclick="document.getElementById('input-foto').click()" style="margin-bottom:12px;padding:12px">
       📷 Hacer foto
     </button>
 
-    <!-- FIRMA Y VALIDACIÓN EN ODOO -->
-    <div class="section-label">✍️ Firma y validación</div>
-    <button class="btn" style="background:var(--morado,#7c3aed);color:#fff;margin-bottom:8px" onclick="abrirOdooAlbaran()">
+    <!-- FIRMA ODOO -->
+    <button class="btn" style="background:var(--morado);color:#fff;margin-bottom:8px" onclick="abrirOdooAlbaran()">
       ✍️ Firmar y validar en Odoo
     </button>
-    <div id="odoo-firmado" style="display:none;background:rgba(34,197,94,.08);border:1px solid var(--success);border-radius:var(--radius);padding:12px;margin-bottom:12px;font-size:13px;font-weight:700;color:var(--success);text-align:center">
-      ✓ Albarán firmado y validado en Odoo
+    <div id="odoo-firmado" style="display:none;background:rgba(34,197,94,.08);border:1px solid var(--success);border-radius:var(--radius);padding:10px;margin-bottom:12px;font-size:13px;font-weight:700;color:var(--success);text-align:center">
+      ✓ Abierto en Odoo — firma y valida, luego vuelve aquí
     </div>
 
     <!-- COMENTARIO -->
@@ -265,130 +368,13 @@
     <!-- ACCIONES -->
     <div class="acciones-grid">
       <button class="btn btn-success" onclick="marcarEntregado()">✅ Entregado</button>
-      <button class="btn btn-danger" onclick="marcarEstado('fallida')">❌ No entregado</button>
+      <button class="btn btn-danger" onclick="marcarFallido()">❌ No entregado</button>
     </div>
 
-    <!-- WHATSAPP — aparece tras entrega -->
-    <div id="btn-whatsapp-wrap" style="display:none;margin-bottom:16px">
-      <button class="btn" style="background:#25D366;color:#fff" onclick="enviarWhatsApp()">
-        📱 Enviar albarán por WhatsApp
-      </button>
-    </div>
+    <!-- WHATSAPP -->
+    <div id="btn-whatsapp-wrap" style="display:none"></div>
 
-    <div style="height:16px"></div>
-  </div>
-</div>
-
-<!-- CLIENTES -->
-<div id="screen-clientes" class="screen">
-  <div class="header">
-    <button class="btn-back" onclick="irA('menu')">‹ Volver</button>
-    <h1 id="clientes-titulo">Clientes</h1>
-    <span class="header-sub" id="clientes-count"></span>
-  </div>
-  <div class="content">
-    <div class="stats-bar">
-      <div class="stat-box"><div class="stat-num" id="stat-total">0</div><div class="stat-lbl">Total</div></div>
-      <div class="stat-box"><div class="stat-num" id="stat-ok" style="color:var(--success)">0</div><div class="stat-lbl">Con ubicación</div></div>
-      <div class="stat-box"><div class="stat-num" id="stat-pend" style="color:var(--warn)">0</div><div class="stat-lbl">Pendientes</div></div>
-    </div>
-    <input class="search-box" id="search-input" type="search" placeholder="🔍  Buscar cliente..." oninput="filtrarClientes()"/>
-    <div class="filtros">
-      <button class="filtro-btn active" onclick="setFiltro('todos',this)">Todos</button>
-      <button class="filtro-btn" onclick="setFiltro('pendientes',this)">Pendientes</button>
-      <button class="filtro-btn" onclick="setFiltro('completados',this)">Con ubicación</button>
-    </div>
-    <div id="clientes-lista"></div>
-  </div>
-</div>
-
-<!-- FICHA CLIENTE -->
-<div id="screen-ficha" class="screen">
-  <div class="header">
-    <button class="btn-back" onclick="irA('clientes')">‹ Volver</button>
-    <h1>Ficha cliente</h1>
-    <span class="header-sub" id="ficha-badge"></span>
-  </div>
-  <div class="content" style="padding-bottom:0">
-    <div class="ficha-header">
-      <div class="ficha-nombre" id="ficha-nombre"></div>
-      <div class="ficha-dir" id="ficha-dir"></div>
-    </div>
-    <div class="section-label">📍 Ubicación GPS</div>
-    <div class="gps-card" id="gps-card">
-      <div class="gps-icon">🗺️</div>
-      <div class="gps-label">Sin ubicación registrada</div>
-      <div class="gps-coords" id="gps-coords"></div>
-    </div>
-    <button class="btn-gps" id="btn-gps" onclick="capturarGPS()">📍 Guardar ubicación actual</button>
-
-    <div class="section-label">⚙️ Características</div>
-    <div class="check-item" id="check-no-firma" onclick="toggleCheck('no-firma')">
-      <div class="check-box"><span class="check-tick">✓</span></div>
-      <div><div class="check-label">No firma en el móvil</div><div class="check-sub">Rechaza firma digital</div></div>
-    </div>
-    <div class="check-item" id="check-quiere-factura" onclick="toggleCheck('quiere-factura')">
-      <div class="check-box"><span class="check-tick">✓</span></div>
-      <div><div class="check-label">Quiere siempre factura</div><div class="check-sub">Llevar factura impresa</div></div>
-    </div>
-    <div class="check-item" id="check-hora-max" onclick="toggleCheck('hora-max')">
-      <div class="check-box"><span class="check-tick">✓</span></div>
-      <div style="flex:1">
-        <div class="check-label">Hora máxima de llegada</div><div class="check-sub">No llegar más tarde</div>
-        <div class="hora-input-wrap"><input class="hora-input" type="time" id="input-hora-max" onclick="event.stopPropagation()"/></div>
-      </div>
-    </div>
-    <div class="check-item" id="check-no-recibe-desde" onclick="toggleCheck('no-recibe-desde')">
-      <div class="check-box"><span class="check-tick">✓</span></div>
-      <div style="flex:1">
-        <div class="check-label">No recibe pedidos desde</div><div class="check-sub">A partir de esta hora no acepta</div>
-        <div class="hora-input-wrap"><input class="hora-input" type="time" id="input-no-recibe-desde" onclick="event.stopPropagation()"/></div>
-      </div>
-    </div>
-    <div class="check-item" id="check-cocina" onclick="toggleCheck('cocina')">
-      <div class="check-box"><span class="check-tick">✓</span></div>
-      <div><div class="check-label">Descarga por cocina</div><div class="check-sub">Entrada por cocina / trastienda</div></div>
-    </div>
-    <div class="check-item" id="check-repasar-nota" onclick="toggleCheck('repasar-nota')">
-      <div class="check-box"><span class="check-tick">✓</span></div>
-      <div><div class="check-label">Repasar nota con el cliente</div><div class="check-sub">Confirmar pedido ítem a ítem</div></div>
-    </div>
-    <div class="check-item" id="check-dias-cerrado" onclick="toggleCheck('dias-cerrado')">
-      <div class="check-box"><span class="check-tick">✓</span></div>
-      <div style="flex:1">
-        <div class="check-label">Días que cierra</div><div class="check-sub">Días que no abre</div>
-        <div class="dias-wrap" id="dias-wrap">
-          <button class="dia-btn" data-dia="lunes" onclick="toggleDia(this,event)">Lun</button>
-          <button class="dia-btn" data-dia="martes" onclick="toggleDia(this,event)">Mar</button>
-          <button class="dia-btn" data-dia="miercoles" onclick="toggleDia(this,event)">Mié</button>
-          <button class="dia-btn" data-dia="jueves" onclick="toggleDia(this,event)">Jue</button>
-          <button class="dia-btn" data-dia="viernes" onclick="toggleDia(this,event)">Vie</button>
-          <button class="dia-btn" data-dia="sabado" onclick="toggleDia(this,event)">Sáb</button>
-          <button class="dia-btn" data-dia="domingo" onclick="toggleDia(this,event)">Dom</button>
-        </div>
-      </div>
-    </div>
-    <div class="section-label">📱 Contactos de recepción</div>
-    <div id="contactos-lista"></div>
-    <div style="display:flex;gap:8px;margin-bottom:4px">
-      <input id="input-contacto-nombre" class="hora-input" style="flex:1" placeholder="Nombre contacto" onclick="event.stopPropagation()"/>
-      <input id="input-contacto-tel" class="hora-input" style="flex:1" placeholder="Teléfono (34612...)" type="tel" onclick="event.stopPropagation()"/>
-    </div>
-    <button class="btn btn-secondary" style="padding:10px;margin-bottom:4px" onclick="añadirContacto()">+ Añadir contacto</button>
-
-    <div class="section-label">⏱️ Tiempo de descarga</div>
-    <div class="card" style="margin-bottom:0">
-      <div class="tiempo-row">
-        <input class="tiempo-input" type="number" id="input-tiempo" placeholder="15" min="1" max="120"/>
-        <div style="font-size:14px;color:var(--text2)">minutos estimados</div>
-      </div>
-    </div>
-    <div class="section-label">📝 Notas adicionales</div>
-    <textarea class="notas-input" id="input-notas" placeholder="Tocar timbre, preguntar por Juan..."></textarea>
-    <div style="height:16px"></div>
-  </div>
-  <div class="guardar-bar">
-    <button class="btn btn-primary" id="btn-guardar" onclick="guardarFicha()">💾 Guardar ficha</button>
+    <div style="height:20px"></div>
   </div>
 </div>
 
@@ -396,7 +382,7 @@
 
 <script>
 // ═══════════════════════════════════════════
-// CONFIGURACIÓN
+// CONFIG
 // ═══════════════════════════════════════════
 const SUPABASE_URL = 'https://pkxjsbgizxntmgtixbwt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_7RsdYecYwSQhsI_PAbhczQ_49wMNVID';
@@ -417,11 +403,10 @@ const REPARTIDORES = [
 // ESTADO
 // ═══════════════════════════════════════════
 let E = {
-  usuario: null, pin: '', repIdx: null,
-  clientes: [], clienteActual: null, filtroActivo: 'todos',
-  coordsActuales: null,
-  pedidos: [], pedidoActual: null,
-  fotos: [], odooSession: null,
+  usuario:null, pin:'', repIdx:null,
+  pedidos:[], pedidoActual:null,
+  fotos:[], fotoUrls:[],
+  contactos:[], coordsGPS:null,
 };
 
 // ═══════════════════════════════════════════
@@ -437,30 +422,14 @@ async function supaFetch(path,method='GET',body=null){
   if(body) opts.body=JSON.stringify(body);
   const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,opts);
   if(!r.ok){ const e=await r.text(); throw new Error(e); }
-  if(r.status===204||r.headers.get('content-length')==='0') return null;
-  return r.json();
+  const txt=await r.text();
+  return txt?JSON.parse(txt):null;
 }
 
-async function supaUpsert(table,rows,conflict){
-  const r=await fetch(`${SUPABASE_URL}/rest/v1/${table}?on_conflict=${conflict}`,{
-    method:'POST',
-    headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
-    body:JSON.stringify(rows),
-  });
-  if(!r.ok){ const e=await r.text(); throw new Error(e); }
-}
-
-// ═══════════════════════════════════════════
-// ODOO VÍA PROXY
-// ═══════════════════════════════════════════
-async function odooProxy(action, params){
-  const r=await fetch(PROXY_URL,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({empresa:EMPRESA, action, params}),
-  });
+async function odooProxy(action,params){
+  const r=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa:EMPRESA,action,params})});
   const j=await r.json();
-  if(!j.ok) throw new Error(j.error||'Error en proxy');
+  if(!j.ok) throw new Error(j.error||'Error proxy');
   return j.result;
 }
 
@@ -471,14 +440,11 @@ function initLogin(){
   document.getElementById('repartidores-grid').innerHTML=REPARTIDORES.map((r,i)=>
     `<button class="rep-btn" onclick="seleccionarRep(${i})">${r.nombre}</button>`).join('');
 }
-function seleccionarRep(i){
-  E.repIdx=i; E.pin=''; actualizarDots();
-  document.querySelectorAll('.rep-btn').forEach((b,j)=>b.classList.toggle('selected',i===j));
-}
+function seleccionarRep(i){ E.repIdx=i; E.pin=''; actualizarDots(); document.querySelectorAll('.rep-btn').forEach((b,j)=>b.classList.toggle('selected',i===j)); }
 function pinKey(k){ if(E.repIdx===null){toast('Selecciona tu nombre','err');return;} if(E.pin.length>=4)return; E.pin+=k; actualizarDots(); if(E.pin.length===4)comprobarPin(); }
 function pinDel(){ E.pin=E.pin.slice(0,-1); actualizarDots(); }
 function actualizarDots(){ for(let i=0;i<4;i++) document.getElementById('dot-'+i).classList.toggle('filled',i<E.pin.length); }
-async function comprobarPin(){
+function comprobarPin(){
   const rep=REPARTIDORES[E.repIdx];
   if(E.pin===rep.pin){ E.usuario=rep; entrarMenu(); }
   else{ toast('PIN incorrecto','err'); setTimeout(()=>{E.pin='';actualizarDots();},600); }
@@ -493,37 +459,25 @@ function entrarMenu(){
 function cerrarSesion(){ E.usuario=null; E.repIdx=null; E.pin=''; actualizarDots(); document.querySelectorAll('.rep-btn').forEach(b=>b.classList.remove('selected')); irA('login'); }
 
 // ═══════════════════════════════════════════
-// PEDIDOS DEL DÍA
+// PEDIDOS
 // ═══════════════════════════════════════════
 async function cargarPedidosHoy(){
   irA('pedidos');
-  const hoy=new Date().toISOString().split('T')[0];
-  document.getElementById('pedidos-fecha').textContent=new Date().toLocaleDateString('es-ES',{day:'numeric',month:'short'});
   document.getElementById('pedidos-lista').innerHTML='<div class="spinner"></div>';
-
-  try {
+  try{
     const rutaNombre=E.usuario.rutaOdoo;
-    const { rutas, pickings } = await odooProxy('get_pickings_hoy', { rutaNombre, fecha: hoy });
-
-    // Enriquecer con datos de Supabase (coordenadas, alertas)
+    // Sin filtro de fecha — todos los pickings assigned del repartidor
+    const {pickings}=await odooProxy('get_pickings_pendientes',{rutaNombre});
     E.pedidos=await Promise.all(pickings.map(async p=>{
       const partnerId=Array.isArray(p.partner_id)?p.partner_id[0]:p.partner_id;
       const partnerNombre=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
-
-      // Buscar punto de entrega en Supabase
       let punto=null;
-      try {
-        const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${partnerId}&select=*`);
-        punto=pts?.[0]||null;
-      } catch(_){}
-
-      return { ...p, partnerNombre, partnerId, punto, estado:'pendiente' };
+      try{ const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${partnerId}&select=*`); punto=pts?.[0]||null; }catch(_){}
+      return{...p,partnerNombre,partnerId,punto,estado:'pendiente'};
     }));
-
     renderPedidos();
-  } catch(e){
-    document.getElementById('pedidos-lista').innerHTML=
-      `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error</div><div class="empty-sub">${e.message}</div></div>`;
+  }catch(e){
+    document.getElementById('pedidos-lista').innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error</div><div class="empty-sub">${e.message}</div></div>`;
   }
 }
 
@@ -532,390 +486,336 @@ function renderPedidos(){
   const entregados=E.pedidos.filter(p=>p.estado==='entregada').length;
   document.getElementById('stat-pedidos').textContent=total;
   document.getElementById('stat-entregados').textContent=entregados;
-  document.getElementById('stat-bultos').textContent=E.pedidos.reduce((a,p)=>a+(p.move_ids_without_package?.length||0),0);
-
+  document.getElementById('stat-pendientes').textContent=total-entregados;
+  document.getElementById('pedidos-sub').textContent=`${entregados}/${total}`;
   if(!total){
-    document.getElementById('pedidos-lista').innerHTML=
-      `<div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-title">Sin pedidos pendientes</div><div class="empty-sub">No hay pickings asignados para hoy</div></div>`;
+    document.getElementById('pedidos-lista').innerHTML='<div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-title">Sin pedidos pendientes</div><div class="empty-sub">No hay pickings asignados</div></div>';
     return;
   }
-
   document.getElementById('pedidos-lista').innerHTML=E.pedidos.map((p,i)=>{
     const alertas=getAlertas(p.punto);
-    return `<div class="pedido-card" onclick="abrirParada(${i})">
+    const esPrimero=p.punto?.descargar_primero;
+    return`<div class="pedido-card ${p.estado==='entregada'?'entregado':''}" onclick="abrirParada(${i})">
+      ${esPrimero?'<div style="font-size:11px;color:var(--warn);font-weight:700;margin-bottom:4px">⚡ DESCARGAR PRIMERO</div>':''}
       <div class="pedido-num">${p.name}</div>
       <div class="pedido-cliente">${p.partnerNombre}</div>
       <div class="pedido-dir">${p.punto?.direccion_texto||'Sin dirección'}</div>
       <div class="pedido-meta">
-        <span class="badge ${p.estado==='entregada'?'badge-ok':p.estado==='fallida'?'badge-warn':'badge-gray'}">
-          ${p.estado==='entregada'?'✓ Entregado':p.estado==='fallida'?'✗ Fallido':'Pendiente'}
-        </span>
+        <span class="badge ${p.estado==='entregada'?'badge-ok':'badge-gray'}">${p.estado==='entregada'?'✓ Entregado':'Pendiente'}</span>
         ${alertas.length?`<span class="badge badge-warn">⚠️ ${alertas.length} alertas</span>`:''}
-        ${p.punto?.geocodificado?'<span class="badge badge-blue">📍 GPS</span>':''}
+        ${p.punto?.geocodificado?'<span class="badge badge-blue">📍 GPS</span>':'<span class="badge badge-red">Sin GPS</span>'}
       </div>
     </div>`;
   }).join('');
 }
 
 function getAlertas(punto){
-  if(!punto) return [];
-  const alertas=[];
-  const notas=punto.notas_logisticas||'';
-  if(notas.includes('NO_FIRMA'))    alertas.push('No firma en el móvil');
-  if(notas.includes('FACTURA'))     alertas.push('Llevar factura');
-  if(notas.includes('COCINA'))      alertas.push('Descarga por cocina');
-  if(notas.includes('REPASAR_NOTA'))alertas.push('Repasar nota con el cliente');
-  if(punto.hora_max_llegada)        alertas.push(`⏰ Llegar antes de ${punto.hora_max_llegada.slice(0,5)}`);
-  if(punto.hora_no_recibe_desde)    alertas.push(`🚫 No recibe desde ${punto.hora_no_recibe_desde.slice(0,5)}`);
-  return alertas;
+  if(!punto) return[];
+  const a=[];
+  const n=punto.notas_logisticas||'';
+  if(n.includes('NO_FIRMA'))    a.push('No firma en el móvil');
+  if(n.includes('FACTURA'))     a.push('Llevar factura');
+  if(n.includes('COCINA'))      a.push('Descarga por cocina');
+  if(n.includes('REPASAR'))     a.push('Repasar nota');
+  if(punto.hora_max_llegada)    a.push(`Límite ${punto.hora_max_llegada.slice(0,5)}`);
+  if(punto.estricto_horario)    a.push('Estricto con horarios');
+  if(punto.descargar_primero)   a.push('Descargar primero');
+  return a;
 }
 
-// ── ABRIR ODOO PARA FIRMA Y VALIDACIÓN ───────────────────
-function abrirOdooAlbaran(){
-  const p=E.pedidos[E.pedidoActual];
-  if(!p) return;
-  const url=`${ODOO_URL}/web#id=${p.id}&model=stock.picking&view_type=form`;
-  window.open(url,'_blank');
-  // Mostrar indicador de que hay que volver tras firmar
-  document.getElementById('odoo-firmado').style.display='block';
-}
-
-function abrirParada(i){
+// ═══════════════════════════════════════════
+// PARADA ACTIVA
+// ═══════════════════════════════════════════
+async function abrirParada(i){
   E.pedidoActual=i;
-  E.fotos=[];
-  E.fotoUrls=[];
-  E.firmaUrl=null;
+  E.fotos=[]; E.fotoUrls=[];
   const p=E.pedidos[i];
   document.getElementById('parada-progreso').textContent=`${i+1}/${E.pedidos.length}`;
   document.getElementById('parada-num').textContent=p.name;
   document.getElementById('parada-cliente').textContent=p.partnerNombre;
-  document.getElementById('parada-dir').textContent=p.punto?.direccion_texto||'Sin dirección registrada';
+  document.getElementById('parada-dir').textContent=p.punto?.direccion_texto||'Sin dirección';
   document.getElementById('parada-comentario').value='';
   document.getElementById('foto-preview').innerHTML='';
   document.getElementById('btn-whatsapp-wrap').style.display='none';
+  document.getElementById('btn-whatsapp-wrap').innerHTML='';
   document.getElementById('odoo-firmado').style.display='none';
 
+  // Alertas
   const alertas=getAlertas(p.punto);
-  document.getElementById('parada-alertas').innerHTML=alertas.map(a=>
-    `<div class="alerta-item">⚠️ ${a}</div>`).join('');
+  document.getElementById('parada-alertas').innerHTML=alertas.map(a=>`<div class="alerta-item">⚠️ ${a}</div>`).join('');
   if(p.punto?.notas_logisticas){
-    const notas=p.punto.notas_logisticas
-      .replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'')
-      .replace(/COCINA\|?/g,'').replace(/REPASAR_NOTA\|?/g,'').trim();
-    if(notas) document.getElementById('parada-alertas').innerHTML+=
-      `<div class="alerta-item" style="color:var(--text2);border-color:var(--border)">📝 ${notas}</div>`;
+    const notas=p.punto.notas_logisticas.replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'').replace(/COCINA\|?/g,'').replace(/REPASAR\|?/g,'').trim();
+    if(notas) document.getElementById('parada-alertas').innerHTML+=`<div class="alerta-item" style="color:var(--text2);border-color:var(--border)">📝 ${notas}</div>`;
   }
+
+  // Cerrar ficha y cargar datos
+  cerrarFicha();
+  await cargarFichaIntegrada(p);
+
   irA('parada');
 }
 
-function navegarCliente(){
-  const p=E.pedidos[E.pedidoActual];
-  if(p.punto?.latitud&&p.punto?.longitud){
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${p.punto.latitud},${p.punto.longitud}`,'_blank');
-  } else if(p.punto?.direccion_texto){
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.punto.direccion_texto)}`,'_blank');
+// ═══════════════════════════════════════════
+// FICHA DESPLEGABLE
+// ═══════════════════════════════════════════
+function toggleFicha(){
+  const toggle=document.getElementById('ficha-toggle');
+  const body=document.getElementById('ficha-body');
+  toggle.classList.toggle('open');
+  body.classList.toggle('open');
+}
+function cerrarFicha(){
+  document.getElementById('ficha-toggle').classList.remove('open');
+  document.getElementById('ficha-body').classList.remove('open');
+}
+
+async function cargarFichaIntegrada(p){
+  const punto=p.punto;
+  E.coordsGPS=null;
+
+  // GPS
+  const gpsCard=document.getElementById('ficha-gps-card');
+  if(punto?.latitud&&punto?.longitud){
+    E.coordsGPS={lat:punto.latitud,lng:punto.longitud};
+    gpsCard.className='gps-card ok';
+    gpsCard.innerHTML=`<div class="gps-coords">${parseFloat(punto.latitud).toFixed(6)}, ${parseFloat(punto.longitud).toFixed(6)}</div><div class="gps-label">✓ Ubicación guardada</div>`;
+    document.getElementById('ficha-badge-mini').textContent='📍 Con GPS';
   } else {
-    toast('Sin dirección disponible','err');
-  }
-}
-
-async function procesarFoto(input){
-  const file=input.files[0]; if(!file) return;
-  const reader=new FileReader();
-  reader.onload=e=>{ E.fotos.push({dataUrl:e.target.result,file}); renderFotos(); };
-  reader.readAsDataURL(file);
-  input.value='';
-}
-
-function renderFotos(){
-  document.getElementById('foto-preview').innerHTML=E.fotos.map((f,i)=>
-    `<img class="foto-thumb" src="${f.dataUrl}"/>`).join('');
-}
-
-async function marcarEntregado(){
-  const p=E.pedidos[E.pedidoActual];
-  p.comentario=document.getElementById('parada-comentario').value;
-  E.fotoUrls=[];
-
-  const btn=document.querySelector('.btn-success');
-  btn.disabled=true; btn.textContent='💾 Guardando...';
-
-  try{
-    // Subir fotos a Supabase Storage
-    for(const foto of E.fotos){
-      const nombreBase=p.name.replace(/[\/\\:*?"<>|]/g,'_');
-      const nombre=`${EMPRESA}/${nombreBase}_foto_${Date.now()}.jpg`;
-      const contentType=foto.file.type||'image/jpeg';
-      const r=await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombre}`,{
-        method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':contentType,'x-upsert':'true'},
-        body:foto.file,
-      });
-      if(r.ok) E.fotoUrls.push(`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`);
-    }
-
-    p.estado='entregada';
-    p.fotoUrls=E.fotoUrls;
-
-    toast('✓ Entrega registrada','ok');
-    renderPedidos();
-    await cargarContactosWhatsApp(p);
-
-  }catch(e){
-    toast('Error: '+e.message,'err');
+    gpsCard.className='gps-card';
+    gpsCard.innerHTML='<div style="font-size:12px;color:var(--text3)">Sin ubicación registrada</div>';
+    document.getElementById('ficha-badge-mini').textContent='⚠️ Sin GPS';
   }
 
-  btn.disabled=false; btn.textContent='✅ Entregado';
-}
+  // Horarios
+  document.getElementById('fc-apertura').value=punto?.hora_apertura?.slice(0,5)||'';
+  document.getElementById('fc-cierre').value=punto?.hora_cierre?.slice(0,5)||'';
+  document.getElementById('fc-hora-max').value=punto?.hora_max_llegada?.slice(0,5)||'';
 
-async function cargarContactosWhatsApp(p){
-  if(!p.punto) return;
-  try{
-    const contactos=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${p.punto.id}&order=es_principal.desc,nombre`);
-    E.contactosRecepcion=contactos||[];
-    if(E.contactosRecepcion.length>0){
-      document.getElementById('btn-whatsapp-wrap').style.display='block';
-      renderContactosWhatsApp();
-    }
-  }catch(_){}
-}
-
-function renderContactosWhatsApp(){
-  const wrap=document.getElementById('btn-whatsapp-wrap');
-  const contactos=E.contactosRecepcion||[];
-  if(!contactos.length){ wrap.style.display='none'; return; }
-
-  wrap.innerHTML=`
-    <div class="section-label" style="margin-top:0">📱 Enviar por WhatsApp</div>
-    ${contactos.map((c,i)=>`
-      <button class="btn" style="background:#25D366;color:#fff;margin-bottom:8px" onclick="enviarWhatsApp(${i})">
-        📱 ${c.nombre} ${c.es_principal?'⭐':''}
-      </button>
-    `).join('')}
-  `;
-}
-
-function enviarWhatsApp(idx){
-  const p=E.pedidos[E.pedidoActual];
-  const contacto=E.contactosRecepcion[idx];
-  const tel=(contacto.telefono||'').replace(/\D/g,'');
-  if(!tel){ toast('Sin teléfono','err'); return; }
-
-  const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${p.id}`;
-  let msg=`Hola ${contacto.nombre}, le confirmamos la entrega de hoy.\n\n`;
-  msg+=`📦 Albarán: ${p.name}\n`;
-  msg+=`🏢 Cliente: ${p.partnerNombre}\n`;
-  msg+=`✅ Entregado y firmado\n\n`;
-  msg+=`📄 Albarán firmado (PDF): ${albaranUrl}\n`;
-  if(E.fotoUrls?.length) msg+=`📷 Foto entrega: ${E.fotoUrls[0]}\n`;
-  msg+=`\nUn saludo,\nDistribuciones Joaquín Infante`;
-
-  window.open(`https://wa.me/${tel}?text=${encodeURIComponent(msg)}`,'_blank');
-}
-
-// ═══════════════════════════════════════════
-// CLIENTES
-// ═══════════════════════════════════════════
-async function irAClientes(filtro='todos'){
-  irA('clientes');
-  document.getElementById('clientes-lista').innerHTML='<div class="spinner"></div>';
-  E.filtroActivo=filtro;
-  try{
-    const [clientes,puntos]=await Promise.all([
-      supaFetch(`rutas_clientes?empresa=eq.${EMPRESA}&activo=eq.true&order=nombre&limit=5000`),
-      supaFetch(`rutas_puntos_entrega?empresa=eq.${EMPRESA}&select=*&limit=5000`),
-    ]);
-    E.clientes=(clientes||[]).map(c=>({
-      ...c,
-      puntos:(puntos||[]).filter(p=>p.cliente_id===c.id),
-      geocodificado:(puntos||[]).filter(p=>p.cliente_id===c.id).some(p=>p.geocodificado),
-    }));
-    actualizarStats();
-    renderClientes();
-  }catch(e){
-    document.getElementById('clientes-lista').innerHTML=
-      `<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error</div><div class="empty-sub">${e.message}</div></div>`;
-  }
-}
-
-function actualizarStats(){
-  const t=E.clientes.length, ok=E.clientes.filter(c=>c.geocodificado).length;
-  document.getElementById('stat-total').textContent=t;
-  document.getElementById('stat-ok').textContent=ok;
-  document.getElementById('stat-pend').textContent=t-ok;
-}
-
-function setFiltro(f,btn){ E.filtroActivo=f; document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderClientes(); }
-function filtrarClientes(){ renderClientes(); }
-
-function renderClientes(){
-  const busq=document.getElementById('search-input').value.toLowerCase();
-  let lista=E.clientes;
-  if(E.filtroActivo==='pendientes') lista=lista.filter(c=>!c.geocodificado);
-  if(E.filtroActivo==='completados') lista=lista.filter(c=>c.geocodificado);
-  if(busq) lista=lista.filter(c=>c.nombre.toLowerCase().includes(busq));
-  document.getElementById('clientes-count').textContent=lista.length+' clientes';
-  if(!lista.length){
-    document.getElementById('clientes-lista').innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-title">Sin resultados</div></div>';
-    return;
-  }
-  document.getElementById('clientes-lista').innerHTML=lista.map(c=>`
-    <div class="cliente-item" onclick="abrirFicha('${c.id}')">
-      <div class="cliente-estado ${c.geocodificado?'ok':'pendiente'}"></div>
-      <div style="flex:1">
-        <div class="cliente-nombre">${c.nombre}</div>
-        <div class="cliente-dir">${c.puntos.length} dir. · ${c.geocodificado?'<span style="color:var(--success)">✓ Con ubicación</span>':'<span style="color:var(--warn)">Sin ubicación</span>'}</div>
-      </div>
-      <div style="color:var(--text3)">›</div>
-    </div>`).join('');
-}
-
-// ═══════════════════════════════════════════
-// FICHA CLIENTE
-// ═══════════════════════════════════════════
-async function abrirFicha(id){
-  irA('ficha');
-  const c=E.clientes.find(x=>x.id===id); if(!c) return;
-  E.clienteActual=c;
-  document.getElementById('ficha-nombre').textContent=c.nombre;
-  document.getElementById('ficha-badge').innerHTML=c.geocodificado?'<span class="badge badge-ok">✓ Completado</span>':'<span class="badge badge-warn">Pendiente</span>';
-  const p=c.puntos[0]||null;
-  document.getElementById('ficha-dir').textContent=p?.direccion_texto||'Sin dirección';
-  E.contactos=[];
-  renderContactos();
-  if(p){ cargarPunto(p); cargarContactos(p.id); } else resetFicha();
-}
-
-function cargarPunto(p){
-  if(p.latitud&&p.longitud){ mostrarCoords(p.latitud,p.longitud); E.coordsActuales={lat:p.latitud,lng:p.longitud}; } else resetGPS();
-  const n=p.notas_logisticas||'';
-  setCheck('no-firma',n.includes('NO_FIRMA'));
-  setCheck('quiere-factura',n.includes('FACTURA'));
-  setCheck('cocina',n.includes('COCINA'));
-  setCheck('repasar-nota',n.includes('REPASAR_NOTA'));
-  if(p.hora_max_llegada){ setCheck('hora-max',true); document.getElementById('input-hora-max').value=p.hora_max_llegada.slice(0,5); } else setCheck('hora-max',false);
-  if(p.hora_no_recibe_desde){ setCheck('no-recibe-desde',true); document.getElementById('input-no-recibe-desde').value=p.hora_no_recibe_desde.slice(0,5); } else setCheck('no-recibe-desde',false);
-  const dias=p.dias_cerrado||[];
-  setCheck('dias-cerrado',dias.length>0);
+  // Días
+  const dias=punto?.dias_cerrado||[];
   document.querySelectorAll('.dia-btn').forEach(b=>b.classList.toggle('active',dias.includes(b.dataset.dia)));
-  document.getElementById('input-tiempo').value=p.tiempo_descarga_min||'';
-  const notas=n.replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'').replace(/COCINA\|?/g,'').replace(/REPASAR_NOTA\|?/g,'').trim();
-  document.getElementById('input-notas').value=notas;
+
+  // Toggles
+  const n=punto?.notas_logisticas||'';
+  document.getElementById('fc-primero').checked=punto?.descargar_primero||false;
+  document.getElementById('fc-estricto').checked=punto?.estricto_horario||false;
+  document.getElementById('fc-cocina').checked=n.includes('COCINA');
+  document.getElementById('fc-no-firma').checked=n.includes('NO_FIRMA');
+  document.getElementById('fc-factura').checked=n.includes('FACTURA');
+  document.getElementById('fc-repasar').checked=n.includes('REPASAR');
+
+  // Tiempo y notas
+  document.getElementById('fc-tiempo').value=punto?.tiempo_descarga_min||'';
+  const notas=n.replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'').replace(/COCINA\|?/g,'').replace(/REPASAR\|?/g,'').trim();
+  document.getElementById('fc-notas').value=notas;
+
+  // Contactos
+  await cargarContactosFicha(punto?.id);
 }
 
-// ── CONTACTOS DE RECEPCIÓN ────────────────────────────────
-async function cargarContactos(puntoId){
+async function cargarContactosFicha(puntoId){
+  const lista=document.getElementById('ficha-contactos');
+  if(!puntoId){ lista.innerHTML='<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Guarda la ficha primero</div>'; E.contactos=[]; return; }
   try{
-    const contactos=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${puntoId}&order=es_principal.desc,nombre`);
-    E.contactos=contactos||[];
-    renderContactos();
-  }catch(_){ E.contactos=[]; }
+    const c=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${puntoId}&order=es_principal.desc,nombre`);
+    E.contactos=c||[];
+    lista.innerHTML=E.contactos.length
+      ? E.contactos.map((c,i)=>`<div class="contacto-item"><div class="contacto-info"><div class="contacto-nombre">${c.nombre}${c.es_principal?' ⭐':''}</div><div class="contacto-tel">${c.telefono}</div></div><button class="contacto-del" onclick="eliminarContactoFicha(${i})">✕</button></div>`).join('')
+      : '<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Sin contactos</div>';
+  }catch(_){ lista.innerHTML=''; E.contactos=[]; }
 }
 
-function renderContactos(){
-  const lista=document.getElementById('contactos-lista');
-  if(!lista) return;
-  if(!E.contactos.length){
-    lista.innerHTML='<div style="font-size:13px;color:var(--text3);margin-bottom:8px">Sin contactos añadidos</div>';
-    return;
-  }
-  lista.innerHTML=E.contactos.map((c,i)=>`
-    <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:8px">
-      <div style="flex:1">
-        <div style="font-size:14px;font-weight:700">${c.nombre} ${c.es_principal?'⭐':''}</div>
-        <div style="font-size:12px;color:var(--text2)">${c.telefono}</div>
-      </div>
-      <button onclick="togglePrincipal(${i})" style="background:none;border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text2);cursor:pointer">${c.es_principal?'Principal':'Hacer principal'}</button>
-      <button onclick="eliminarContacto(${i})" style="background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer">✕</button>
-    </div>
-  `).join('');
-}
+function toggleDiaFicha(btn){ btn.classList.toggle('active'); }
 
-async function añadirContacto(){
-  const nombre=document.getElementById('input-contacto-nombre').value.trim();
-  const tel=document.getElementById('input-contacto-tel').value.trim();
+async function añadirContactoFicha(){
+  const nombre=document.getElementById('fc-nombre').value.trim();
+  const tel=document.getElementById('fc-tel').value.trim();
   if(!nombre||!tel){ toast('Rellena nombre y teléfono','err'); return; }
-  const c=E.clienteActual;
-  if(!c?.puntos?.length){ toast('Guarda la ficha primero','err'); return; }
+  const p=E.pedidos[E.pedidoActual];
+  if(!p.punto?.id){ toast('Guarda la ficha primero','err'); return; }
   try{
-    await supaFetch('rutas_contactos_recepcion','POST',{
-      punto_entrega_id:c.puntos[0].id,
-      nombre, telefono:tel,
-      es_principal:E.contactos.length===0,
-    });
-    document.getElementById('input-contacto-nombre').value='';
-    document.getElementById('input-contacto-tel').value='';
-    await cargarContactos(c.puntos[0].id);
+    await supaFetch('rutas_contactos_recepcion','POST',{punto_entrega_id:p.punto.id,nombre,telefono:tel,es_principal:E.contactos.length===0});
+    document.getElementById('fc-nombre').value='';
+    document.getElementById('fc-tel').value='';
+    await cargarContactosFicha(p.punto.id);
     toast('Contacto añadido ✓');
   }catch(e){ toast('Error: '+e.message,'err'); }
 }
 
-async function eliminarContacto(i){
+async function eliminarContactoFicha(i){
   const c=E.contactos[i];
+  const p=E.pedidos[E.pedidoActual];
   try{
     await supaFetch(`rutas_contactos_recepcion?id=eq.${c.id}`,'DELETE');
-    await cargarContactos(E.clienteActual.puntos[0].id);
-    toast('Contacto eliminado');
-  }catch(e){ toast('Error: '+e.message,'err'); }
+    await cargarContactosFicha(p.punto?.id);
+    toast('Eliminado');
+  }catch(e){ toast('Error','err'); }
 }
 
-async function togglePrincipal(i){
-  const puntoId=E.clienteActual.puntos[0].id;
-  try{
-    await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${puntoId}`,'PATCH',{es_principal:false});
-    await supaFetch(`rutas_contactos_recepcion?id=eq.${E.contactos[i].id}`,'PATCH',{es_principal:true});
-    await cargarContactos(puntoId);
-  }catch(e){ toast('Error: '+e.message,'err'); }
-}
-
-function resetFicha(){ resetGPS(); ['no-firma','quiere-factura','hora-max','no-recibe-desde','cocina','repasar-nota','dias-cerrado'].forEach(id=>setCheck(id,false)); document.querySelectorAll('.dia-btn').forEach(b=>b.classList.remove('active')); document.getElementById('input-tiempo').value=''; document.getElementById('input-notas').value=''; E.contactos=[]; renderContactos(); }
-function resetGPS(){ E.coordsActuales=null; const c=document.getElementById('gps-card'); c.classList.remove('has-coords'); c.innerHTML='<div class="gps-icon">🗺️</div><div class="gps-label">Sin ubicación registrada</div><div class="gps-coords"></div>'; }
-function mostrarCoords(lat,lng){ const c=document.getElementById('gps-card'); c.classList.add('has-coords'); c.innerHTML=`<div class="gps-icon">✅</div><div class="gps-coords">${lat.toFixed(6)}, ${lng.toFixed(6)}</div><div class="gps-label">Ubicación guardada · <a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" style="color:var(--accent)">Ver en mapa</a></div>`; }
-function setCheck(id,v){ document.getElementById('check-'+id).classList.toggle('checked',v); }
-function toggleCheck(id){ document.getElementById('check-'+id).classList.toggle('checked'); }
-function toggleDia(btn,e){ e.stopPropagation(); btn.classList.toggle('active'); }
-
-async function capturarGPS(){
-  const btn=document.getElementById('btn-gps');
-  btn.disabled=true; btn.textContent='📡 Obteniendo...';
-  if(!navigator.geolocation){ toast('GPS no disponible','err'); btn.disabled=false; btn.textContent='📍 Guardar ubicación actual'; return; }
+async function capturarGPSFicha(){
+  if(!navigator.geolocation){ toast('GPS no disponible','err'); return; }
+  toast('Obteniendo ubicación...');
   navigator.geolocation.getCurrentPosition(
-    pos=>{ const lat=pos.coords.latitude,lng=pos.coords.longitude; E.coordsActuales={lat,lng}; mostrarCoords(lat,lng); btn.disabled=false; btn.textContent='📍 Actualizar ubicación'; toast('Ubicación capturada ✓'); },
-    ()=>{ toast('No se pudo obtener la ubicación','err'); btn.disabled=false; btn.textContent='📍 Guardar ubicación actual'; },
+    pos=>{
+      E.coordsGPS={lat:pos.coords.latitude,lng:pos.coords.longitude};
+      const card=document.getElementById('ficha-gps-card');
+      card.className='gps-card ok';
+      card.innerHTML=`<div class="gps-coords">${E.coordsGPS.lat.toFixed(6)}, ${E.coordsGPS.lng.toFixed(6)}</div><div class="gps-label">✓ Capturado ahora</div>`;
+      document.getElementById('ficha-badge-mini').textContent='📍 Con GPS';
+      toast('Ubicación capturada ✓');
+    },
+    ()=>toast('No se pudo obtener GPS','err'),
     {enableHighAccuracy:true,timeout:10000}
   );
 }
 
-async function guardarFicha(){
-  const btn=document.getElementById('btn-guardar');
-  btn.disabled=true; btn.textContent='Guardando...';
-  const c=E.clienteActual; if(!c){ btn.disabled=false; return; }
+async function guardarFichaIntegrada(){
+  const p=E.pedidos[E.pedidoActual];
+  if(!p){ return; }
+
   const flags=[];
-  if(document.getElementById('check-no-firma').classList.contains('checked')) flags.push('NO_FIRMA');
-  if(document.getElementById('check-quiere-factura').classList.contains('checked')) flags.push('FACTURA');
-  if(document.getElementById('check-cocina').classList.contains('checked')) flags.push('COCINA');
-  if(document.getElementById('check-repasar-nota').classList.contains('checked')) flags.push('REPASAR_NOTA');
-  const notasLibres=document.getElementById('input-notas').value.trim();
+  if(document.getElementById('fc-cocina').checked)   flags.push('COCINA');
+  if(document.getElementById('fc-no-firma').checked)  flags.push('NO_FIRMA');
+  if(document.getElementById('fc-factura').checked)   flags.push('FACTURA');
+  if(document.getElementById('fc-repasar').checked)   flags.push('REPASAR');
+  const notasLibres=document.getElementById('fc-notas').value.trim();
   const notas=[...flags,notasLibres].filter(Boolean).join('|');
   const dias=[...document.querySelectorAll('.dia-btn.active')].map(b=>b.dataset.dia);
-  const horaMax=document.getElementById('check-hora-max').classList.contains('checked')?document.getElementById('input-hora-max').value||null:null;
-  const horaNoRecibe=document.getElementById('check-no-recibe-desde').classList.contains('checked')?document.getElementById('input-no-recibe-desde').value||null:null;
-  const tiempo=parseInt(document.getElementById('input-tiempo').value)||15;
+
+  const datos={
+    notas_logisticas:notas||null,
+    hora_apertura:document.getElementById('fc-apertura').value||null,
+    hora_cierre:document.getElementById('fc-cierre').value||null,
+    hora_max_llegada:document.getElementById('fc-hora-max').value||null,
+    dias_cerrado:dias,
+    tiempo_descarga_min:parseInt(document.getElementById('fc-tiempo').value)||15,
+    descargar_primero:document.getElementById('fc-primero').checked,
+    estricto_horario:document.getElementById('fc-estricto').checked,
+    geocodificado:!!E.coordsGPS,
+  };
+  if(E.coordsGPS){ datos.latitud=E.coordsGPS.lat; datos.longitud=E.coordsGPS.lng; }
+
   try{
-    if(c.puntos.length>0){
-      const update={notas_logisticas:notas||null,hora_max_llegada:horaMax,hora_no_recibe_desde:horaNoRecibe,dias_cerrado:dias,tiempo_descarga_min:tiempo,geocodificado:!!E.coordsActuales};
-      if(E.coordsActuales){ update.latitud=E.coordsActuales.lat; update.longitud=E.coordsActuales.lng; }
-      await supaFetch(`rutas_puntos_entrega?id=eq.${c.puntos[0].id}`,'PATCH',update);
+    if(p.punto?.id){
+      await supaFetch(`rutas_puntos_entrega?id=eq.${p.punto.id}`,'PATCH',datos);
+      // Actualizar punto en memoria
+      Object.assign(p.punto, datos);
     } else {
-      await supaFetch('rutas_puntos_entrega','POST',{cliente_id:c.id,odoo_delivery_id:c.odoo_partner_id,empresa:EMPRESA,nombre_punto:'Principal',direccion_texto:'',latitud:E.coordsActuales?.lat||null,longitud:E.coordsActuales?.lng||null,geocodificado:!!E.coordsActuales,notas_logisticas:notas||null,hora_max_llegada:horaMax,hora_no_recibe_desde:horaNoRecibe,dias_cerrado:dias,tiempo_descarga_min:tiempo});
+      // Crear punto nuevo
+      const nuevo=await supaFetch('rutas_puntos_entrega?select=id','POST',{
+        ...datos,
+        odoo_delivery_id:p.partnerId,
+        cliente_id:null, // se actualizará por el cliente
+        empresa:EMPRESA,
+        nombre_punto:'Principal',
+        direccion_texto:'',
+      });
+      if(nuevo?.[0]) p.punto={id:nuevo[0].id,...datos};
     }
     toast('Ficha guardada ✓');
-    const idx=E.clientes.findIndex(x=>x.id===c.id);
-    if(idx>=0) E.clientes[idx].geocodificado=!!E.coordsActuales;
-    actualizarStats();
-    document.getElementById('ficha-badge').innerHTML=E.coordsActuales?'<span class="badge badge-ok">✓ Completado</span>':'<span class="badge badge-warn">Pendiente</span>';
+    document.getElementById('ficha-badge-mini').textContent=E.coordsGPS?'📍 Con GPS':'⚠️ Sin GPS';
+    renderPedidos();
   }catch(e){ toast('Error: '+e.message,'err'); }
-  btn.disabled=false; btn.textContent='💾 Guardar ficha';
+}
+
+// ═══════════════════════════════════════════
+// NAVEGACIÓN
+// ═══════════════════════════════════════════
+function navegarCliente(){
+  const p=E.pedidos[E.pedidoActual];
+  if(p.punto?.latitud&&p.punto?.longitud)
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${p.punto.latitud},${p.punto.longitud}`,'_blank');
+  else if(p.punto?.direccion_texto)
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.punto.direccion_texto)}`,'_blank');
+  else toast('Sin dirección disponible','err');
+}
+
+function abrirOdooAlbaran(){
+  const p=E.pedidos[E.pedidoActual];
+  if(!p) return;
+  window.open(`${ODOO_URL}/web#id=${p.id}&model=stock.picking&view_type=form`,'_blank');
+  document.getElementById('odoo-firmado').style.display='block';
+}
+
+// ═══════════════════════════════════════════
+// FOTO
+// ═══════════════════════════════════════════
+function procesarFoto(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{E.fotos.push({dataUrl:e.target.result,file}); renderFotos();};
+  reader.readAsDataURL(file);
+  input.value='';
+}
+function renderFotos(){
+  document.getElementById('foto-preview').innerHTML=E.fotos.map(f=>`<img class="foto-thumb" src="${f.dataUrl}"/>`).join('');
+}
+
+// ═══════════════════════════════════════════
+// ENTREGA
+// ═══════════════════════════════════════════
+async function marcarEntregado(){
+  const p=E.pedidos[E.pedidoActual];
+  p.comentario=document.getElementById('parada-comentario').value;
+  E.fotoUrls=[];
+  const btn=document.querySelector('.btn-success');
+  btn.disabled=true; btn.textContent='💾 Guardando...';
+  try{
+    for(const foto of E.fotos){
+      const nombre=`${EMPRESA}/${p.name.replace(/[\/\\:*?"<>|]/g,'_')}_foto_${Date.now()}.jpg`;
+      const r=await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombre}`,{
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':foto.file.type||'image/jpeg','x-upsert':'true'},
+        body:foto.file,
+      });
+      if(r.ok) E.fotoUrls.push(`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`);
+    }
+    p.estado='entregada'; p.fotoUrls=E.fotoUrls;
+    toast('✓ Entrega registrada');
+    renderPedidos();
+    mostrarBotonesWhatsApp(p);
+  }catch(e){ toast('Error: '+e.message,'err'); }
+  btn.disabled=false; btn.textContent='✅ Entregado';
+}
+
+async function marcarFallido(){
+  const p=E.pedidos[E.pedidoActual];
+  p.estado='fallida';
+  p.comentario=document.getElementById('parada-comentario').value;
+  toast('✗ Marcado como no entregado','err');
+  renderPedidos();
+  irA('pedidos');
+}
+
+// ═══════════════════════════════════════════
+// WHATSAPP
+// ═══════════════════════════════════════════
+async function mostrarBotonesWhatsApp(p){
+  const wrap=document.getElementById('btn-whatsapp-wrap');
+  wrap.innerHTML='';
+  if(!p.punto?.id){ wrap.style.display='none'; return; }
+  try{
+    const contactos=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${p.punto.id}&order=es_principal.desc,nombre`);
+    if(!contactos?.length){ wrap.style.display='none'; return; }
+    wrap.style.display='block';
+    wrap.innerHTML='<div class="section-label" style="margin-top:0">📱 Enviar por WhatsApp</div>'+
+      contactos.map((c,i)=>`<button class="whatsapp-btn" onclick="enviarWhatsApp('${c.telefono}','${c.nombre}')">📱 ${c.nombre}${c.es_principal?' ⭐':''}</button>`).join('');
+  }catch(_){ wrap.style.display='none'; }
+}
+
+function enviarWhatsApp(tel,nombre){
+  const p=E.pedidos[E.pedidoActual];
+  const telLimpio=tel.replace(/\D/g,'');
+  if(!telLimpio){ toast('Sin teléfono','err'); return; }
+  const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${p.id}`;
+  let msg=`Hola ${nombre}, le confirmamos la entrega de hoy.\n\n`;
+  msg+=`📦 Albarán: ${p.name}\n`;
+  msg+=`🏢 Cliente: ${p.partnerNombre}\n`;
+  msg+=`✅ Entregado y firmado\n\n`;
+  msg+=`📄 Albarán PDF: ${albaranUrl}\n`;
+  if(E.fotoUrls?.length) msg+=`📷 Foto entrega: ${E.fotoUrls[0]}\n`;
+  msg+=`\nUn saludo,\nDistribuciones Joaquín Infante`;
+  window.open(`https://wa.me/${telLimpio}?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
 // ═══════════════════════════════════════════
