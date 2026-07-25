@@ -114,6 +114,8 @@ exports.handler = async (event) => {
       });
 
       result = { rutas, orders: orders.length, pickings };
+
+    } else if (action === 'entregar_picking') {
       // Firma + validación en un solo paso
       const { pickingId, firmaBase64 } = params;
 
