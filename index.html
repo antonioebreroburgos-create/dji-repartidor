@@ -698,19 +698,28 @@ async function guardarFichaIntegrada(){
   try{
     if(p.punto?.id){
       await supaFetch(`rutas_puntos_entrega?id=eq.${p.punto.id}`,'PATCH',datos);
-      // Actualizar punto en memoria
       Object.assign(p.punto, datos);
     } else {
-      // Crear punto nuevo
-      const nuevo=await supaFetch('rutas_puntos_entrega?select=id','POST',{
+      // Buscar el cliente en Supabase por odoo_partner_id
+      let clienteId=null;
+      try{
+        const clientes=await supaFetch(`rutas_clientes?odoo_partner_id=eq.${p.partnerId}&empresa=eq.${EMPRESA}&select=id`);
+        clienteId=clientes?.[0]?.id||null;
+      }catch(_){}
+
+      const nuevo=await supaFetch('rutas_puntos_entrega','POST',{
         ...datos,
         odoo_delivery_id:p.partnerId,
-        cliente_id:null, // se actualizará por el cliente
+        cliente_id:clienteId,
         empresa:EMPRESA,
         nombre_punto:'Principal',
-        direccion_texto:'',
+        direccion_texto:p.punto?.direccion_texto||'',
       });
-      if(nuevo?.[0]) p.punto={id:nuevo[0].id,...datos};
+      // Recargar el punto desde Supabase
+      try{
+        const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${p.partnerId}&select=*`);
+        p.punto=pts?.[0]||{...datos,odoo_delivery_id:p.partnerId};
+      }catch(_){}
     }
     toast('Ficha guardada ✓');
     document.getElementById('ficha-badge-mini').textContent=E.coordsGPS?'📍 Con GPS':'⚠️ Sin GPS';
