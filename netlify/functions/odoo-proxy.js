@@ -120,20 +120,38 @@ exports.handler = async (event) => {
 
         // Si devuelve un wizard, lo procesamos
         if (validateRes && typeof validateRes === 'object' && validateRes.res_model) {
-          if (validateRes.res_model === 'stock.backorder.confirmation') {
-            const wizardId = await odooCallKw(cfg, cookie, 'stock.backorder.confirmation', 'create',
-              [{ pick_ids: [[4, pickingId]] }], {});
-            await odooCallKw(cfg, cookie, 'stock.backorder.confirmation', 'process',
-              [[wizardId]], {});
-          } else if (validateRes.res_model === 'stock.immediate.transfer') {
-            // Crear wizard con el contexto correcto de Odoo 15
-            const ctx = validateRes.context || {};
-            const wizardId = await odooCallKw(cfg, cookie, 'stock.immediate.transfer', 'create',
-              [{ pick_ids: [[4, pickingId]], show_transfers: false }],
-              { context: ctx }
+          const ctx = validateRes.context || {};
+
+          if (validateRes.res_model === 'stock.immediate.transfer') {
+            // Buscar el wizard recién creado por Odoo
+            const wizards = await odooCallKw(cfg, cookie, 'stock.immediate.transfer', 'search_read',
+              [[['pick_ids', 'in', [pickingId]]]],
+              { fields: ['id'], limit: 1, context: ctx }
             );
-            await odooCallKw(cfg, cookie, 'stock.immediate.transfer', 'process',
-              [[wizardId]], { context: ctx });
+            if (wizards && wizards.length > 0) {
+              await odooCallKw(cfg, cookie, 'stock.immediate.transfer', 'process',
+                [[wizards[0].id]], { context: ctx });
+            } else {
+              // Si no encontramos el wizard, crearlo y procesarlo
+              const wizardId = await odooCallKw(cfg, cookie, 'stock.immediate.transfer', 'create',
+                [{ pick_ids: [[4, pickingId]], show_transfers: false }], { context: ctx });
+              await odooCallKw(cfg, cookie, 'stock.immediate.transfer', 'process',
+                [[wizardId]], { context: ctx });
+            }
+          } else if (validateRes.res_model === 'stock.backorder.confirmation') {
+            const wizards = await odooCallKw(cfg, cookie, 'stock.backorder.confirmation', 'search_read',
+              [[['pick_ids', 'in', [pickingId]]]],
+              { fields: ['id'], limit: 1 }
+            );
+            if (wizards && wizards.length > 0) {
+              await odooCallKw(cfg, cookie, 'stock.backorder.confirmation', 'process',
+                [[wizards[0].id]], {});
+            } else {
+              const wizardId = await odooCallKw(cfg, cookie, 'stock.backorder.confirmation', 'create',
+                [{ pick_ids: [[4, pickingId]] }], {});
+              await odooCallKw(cfg, cookie, 'stock.backorder.confirmation', 'process',
+                [[wizardId]], {});
+            }
           }
         }
         result = { ok: true, validated: true, raw: validateRes };
