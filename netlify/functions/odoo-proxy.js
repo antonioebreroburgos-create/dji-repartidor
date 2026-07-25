@@ -73,7 +73,7 @@ exports.handler = async (event) => {
     const { cookie, uid } = await odooLogin(cfg);
     let result;
 
-    if (action === 'get_pickings_hoy') {
+    if (action === 'get_pickings_hoy' || action === 'get_pickings_pendientes') {
       const { rutaNombre, fecha } = params;
       const rutas = await odooCallKw(cfg, cookie, 'stock.location.route', 'search_read',
         [[['name', 'ilike', rutaNombre]]], { fields: ['id', 'name'], limit: 5 });
@@ -85,12 +85,15 @@ exports.handler = async (event) => {
         { fields: ['id', 'name'], limit: 500 });
       const orderIds = orders.map(o => o.id);
 
+      // Sin filtro de fecha para get_pickings_pendientes
       const domain = [
         ['state', '=', 'assigned'],
         ['picking_type_code', '=', 'outgoing'],
-        ['scheduled_date', '>=', fecha + ' 00:00:00'],
-        ['scheduled_date', '<=', fecha + ' 23:59:59'],
       ];
+      if (action === 'get_pickings_hoy' && fecha) {
+        domain.push(['scheduled_date', '>=', fecha + ' 00:00:00']);
+        domain.push(['scheduled_date', '<=', fecha + ' 23:59:59']);
+      }
       if (orderIds.length > 0) domain.push(['sale_id', 'in', orderIds]);
       else domain.push(['id', '=', -1]);
 
