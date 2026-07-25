@@ -115,23 +115,24 @@ exports.handler = async (event) => {
 
       // 2. Validar el albarán (button_validate)
       try {
-        const res = await odooCallKw(cfg, cookie, 'stock.picking', 'button_validate',
+        const validateRes = await odooCallKw(cfg, cookie, 'stock.picking', 'button_validate',
           [[pickingId]], {});
-        // Si devuelve un wizard (backorder), lo confirmamos automáticamente
-        if (res && typeof res === 'object' && res.res_model) {
-          if (res.res_model === 'stock.backorder.confirmation') {
+
+        // Si devuelve un wizard, lo procesamos
+        if (validateRes && typeof validateRes === 'object' && validateRes.res_model) {
+          if (validateRes.res_model === 'stock.backorder.confirmation') {
             const wizardId = await odooCallKw(cfg, cookie, 'stock.backorder.confirmation', 'create',
               [{ pick_ids: [[4, pickingId]] }], {});
             await odooCallKw(cfg, cookie, 'stock.backorder.confirmation', 'process',
               [[wizardId]], {});
-          } else if (res.res_model === 'stock.immediate.transfer') {
+          } else if (validateRes.res_model === 'stock.immediate.transfer') {
             const wizardId = await odooCallKw(cfg, cookie, 'stock.immediate.transfer', 'create',
               [{ pick_ids: [[4, pickingId]] }], {});
             await odooCallKw(cfg, cookie, 'stock.immediate.transfer', 'process',
               [[wizardId]], {});
           }
         }
-        result = { ok: true, validated: true };
+        result = { ok: true, validated: true, raw: validateRes };
       } catch(e) {
         result = { ok: false, validated: false, error: e.message };
       }
