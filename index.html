@@ -721,22 +721,27 @@ async function marcarEntregado(){
       if(r.ok) E.fotoUrls.push(`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`);
     }
 
-    // 2. Obtener firma base64
+   // 2. Obtener firma base64
+    console.log('Obteniendo firma...');
     const firmaB64=getFirmaBase64();
-
-    // 3. Subir copia firma a Supabase
+    console.log('Firma:', firmaB64 ? 'SÍ' : 'NO');
     if(firmaB64){
-      const blob=await(await fetch('data:image/png;base64,'+firmaB64)).blob();
-      const nombreBase=p.name.replace(/[\/\\:*?"<>|]/g,'_');
-      const nombreFirma=`${EMPRESA}/${nombreBase}_firma_${Date.now()}.png`;
-      const rf=await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombreFirma}`,{
-        method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'image/png'},
-        body:blob,
-      });
-      if(rf.ok) E.firmaUrl=`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombreFirma}`;
+      try{
+        const blob=await(await fetch('data:image/png;base64,'+firmaB64)).blob();
+        const nombreBase=p.name.replace(/[\/\\:*?"<>|]/g,'_');
+        const nombreFirma=`${EMPRESA}/${nombreBase}_firma_${Date.now()}.png`;
+        const rf=await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombreFirma}`,{
+          method:'POST',
+          headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'image/png','x-upsert':'true'},
+          body:blob,
+        });
+        const txt=await rf.text();
+        console.log('Firma resultado:', rf.status, txt);
+        if(rf.ok) E.firmaUrl=`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombreFirma}`;
+      }catch(fe){ console.error('Error firma:', fe); }
     }
 
+    // 4. Firmar + validar albarán en Odoo
     // 4. Firmar + validar albarán en Odoo (un solo paso)
     btn.textContent='📤 Validando en Odoo...';
     try{
