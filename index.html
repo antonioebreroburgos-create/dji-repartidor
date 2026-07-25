@@ -167,6 +167,16 @@
     .empty-icon{font-size:48px;margin-bottom:12px}
     .empty-title{font-size:18px;font-weight:700;margin-bottom:6px}
     .empty-sub{font-size:14px;color:var(--text2)}
+
+    /* PESTAÑAS PEDIDOS */
+    .filtro-tab{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s}
+    .filtro-tab.active{background:rgba(0,201,167,.12);border-color:var(--accent);color:var(--accent)}
+
+    /* PEDIDO ENTREGADO */
+    .pedido-entregado-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px;cursor:pointer;transition:all .15s;opacity:.75}
+    .pedido-entregado-card:active{transform:scale(0.98)}
+    .albaran-link{display:flex;align-items:center;gap:6px;color:var(--accent);font-size:13px;font-weight:700;margin-top:8px;text-decoration:none}
+    .albaran-link:active{opacity:.7}
   </style>
 </head>
 <body>
@@ -221,6 +231,10 @@
       <div class="stat-box"><div class="stat-num" id="stat-pedidos">0</div><div class="stat-lbl">Total</div></div>
       <div class="stat-box"><div class="stat-num" id="stat-entregados" style="color:var(--success)">0</div><div class="stat-lbl">Entregados</div></div>
       <div class="stat-box"><div class="stat-num" id="stat-pendientes" style="color:var(--warn)">0</div><div class="stat-lbl">Pendientes</div></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="filtro-tab active" id="tab-pendientes" onclick="setTabPedidos('pendientes')">⏳ Pendientes</button>
+      <button class="filtro-tab" id="tab-entregados" onclick="setTabPedidos('entregados')">✅ Entregados</button>
     </div>
     <div id="pedidos-lista"></div>
   </div>
@@ -346,11 +360,11 @@
     </div>
 
     <!-- FOTO -->
-    <div class="section-label">📷 Foto de la entrega</div>
+    <div class="section-label">📷 Fotos de la entrega</div>
     <div class="foto-preview" id="foto-preview"></div>
     <input type="file" id="input-foto" accept="image/*" capture="environment" style="display:none" onchange="procesarFoto(this)"/>
     <button class="btn btn-secondary" onclick="document.getElementById('input-foto').click()" style="margin-bottom:12px;padding:12px">
-      📷 Hacer foto
+      📷 Añadir foto <span id="foto-count" style="font-size:12px;opacity:.7"></span>
     </button>
 
     <!-- FIRMA ODOO -->
@@ -491,6 +505,18 @@ async function cargarPedidosHoy(){
   }
 }
 
+// ═══════════════════════════════════════════
+// PESTAÑAS PEDIDOS
+// ═══════════════════════════════════════════
+let tabActiva='pendientes';
+
+function setTabPedidos(tab){
+  tabActiva=tab;
+  document.getElementById('tab-pendientes').classList.toggle('active',tab==='pendientes');
+  document.getElementById('tab-entregados').classList.toggle('active',tab==='entregados');
+  renderPedidos();
+}
+
 function renderPedidos(){
   const total=E.pedidos.length;
   const entregados=E.pedidos.filter(p=>p.estado==='entregada').length;
@@ -498,25 +524,54 @@ function renderPedidos(){
   document.getElementById('stat-entregados').textContent=entregados;
   document.getElementById('stat-pendientes').textContent=total-entregados;
   document.getElementById('pedidos-sub').textContent=`${entregados}/${total}`;
-  if(!total){
-    document.getElementById('pedidos-lista').innerHTML='<div class="empty-state"><div class="empty-icon">🎉</div><div class="empty-title">Sin pedidos pendientes</div><div class="empty-sub">No hay pickings asignados</div></div>';
+
+  const lista=tabActiva==='pendientes'
+    ? E.pedidos.filter(p=>p.estado!=='entregada')
+    : E.pedidos.filter(p=>p.estado==='entregada');
+
+  if(!lista.length){
+    document.getElementById('pedidos-lista').innerHTML=`<div class="empty-state">
+      <div class="empty-icon">${tabActiva==='pendientes'?'🎉':'📦'}</div>
+      <div class="empty-title">${tabActiva==='pendientes'?'Sin pendientes':'Sin entregados aún'}</div>
+    </div>`;
     return;
   }
-  document.getElementById('pedidos-lista').innerHTML=E.pedidos.map((p,i)=>{
-    const alertas=getAlertas(p.punto);
-    const esPrimero=p.punto?.descargar_primero;
-    return`<div class="pedido-card ${p.estado==='entregada'?'entregado':''}" onclick="abrirParada(${i})">
-      ${esPrimero?'<div style="font-size:11px;color:var(--warn);font-weight:700;margin-bottom:4px">⚡ DESCARGAR PRIMERO</div>':''}
-      <div class="pedido-num">${p.name}</div>
-      <div class="pedido-cliente">${p.partnerNombre}</div>
-      <div class="pedido-dir">${p.punto?.direccion_texto||'Sin dirección'}</div>
-      <div class="pedido-meta">
-        <span class="badge ${p.estado==='entregada'?'badge-ok':'badge-gray'}">${p.estado==='entregada'?'✓ Entregado':'Pendiente'}</span>
-        ${alertas.length?`<span class="badge badge-warn">⚠️ ${alertas.length} alertas</span>`:''}
-        ${p.punto?.geocodificado?'<span class="badge badge-blue">📍 GPS</span>':'<span class="badge badge-red">Sin GPS</span>'}
-      </div>
-    </div>`;
-  }).join('');
+
+  if(tabActiva==='pendientes'){
+    document.getElementById('pedidos-lista').innerHTML=lista.map((p,i)=>{
+      const idx=E.pedidos.indexOf(p);
+      const alertas=getAlertas(p.punto);
+      const esPrimero=p.punto?.descargar_primero;
+      return`<div class="pedido-card" onclick="abrirParada(${idx})">
+        ${esPrimero?'<div style="font-size:11px;color:var(--warn);font-weight:700;margin-bottom:4px">⚡ DESCARGAR PRIMERO</div>':''}
+        <div class="pedido-num">${p.name}</div>
+        <div class="pedido-cliente">${p.partnerNombre}</div>
+        <div class="pedido-dir">${p.punto?.direccion_texto||'Sin dirección'}</div>
+        <div class="pedido-meta">
+          <span class="badge badge-gray">Pendiente</span>
+          ${alertas.length?`<span class="badge badge-warn">⚠️ ${alertas.length} alertas</span>`:''}
+          ${p.punto?.geocodificado?'<span class="badge badge-blue">📍 GPS</span>':'<span class="badge badge-red">Sin GPS</span>'}
+        </div>
+      </div>`;
+    }).join('');
+  } else {
+    document.getElementById('pedidos-lista').innerHTML=lista.map((p,i)=>{
+      const idx=E.pedidos.indexOf(p);
+      const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${p.id}`;
+      return`<div class="pedido-entregado-card" onclick="abrirParada(${idx})">
+        <div class="pedido-num">${p.name}</div>
+        <div class="pedido-cliente">${p.partnerNombre}</div>
+        <div class="pedido-dir">${p.punto?.direccion_texto||'Sin dirección'}</div>
+        <div class="pedido-meta" style="margin-bottom:8px">
+          <span class="badge badge-ok">✓ Entregado</span>
+          ${p.fotoUrls?.length?`<span class="badge badge-blue">📷 ${p.fotoUrls.length} foto${p.fotoUrls.length>1?'s':''}</span>`:''}
+        </div>
+        <a class="albaran-link" href="${albaranUrl}" target="_blank" onclick="event.stopPropagation()">
+          📄 Ver albarán PDF
+        </a>
+      </div>`;
+    }).join('');
+  }
 }
 
 function getAlertas(punto){
@@ -783,12 +838,28 @@ function abrirOdooAlbaran(){
 function procesarFoto(input){
   const file=input.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=e=>{E.fotos.push({dataUrl:e.target.result,file}); renderFotos();};
+  reader.onload=e=>{
+    E.fotos.push({dataUrl:e.target.result,file});
+    renderFotos();
+  };
   reader.readAsDataURL(file);
-  input.value='';
+  input.value=''; // reset para permitir misma foto
 }
+
 function renderFotos(){
-  document.getElementById('foto-preview').innerHTML=E.fotos.map(f=>`<img class="foto-thumb" src="${f.dataUrl}"/>`).join('');
+  const count=E.fotos.length;
+  document.getElementById('foto-count').textContent=count>0?`(${count})`:'' ;
+  document.getElementById('foto-preview').innerHTML=E.fotos.map((f,i)=>`
+    <div style="position:relative;display:inline-block">
+      <img class="foto-thumb" src="${f.dataUrl}"/>
+      <button onclick="eliminarFoto(${i})" style="position:absolute;top:-6px;right:-6px;background:var(--danger);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:900">✕</button>
+    </div>
+  `).join('');
+}
+
+function eliminarFoto(i){
+  E.fotos.splice(i,1);
+  renderFotos();
 }
 
 // ═══════════════════════════════════════════
