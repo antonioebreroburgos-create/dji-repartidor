@@ -904,14 +904,31 @@ async function marcarFallido(){
 async function mostrarBotonesWhatsApp(p){
   const wrap=document.getElementById('btn-whatsapp-wrap');
   wrap.innerHTML='';
-  if(!p.punto?.id){ wrap.style.display='none'; return; }
-  try{
-    const contactos=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${p.punto.id}&order=es_principal.desc,nombre`);
-    if(!contactos?.length){ wrap.style.display='none'; return; }
+
+  // Cargar contactos del punto de entrega actual
+  let contactos=[];
+  if(p.punto?.id){
+    try{
+      const c=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${p.punto.id}&order=es_principal.desc,nombre`);
+      contactos=c||[];
+    }catch(_){}
+  }
+
+  if(!contactos.length){
     wrap.style.display='block';
-    wrap.innerHTML='<div class="section-label" style="margin-top:0">📱 Enviar por WhatsApp</div>'+
-      contactos.map((c,i)=>`<button class="whatsapp-btn" onclick="enviarWhatsApp('${c.telefono}','${c.nombre}')">📱 ${c.nombre}${c.es_principal?' ⭐':''}</button>`).join('');
-  }catch(_){ wrap.style.display='none'; }
+    wrap.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center;font-size:13px;color:var(--text2)">
+      Sin contactos de recepción — añádelos en la ficha del cliente
+    </div>`;
+    return;
+  }
+
+  wrap.style.display='block';
+  wrap.innerHTML='<div class="section-label" style="margin-top:0">📱 Enviar albarán por WhatsApp</div>'+
+    contactos.map(c=>`
+      <button class="whatsapp-btn" onclick="enviarWhatsApp('${c.telefono}','${c.nombre}')">
+        📱 ${c.nombre}${c.es_principal?' ⭐':''} <span style="font-size:12px;opacity:.8">${c.telefono}</span>
+      </button>
+    `).join('');
 }
 
 function enviarWhatsApp(tel,nombre){
@@ -924,7 +941,11 @@ function enviarWhatsApp(tel,nombre){
   msg+=`🏢 Cliente: ${p.partnerNombre}\n`;
   msg+=`✅ Entregado y firmado\n\n`;
   msg+=`📄 Albarán PDF: ${albaranUrl}\n`;
-  if(E.fotoUrls?.length) msg+=`📷 Foto entrega: ${E.fotoUrls[0]}\n`;
+  if(E.fotoUrls?.length){
+    E.fotoUrls.forEach((url,i)=>{
+      msg+=`📷 Foto ${E.fotoUrls.length>1?i+1+' ':''}: ${url}\n`;
+    });
+  }
   msg+=`\nUn saludo,\nDistribuciones Joaquín Infante`;
   window.open(`https://wa.me/${telLimpio}?text=${encodeURIComponent(msg)}`,'_blank');
 }
