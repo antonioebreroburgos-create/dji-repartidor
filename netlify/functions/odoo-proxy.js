@@ -126,10 +126,14 @@ exports.handler = async (event) => {
             await odooCallKw(cfg, cookie, 'stock.backorder.confirmation', 'process',
               [[wizardId]], {});
           } else if (validateRes.res_model === 'stock.immediate.transfer') {
+            // Crear wizard con el contexto correcto de Odoo 15
+            const ctx = validateRes.context || {};
             const wizardId = await odooCallKw(cfg, cookie, 'stock.immediate.transfer', 'create',
-              [{ pick_ids: [[4, pickingId]] }], {});
+              [{ pick_ids: [[4, pickingId]], show_transfers: false }],
+              { context: ctx }
+            );
             await odooCallKw(cfg, cookie, 'stock.immediate.transfer', 'process',
-              [[wizardId]], {});
+              [[wizardId]], { context: ctx });
           }
         }
         result = { ok: true, validated: true, raw: validateRes };
