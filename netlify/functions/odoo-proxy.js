@@ -99,9 +99,21 @@ exports.handler = async (event) => {
 
       const pickings = await odooCallKw(cfg, cookie, 'stock.picking', 'search_read',
         [domain], { fields: ['id', 'name', 'partner_id', 'scheduled_date', 'move_ids_without_package', 'sale_id', 'note'], limit: 100 });
-      result = { rutas, orders: orders.length, pickings };
 
-    } else if (action === 'entregar_picking') {
+      // Enriquecer pickings con la dirección de entrega de la sale.order
+      const saleIds = pickings.map(p => Array.isArray(p.sale_id) ? p.sale_id[0] : p.sale_id).filter(Boolean);
+      let saleDeliveryMap = {};
+      if (saleIds.length > 0) {
+        const sales = await odooCallKw(cfg, cookie, 'sale.order', 'read',
+          [saleIds], { fields: ['id', 'partner_shipping_id'] });
+        sales.forEach(s => { saleDeliveryMap[s.id] = s.partner_shipping_id; });
+      }
+      pickings.forEach(p => {
+        const saleId = Array.isArray(p.sale_id) ? p.sale_id[0] : p.sale_id;
+        p.delivery_address_id = saleDeliveryMap[saleId] || p.partner_id;
+      });
+
+      result = { rutas, orders: orders.length, pickings };
       // Firma + validación en un solo paso
       const { pickingId, firmaBase64 } = params;
 
