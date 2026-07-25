@@ -471,9 +471,19 @@ async function cargarPedidosHoy(){
     E.pedidos=await Promise.all(pickings.map(async p=>{
       const partnerId=Array.isArray(p.partner_id)?p.partner_id[0]:p.partner_id;
       const partnerNombre=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
+      // Dirección de entrega específica (puede ser diferente al cliente principal)
+      const deliveryId=Array.isArray(p.delivery_address_id)?p.delivery_address_id[0]:(p.delivery_address_id||partnerId);
+      const deliveryNombre=Array.isArray(p.delivery_address_id)?p.delivery_address_id[1]:null;
       let punto=null;
-      try{ const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${partnerId}&select=*`); punto=pts?.[0]||null; }catch(_){}
-      return{...p,partnerNombre,partnerId,punto,estado:'pendiente'};
+      try{
+        // Buscar primero por dirección de entrega, luego por cliente principal
+        let pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${deliveryId}&select=*`);
+        if(!pts?.length && deliveryId!==partnerId){
+          pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${partnerId}&select=*`);
+        }
+        punto=pts?.[0]||null;
+      }catch(_){}
+      return{...p,partnerNombre,partnerId,deliveryId,deliveryNombre,punto,estado:'pendiente'};
     }));
     renderPedidos();
   }catch(e){
@@ -700,7 +710,7 @@ async function guardarFichaIntegrada(){
       await supaFetch(`rutas_puntos_entrega?id=eq.${p.punto.id}`,'PATCH',datos);
       Object.assign(p.punto, datos);
     } else {
-      // Buscar o crear cliente en rutas_clientes
+      // Buscar o crear cliente en rutas_clientes usando el cliente principal
       let clienteId=null;
       try{
         const clientes=await supaFetch(`rutas_clientes?odoo_partner_id=eq.${p.partnerId}&empresa=eq.${EMPRESA}&select=id`);
@@ -708,7 +718,6 @@ async function guardarFichaIntegrada(){
       }catch(_){}
 
       if(!clienteId){
-        // Cliente no existe — crearlo al vuelo
         try{
           await fetch(SUPABASE_URL+'/rest/v1/rutas_clientes',{
             method:'POST',
@@ -722,10 +731,10 @@ async function guardarFichaIntegrada(){
 
       const bodyNuevo={
         ...datos,
-        odoo_delivery_id:p.partnerId,
+        odoo_delivery_id:p.deliveryId,
         cliente_id:clienteId,
         empresa:EMPRESA,
-        nombre_punto:'Principal',
+        nombre_punto:p.deliveryNombre||'Principal',
         direccion_texto:p.punto?.direccion_texto||'',
       };
       console.log('Creando punto:', JSON.stringify(bodyNuevo));
