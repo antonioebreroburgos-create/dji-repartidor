@@ -490,12 +490,10 @@ async function cargarPedidosHoy(){
     E.pedidos=await Promise.all(pickings.map(async p=>{
       const partnerId=Array.isArray(p.partner_id)?p.partner_id[0]:p.partner_id;
       const partnerNombre=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
-      // Dirección de entrega específica (puede ser diferente al cliente principal)
       const deliveryId=Array.isArray(p.delivery_address_id)?p.delivery_address_id[0]:(p.delivery_address_id||partnerId);
       const deliveryNombre=Array.isArray(p.delivery_address_id)?p.delivery_address_id[1]:null;
       let punto=null;
       try{
-        // Buscar primero por dirección de entrega, luego por cliente principal
         let pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${deliveryId}&select=*`);
         if(!pts?.length && deliveryId!==partnerId){
           pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${partnerId}&select=*`);
@@ -504,7 +502,20 @@ async function cargarPedidosHoy(){
       }catch(_){}
       return{...p,partnerNombre,partnerId,deliveryId,deliveryNombre,punto,estado:'pendiente'};
     }));
-    // Persistir en sessionStorage para sobrevivir recarga de pestaña
+
+    // Cruzar con entregados del día en Supabase
+    try{
+      const hoy=new Date().toISOString().split('T')[0];
+      const entregados=await supaFetch(`rutas_entregas_dia?empresa=eq.${EMPRESA}&repartidor=eq.${encodeURIComponent(E.usuario.nombre)}&fecha=eq.${hoy}&select=*`);
+      if(entregados?.length){
+        entregados.forEach(e=>{
+          const p=E.pedidos.find(p=>p.id===e.odoo_picking_id);
+          if(p){ p.estado='entregada'; p.fotoUrls=e.foto_urls||[]; p.comentario=e.comentario; }
+        });
+      }
+    }catch(_){}
+
+    // Persistir en sessionStorage
     try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo, JSON.stringify(E.pedidos)); }catch(_){}
     renderPedidos();
   }catch(e){
@@ -889,7 +900,21 @@ async function marcarEntregado(){
       if(r.ok) E.fotoUrls.push(`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`);
     }
     p.estado='entregada'; p.fotoUrls=E.fotoUrls;
-    // Persistir estado actualizado
+    // Guardar entrega en Supabase para persistencia
+    try{
+      await supaFetch('rutas_entregas_dia','POST',{
+        empresa:EMPRESA,
+        repartidor:E.usuario.nombre,
+        odoo_picking_id:p.id,
+        odoo_picking_name:p.name,
+        partner_nombre:p.partnerNombre,
+        delivery_id:p.deliveryId,
+        foto_urls:E.fotoUrls,
+        comentario:p.comentario||null,
+        estado:'entregada',
+      });
+    }catch(err){ console.warn('No se pudo guardar entrega:', err.message); }
+    // Persistir estado en sessionStorage también
     try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo, JSON.stringify(E.pedidos)); }catch(_){}
     toast('✓ Entrega registrada');
     renderPedidos();
