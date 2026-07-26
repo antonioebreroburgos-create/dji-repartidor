@@ -1003,23 +1003,6 @@ function enviarWhatsAppPedido(p, tel, nombre, fotoUrls){
   msg+=`\nUn saludo,\nDistribuciones Joaquín Infante`;
   window.open(`https://wa.me/${telLimpio}?text=${encodeURIComponent(msg)}`,'_blank');
 }
-  const p=E.pedidos[E.pedidoActual];
-  const telLimpio=tel.replace(/\D/g,'');
-  if(!telLimpio){ toast('Sin teléfono','err'); return; }
-  const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${p.id}`;
-  let msg=`Hola ${nombre}, le confirmamos la entrega de hoy.\n\n`;
-  msg+=`[PKG] Albarán: ${p.name}\n`;
-  msg+=`[EMP] Cliente: ${p.partnerNombre}\n`;
-  msg+=`[OK] Entregado y firmado\n\n`;
-  msg+=`[PDF] Albarán PDF: ${albaranUrl}\n`;
-  if(E.fotoUrls?.length){
-    E.fotoUrls.forEach((url,i)=>{
-      msg+=`[CAM] Foto ${E.fotoUrls.length>1?i+1+' ':''}: ${url}\n`;
-    });
-  }
-  msg+=`\nUn saludo,\nDistribuciones Joaquín Infante`;
-  window.open(`https://wa.me/${telLimpio}?text=${encodeURIComponent(msg)}`,'_blank');
-}
 
 // ═══════════════════════════════════════════
 // INIT
