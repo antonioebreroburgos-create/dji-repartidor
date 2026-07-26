@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>DJI Admin — Panel de Reparto</title>
+  <style>
+    :root{
+      --bg:#0f1923;--bg2:#162230;--bg3:#1e2f40;--card:#1a2a38;
+      --border:#2a4055;--accent:#00c9a7;--warn:#f59e0b;--danger:#ef4444;
+      --success:#22c55e;--text:#e8f4f8;--text2:#8ab4c4;--text3:#5a8a9a;
+      --radius:10px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+    /* LOGIN */
+    #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px}
+    .login-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:40px;width:360px;text-align:center}
+    .login-logo{font-size:48px;margin-bottom:12px}
+    .login-title{font-size:22px;font-weight:800;margin-bottom:4px}
+    .login-sub{font-size:14px;color:var(--text2);margin-bottom:28px}
+    .login-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-size:16px;outline:none;margin-bottom:12px}
+    .login-input:focus{border-color:var(--accent)}
+    .login-btn{width:100%;background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:14px;font-size:16px;font-weight:700;cursor:pointer}
+    .login-btn:hover{opacity:.9}
+    .login-err{color:var(--danger);font-size:13px;margin-top:8px}
+
+    /* LAYOUT */
+    #app{display:none}
+    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px}
+    .topbar-logo{font-size:20px;font-weight:800;color:var(--accent)}
+    .topbar-title{font-size:16px;font-weight:600;color:var(--text2)}
+    .topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
+    .main{padding:24px;max-width:1400px;margin:0 auto}
+
+    /* FILTROS */
+    .filtros-bar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
+    .filtro-label{font-size:13px;color:var(--text2);font-weight:600}
+    select, input[type=date]{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;outline:none;cursor:pointer}
+    select:focus, input[type=date]:focus{border-color:var(--accent)}
+    .btn-refresh{background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer}
+    .btn-refresh:hover{opacity:.9}
+
+    /* STATS */
+    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px}
+    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center}
+    .stat-num{font-size:28px;font-weight:800}
+    .stat-lbl{font-size:12px;color:var(--text2);margin-top:4px}
+
+    /* TABLA */
+    .section-title{font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+    .tabla-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px}
+    table{width:100%;border-collapse:collapse}
+    thead{background:var(--bg3)}
+    th{padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+    td{padding:12px 16px;border-top:1px solid var(--border);font-size:14px;vertical-align:middle}
+    tr:hover td{background:rgba(255,255,255,.02)}
+    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+    .badge-ok{background:rgba(34,197,94,.15);color:var(--success)}
+    .badge-warn{background:rgba(245,158,11,.15);color:var(--warn)}
+    .badge-gray{background:var(--bg3);color:var(--text2)}
+
+    /* FOTOS */
+    .fotos-wrap{display:flex;gap:6px;flex-wrap:wrap}
+    .foto-thumb{width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:transform .15s}
+    .foto-thumb:hover{transform:scale(1.1)}
+
+    /* LIGHTBOX */
+    #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;align-items:center;justify-content:center;cursor:pointer}
+    #lightbox.show{display:flex}
+    #lightbox img{max-width:90vw;max-height:90vh;border-radius:8px;object-fit:contain}
+    #lightbox-close{position:absolute;top:20px;right:20px;color:#fff;font-size:32px;cursor:pointer;background:none;border:none}
+
+    /* REPARTIDORES */
+    .rep-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:24px}
+    .rep-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+    .rep-nombre{font-size:15px;font-weight:800;margin-bottom:8px}
+    .rep-stats{display:flex;gap:12px}
+    .rep-stat{text-align:center;flex:1;background:var(--bg3);border-radius:8px;padding:8px}
+    .rep-num{font-size:20px;font-weight:800}
+    .rep-lbl{font-size:11px;color:var(--text2)}
+    .progreso{height:6px;background:var(--bg3);border-radius:3px;margin-top:10px;overflow:hidden}
+    .progreso-bar{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
+
+    /* EMPTY */
+    .empty{text-align:center;padding:48px;color:var(--text2)}
+    .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:32px auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    .albaran-link{color:var(--accent);text-decoration:none;font-size:13px}
+    .albaran-link:hover{text-decoration:underline}
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🚚</div>
+    <div class="login-title">DJI Admin</div>
+    <div class="login-sub">Panel de control de reparto</div>
+    <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">DJI</div>
+    <div class="topbar-title">Panel de Reparto</div>
+    <div class="topbar-right">
+      <span id="topbar-fecha" style="font-size:13px;color:var(--text2)"></span>
+      <button class="btn-refresh" onclick="cargarDatos()">🔄 Actualizar</button>
+    </div>
+  </div>
+
+  <div class="main">
+
+    <!-- FILTROS -->
+    <div class="filtros-bar">
+      <span class="filtro-label">Fecha:</span>
+      <input type="date" id="filtro-fecha"/>
+      <span class="filtro-label">Repartidor:</span>
+      <select id="filtro-rep">
+        <option value="">Todos</option>
+        <option>JUAN PEDRO</option>
+        <option>JAVIER</option>
+        <option>ALFONSO</option>
+        <option>JUANLU</option>
+        <option>JUANJOROBLEDO</option>
+        <option>ZEKY</option>
+      </select>
+      <span class="filtro-label">Estado:</span>
+      <select id="filtro-estado">
+        <option value="">Todos</option>
+        <option value="entregada">Entregados</option>
+        <option value="pendiente">Pendientes</option>
+      </select>
+      <button class="btn-refresh" onclick="cargarDatos()">Buscar</button>
+    </div>
+
+    <!-- STATS GLOBALES -->
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Total pedidos</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-entregados" style="color:var(--success)">—</div><div class="stat-lbl">Entregados</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-pendientes" style="color:var(--warn)">—</div><div class="stat-lbl">Pendientes</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-fotos" style="color:var(--accent)">—</div><div class="stat-lbl">Fotos tomadas</div></div>
+    </div>
+
+    <!-- RESUMEN POR REPARTIDOR -->
+    <div class="section-title">👥 Resumen por repartidor</div>
+    <div class="rep-grid" id="rep-grid"><div class="spinner"></div></div>
+
+    <!-- TABLA DE ENTREGAS -->
+    <div class="section-title">📦 Detalle de entregas</div>
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Hora</th>
+            <th>Repartidor</th>
+            <th>Albarán</th>
+            <th>Cliente</th>
+            <th>Estado</th>
+            <th>Fotos</th>
+            <th>Comentario</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-body">
+          <tr><td colspan="8" style="text-align:center;padding:32px"><div class="spinner"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox" onclick="closeLightbox()">
+  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
+  <img id="lightbox-img" src="" alt=""/>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://pkxjsbgizxntmgtixbwt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_7RsdYecYwSQhsI_PAbhczQ_49wMNVID';
+const ODOO_URL     = 'https://distribucionesjoaquininfante.es';
+const ADMIN_PASS   = 'dji2026admin';
+const EMPRESA      = 'DJI';
+
+const REPARTIDORES = ['JUAN PEDRO','JAVIER','ALFONSO','JUANLU','JUANJOROBLEDO','ZEKY'];
+
+async function supaFetch(path){
+  const r = await fetch(SUPABASE_URL+'/rest/v1/'+path, {
+    headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}
+  });
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+// LOGIN
+function doLogin(){
+  const pass = document.getElementById('login-pass').value;
+  if(pass === ADMIN_PASS){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    init();
+  } else {
+    document.getElementById('login-err').textContent='Contraseña incorrecta';
+  }
+}
+
+function init(){
+  const hoy = new Date().toISOString().split('T')[0];
+  document.getElementById('filtro-fecha').value = hoy;
+  document.getElementById('topbar-fecha').textContent =
+    new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  cargarDatos();
+}
+
+async function cargarDatos(){
+  const fecha  = document.getElementById('filtro-fecha').value;
+  const rep    = document.getElementById('filtro-rep').value;
+  const estado = document.getElementById('filtro-estado').value;
+
+  document.getElementById('rep-grid').innerHTML='<div class="spinner"></div>';
+  document.getElementById('tabla-body').innerHTML='<tr><td colspan="8" style="text-align:center;padding:32px"><div class="spinner"></div></td></tr>';
+
+  try{
+    // Cargar entregas del día desde Supabase
+    let query = `rutas_entregas_dia?empresa=eq.${EMPRESA}&fecha=eq.${fecha}&order=created_at.desc&select=*`;
+    if(rep)    query += `&repartidor=eq.${encodeURIComponent(rep)}`;
+    if(estado === 'entregada') query += `&estado=eq.entregada`;
+
+    const entregas = await supaFetch(query);
+
+    // Stats globales
+    const totalEntregas = entregas.length;
+    const totalFotos = entregas.reduce((a,e)=>a+(e.foto_urls?.length||0),0);
+    document.getElementById('s-entregados').textContent = totalEntregas;
+    document.getElementById('s-fotos').textContent = totalFotos;
+
+    // Pendientes: necesitamos consultar el proxy para traer pickings assigned
+    // Por ahora mostramos lo que tenemos en Supabase
+    document.getElementById('s-total').textContent = totalEntregas;
+    document.getElementById('s-pendientes').textContent = '—';
+
+    // Resumen por repartidor
+    renderRepGrid(entregas, rep);
+
+    // Tabla detalle
+    if(estado === 'pendiente'){
+      document.getElementById('tabla-body').innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text2)">Los pedidos pendientes no están disponibles en el panel — consulta la app del repartidor</td></tr>';
+      return;
+    }
+
+    renderTabla(entregas);
+
+  }catch(e){
+    document.getElementById('tabla-body').innerHTML=`<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--danger)">${e.message}</td></tr>`;
+  }
+}
+
+function renderRepGrid(entregas, filtroRep){
+  const reps = filtroRep ? [filtroRep] : REPARTIDORES;
+  document.getElementById('rep-grid').innerHTML = reps.map(nombre=>{
+    const mis = entregas.filter(e=>e.repartidor===nombre);
+    const fotos = mis.reduce((a,e)=>a+(e.foto_urls?.length||0),0);
+    return `<div class="rep-card">
+      <div class="rep-nombre">${nombre}</div>
+      <div class="rep-stats">
+        <div class="rep-stat"><div class="rep-num" style="color:var(--success)">${mis.length}</div><div class="rep-lbl">Entregados</div></div>
+        <div class="rep-stat"><div class="rep-num" style="color:var(--accent)">${fotos}</div><div class="rep-lbl">Fotos</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTabla(entregas){
+  if(!entregas.length){
+    document.getElementById('tabla-body').innerHTML='<tr><td colspan="8"><div class="empty">Sin entregas para esta selección</div></td></tr>';
+    return;
+  }
+
+  document.getElementById('tabla-body').innerHTML = entregas.map(e=>{
+    const hora = new Date(e.created_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+    const fotos = (e.foto_urls||[]).map(url=>
+      `<img class="foto-thumb" src="${url}" onclick="openLightbox('${url}')" title="Ver foto"/>`
+    ).join('');
+    const albaranUrl = `${ODOO_URL}/report/pdf/stock.report_deliveryslip/${e.odoo_picking_id}`;
+
+    return `<tr>
+      <td style="white-space:nowrap;font-weight:700">${hora}</td>
+      <td><span style="font-size:13px;font-weight:600">${e.repartidor}</span></td>
+      <td><a class="albaran-link" href="${albaranUrl}" target="_blank">${e.odoo_picking_name}</a></td>
+      <td style="max-width:200px">${e.partner_nombre}</td>
+      <td><span class="badge badge-ok">Entregado</span></td>
+      <td><div class="fotos-wrap">${fotos||'<span style="color:var(--text3);font-size:12px">Sin fotos</span>'}</div></td>
+      <td style="max-width:200px;color:var(--text2);font-size:13px">${e.comentario||'—'}</td>
+      <td><a class="albaran-link" href="${albaranUrl}" target="_blank">📄 PDF</a></td>
+    </tr>`;
+  }).join('');
+}
+
+function openLightbox(url){
+  document.getElementById('lightbox-img').src=url;
+  document.getElementById('lightbox').classList.add('show');
+}
+function closeLightbox(){
+  document.getElementById('lightbox').classList.remove('show');
+  document.getElementById('lightbox-img').src='';
+}
+
+document.getElementById('login-pass').addEventListener('keydown', e=>{
+  if(e.key==='Enter') doLogin();
+});
+</script>
+</body>
+</html>
