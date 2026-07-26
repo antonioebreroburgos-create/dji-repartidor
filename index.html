@@ -515,11 +515,39 @@ async function cargarPedidosHoy(){
       const entregados=await supaFetch(`rutas_entregas_dia?empresa=eq.${EMPRESA}&repartidor=eq.${E.usuario.nombre}&fecha=eq.${hoy}&select=*`);
       if(entregados?.length){
         entregados.forEach(e=>{
+          // Buscar si el picking ya está en la lista
           const p=E.pedidos.find(p=>p.id===e.odoo_picking_id);
-          if(p){ p.estado='entregada'; p.fotoUrls=e.foto_urls||[]; p.comentario=e.comentario; }
+          if(p){
+            // Ya está — actualizar estado
+            p.estado='entregada';
+            p.fotoUrls=e.foto_urls||[];
+            p.comentario=e.comentario;
+          } else {
+            // No está en Odoo (ya validado) — añadirlo como entregado
+            E.pedidos.push({
+              id: e.odoo_picking_id,
+              name: e.odoo_picking_name,
+              partnerNombre: e.partner_nombre,
+              partnerId: e.delivery_id,
+              deliveryId: e.delivery_id,
+              deliveryNombre: null,
+              punto: null,
+              estado: 'entregada',
+              fotoUrls: e.foto_urls||[],
+              comentario: e.comentario,
+              _soloHistorico: true, // no tiene picking en Odoo
+            });
+          }
         });
+        // Cargar puntos de entrega para los históricos
+        for(const p of E.pedidos.filter(x=>x._soloHistorico && !x.punto)){
+          try{
+            const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${p.deliveryId}&select=*`);
+            p.punto=pts?.[0]||null;
+          }catch(_){}
+        }
       }
-    }catch(_){}
+    }catch(err){ console.warn('Error cargando entregados:', err.message); }
 
     // Persistir en sessionStorage
     try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo, JSON.stringify(E.pedidos)); }catch(_){}
