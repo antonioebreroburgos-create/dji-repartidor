@@ -379,10 +379,12 @@
     <div class="section-label">💬 Comentario</div>
     <textarea class="comentario-input" id="parada-comentario" placeholder="Observaciones de la entrega..."></textarea>
 
-    <!-- ACCIONES -->
-    <div class="acciones-grid">
-      <button class="btn btn-success" onclick="marcarEntregado()">✅ Entregado</button>
-      <button class="btn btn-danger" onclick="marcarFallido()">❌ No entregado</button>
+    <!-- ACCIONES — solo si no está entregado -->
+    <div id="acciones-wrap">
+      <div class="acciones-grid">
+        <button class="btn btn-success" onclick="marcarEntregado()">✅ Entregado</button>
+        <button class="btn btn-danger" onclick="marcarFallido()">❌ No entregado</button>
+      </div>
     </div>
 
     <!-- WHATSAPP -->
@@ -678,6 +680,20 @@ async function abrirParada(i){
   await cargarFichaIntegrada(p);
 
   irA('parada');
+
+  // Si ya está entregado, ocultar acciones y firma
+  const yaEntregado = p.estado === 'entregada';
+  document.getElementById('acciones-wrap').style.display = yaEntregado ? 'none' : 'block';
+  document.querySelector('.btn-navegar').style.display = 'flex';
+  // Ocultar firma y foto si ya entregado
+  const firmaBtn = document.querySelector('button[onclick="abrirOdooAlbaran()"]');
+  if(firmaBtn) firmaBtn.style.display = yaEntregado ? 'none' : 'flex';
+  const fotoBtn = document.querySelector('button[onclick="document.getElementById(\'input-foto\').click()"]');
+  if(fotoBtn) fotoBtn.style.display = yaEntregado ? 'none' : 'flex';
+  document.getElementById('odoo-firmado').style.display = 'none';
+
+  // Si ya entregado, mostrar directamente los botones WhatsApp
+  if(yaEntregado){ mostrarBotonesWhatsApp(p); }
 }
 
 // ═══════════════════════════════════════════
