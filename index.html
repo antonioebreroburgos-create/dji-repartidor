@@ -224,7 +224,7 @@
   <div class="header">
     <button class="btn-back" onclick="irA('menu')">‹ Volver</button>
     <h1>Mis pedidos</h1>
-    <span class="header-sub" id="pedidos-sub"></span>
+    <span class="header-sub" id="pedidos-sub" onclick="recargarPedidos()" style="cursor:pointer;color:var(--accent)">🔄 <span id="pedidos-count"></span></span>
   </div>
   <div class="content">
     <div class="stats-bar">
@@ -481,6 +481,12 @@ function cerrarSesion(){ E.usuario=null; E.repIdx=null; E.pin=''; actualizarDots
 // PEDIDOS
 // ═══════════════════════════════════════════
 async function cargarPedidosHoy(){
+  // Si ya hay pedidos en memoria, ir directo sin recargar
+  if(E.pedidos.length > 0){
+    irA('pedidos');
+    renderPedidos();
+    return;
+  }
   irA('pedidos');
   document.getElementById('pedidos-lista').innerHTML='<div class="spinner"></div>';
   try{
@@ -535,13 +541,18 @@ function setTabPedidos(tab){
   renderPedidos();
 }
 
+async function recargarPedidos(){
+  E.pedidos=[];
+  await cargarPedidosHoy();
+}
+
 function renderPedidos(){
   const total=E.pedidos.length;
   const entregados=E.pedidos.filter(p=>p.estado==='entregada').length;
   document.getElementById('stat-pedidos').textContent=total;
   document.getElementById('stat-entregados').textContent=entregados;
   document.getElementById('stat-pendientes').textContent=total-entregados;
-  document.getElementById('pedidos-sub').textContent=`${entregados}/${total}`;
+  document.getElementById('pedidos-sub').innerHTML=`🔄 <span id="pedidos-count">${entregados}/${total}</span>`;
 
   const lista=tabActiva==='pendientes'
     ? E.pedidos.filter(p=>p.estado!=='entregada')
