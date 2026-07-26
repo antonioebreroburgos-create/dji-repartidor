@@ -506,7 +506,7 @@ async function cargarPedidosHoy(){
     // Cruzar con entregados del día en Supabase
     try{
       const hoy=new Date().toISOString().split('T')[0];
-      const entregados=await supaFetch(`rutas_entregas_dia?empresa=eq.${EMPRESA}&repartidor=eq.${encodeURIComponent(E.usuario.nombre)}&fecha=eq.${hoy}&select=*`);
+      const entregados=await supaFetch(`rutas_entregas_dia?empresa=eq.${EMPRESA}&repartidor=eq.${E.usuario.nombre}&fecha=eq.${hoy}&select=*`);
       if(entregados?.length){
         entregados.forEach(e=>{
           const p=E.pedidos.find(p=>p.id===e.odoo_picking_id);
