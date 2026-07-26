@@ -519,7 +519,7 @@ async function cargarPedidosHoy(){
     try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo, JSON.stringify(E.pedidos)); }catch(_){}
     renderPedidos();
   }catch(e){
-    document.getElementById('pedidos-lista').innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error</div><div class="empty-sub">${e.message}</div></div>`;
+    document.getElementById('pedidos-lista').innerHTML=`<div class="empty-state"><div class="empty-icon">[!]</div><div class="empty-title">Error</div><div class="empty-sub">${e.message}</div></div>`;
   }
 }
 
@@ -549,7 +549,7 @@ function renderPedidos(){
 
   if(!lista.length){
     document.getElementById('pedidos-lista').innerHTML=`<div class="empty-state">
-      <div class="empty-icon">${tabActiva==='pendientes'?'🎉':'📦'}</div>
+      <div class="empty-icon">${tabActiva==='pendientes'?'[OK]':'[PKG]'}</div>
       <div class="empty-title">${tabActiva==='pendientes'?'Sin pendientes':'Sin entregados aún'}</div>
     </div>`;
     return;
@@ -567,8 +567,8 @@ function renderPedidos(){
         <div class="pedido-dir">${p.punto?.direccion_texto||'Sin dirección'}</div>
         <div class="pedido-meta">
           <span class="badge badge-gray">Pendiente</span>
-          ${alertas.length?`<span class="badge badge-warn">⚠️ ${alertas.length} alertas</span>`:''}
-          ${p.punto?.geocodificado?'<span class="badge badge-blue">📍 GPS</span>':'<span class="badge badge-red">Sin GPS</span>'}
+          ${alertas.length?`<span class="badge badge-warn">[!] ${alertas.length} alertas</span>`:''}
+          ${p.punto?.geocodificado?'<span class="badge badge-blue">[GPS] GPS</span>':'<span class="badge badge-red">Sin GPS</span>'}
         </div>
       </div>`;
     }).join('');
@@ -581,14 +581,14 @@ function renderPedidos(){
         <div class="pedido-cliente">${p.partnerNombre}</div>
         <div class="pedido-dir">${p.punto?.direccion_texto||'Sin dirección'}</div>
         <div class="pedido-meta" style="margin-bottom:8px">
-          <span class="badge badge-ok">✓ Entregado</span>
-          ${p.fotoUrls?.length?`<span class="badge badge-blue">📷 ${p.fotoUrls.length} foto${p.fotoUrls.length>1?'s':''}</span>`:''}
+          <span class="badge badge-ok">OK Entregado</span>
+          ${p.fotoUrls?.length?`<span class="badge badge-blue">[CAM] ${p.fotoUrls.length} foto${p.fotoUrls.length>1?'s':''}</span>`:''}
         </div>
         <a class="albaran-link" href="${albaranUrl}" target="_blank" onclick="event.stopPropagation()">
-          📄 Ver albarán PDF
+          [PDF] Ver albarán PDF
         </a>
         <button class="whatsapp-btn" style="margin-top:8px;padding:10px;font-size:13px" onclick="event.stopPropagation();reenviarWhatsApp(${idx})">
-          📱 Reenviar por WhatsApp
+          [TEL] Reenviar por WhatsApp
         </button>
       </div>`;
     }).join('');
@@ -628,10 +628,10 @@ async function abrirParada(i){
 
   // Alertas
   const alertas=getAlertas(p.punto);
-  document.getElementById('parada-alertas').innerHTML=alertas.map(a=>`<div class="alerta-item">⚠️ ${a}</div>`).join('');
+  document.getElementById('parada-alertas').innerHTML=alertas.map(a=>`<div class="alerta-item">[!] ${a}</div>`).join('');
   if(p.punto?.notas_logisticas){
     const notas=p.punto.notas_logisticas.replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'').replace(/COCINA\|?/g,'').replace(/REPASAR\|?/g,'').trim();
-    if(notas) document.getElementById('parada-alertas').innerHTML+=`<div class="alerta-item" style="color:var(--text2);border-color:var(--border)">📝 ${notas}</div>`;
+    if(notas) document.getElementById('parada-alertas').innerHTML+=`<div class="alerta-item" style="color:var(--text2);border-color:var(--border)">[NOTA] ${notas}</div>`;
   }
 
   // Cerrar ficha y cargar datos
@@ -664,12 +664,12 @@ async function cargarFichaIntegrada(p){
   if(punto?.latitud&&punto?.longitud){
     E.coordsGPS={lat:punto.latitud,lng:punto.longitud};
     gpsCard.className='gps-card ok';
-    gpsCard.innerHTML=`<div class="gps-coords">${parseFloat(punto.latitud).toFixed(6)}, ${parseFloat(punto.longitud).toFixed(6)}</div><div class="gps-label">✓ Ubicación guardada</div>`;
-    document.getElementById('ficha-badge-mini').textContent='📍 Con GPS';
+    gpsCard.innerHTML=`<div class="gps-coords">${parseFloat(punto.latitud).toFixed(6)}, ${parseFloat(punto.longitud).toFixed(6)}</div><div class="gps-label">OK Ubicación guardada</div>`;
+    document.getElementById('ficha-badge-mini').textContent='[GPS] Con GPS';
   } else {
     gpsCard.className='gps-card';
     gpsCard.innerHTML='<div style="font-size:12px;color:var(--text3)">Sin ubicación registrada</div>';
-    document.getElementById('ficha-badge-mini').textContent='⚠️ Sin GPS';
+    document.getElementById('ficha-badge-mini').textContent='[!] Sin GPS';
   }
 
   // Horarios
@@ -706,7 +706,7 @@ async function cargarContactosFicha(puntoId){
     const c=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${puntoId}&order=es_principal.desc,nombre`);
     E.contactos=c||[];
     lista.innerHTML=E.contactos.length
-      ? E.contactos.map((c,i)=>`<div class="contacto-item"><div class="contacto-info"><div class="contacto-nombre">${c.nombre}${c.es_principal?' ⭐':''}</div><div class="contacto-tel">${c.telefono}</div></div><button class="contacto-del" onclick="eliminarContactoFicha(${i})">✕</button></div>`).join('')
+      ? E.contactos.map((c,i)=>`<div class="contacto-item"><div class="contacto-info"><div class="contacto-nombre">${c.nombre}${c.es_principal?' *':''}</div><div class="contacto-tel">${c.telefono}</div></div><button class="contacto-del" onclick="eliminarContactoFicha(${i})">✕</button></div>`).join('')
       : '<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Sin contactos</div>';
   }catch(_){ lista.innerHTML=''; E.contactos=[]; }
 }
@@ -724,7 +724,7 @@ async function añadirContactoFicha(){
     document.getElementById('fc-nombre').value='';
     document.getElementById('fc-tel').value='';
     await cargarContactosFicha(p.punto.id);
-    toast('Contacto añadido ✓');
+    toast('Contacto añadido OK');
   }catch(e){ toast('Error: '+e.message,'err'); }
 }
 
@@ -746,9 +746,9 @@ async function capturarGPSFicha(){
       E.coordsGPS={lat:pos.coords.latitude,lng:pos.coords.longitude};
       const card=document.getElementById('ficha-gps-card');
       card.className='gps-card ok';
-      card.innerHTML=`<div class="gps-coords">${E.coordsGPS.lat.toFixed(6)}, ${E.coordsGPS.lng.toFixed(6)}</div><div class="gps-label">✓ Capturado ahora</div>`;
-      document.getElementById('ficha-badge-mini').textContent='📍 Con GPS';
-      toast('Ubicación capturada ✓');
+      card.innerHTML=`<div class="gps-coords">${E.coordsGPS.lat.toFixed(6)}, ${E.coordsGPS.lng.toFixed(6)}</div><div class="gps-label">OK Capturado ahora</div>`;
+      document.getElementById('ficha-badge-mini').textContent='[GPS] Con GPS';
+      toast('Ubicación capturada OK');
     },
     ()=>toast('No se pudo obtener GPS','err'),
     {enableHighAccuracy:true,timeout:10000}
@@ -828,8 +828,8 @@ async function guardarFichaIntegrada(){
         p.punto=pts?.[0]||{...datos,odoo_delivery_id:p.partnerId};
       }catch(_){}
     }
-    toast('Ficha guardada ✓');
-    document.getElementById('ficha-badge-mini').textContent=E.coordsGPS?'📍 Con GPS':'⚠️ Sin GPS';
+    toast('Ficha guardada OK');
+    document.getElementById('ficha-badge-mini').textContent=E.coordsGPS?'[GPS] Con GPS':'[!] Sin GPS';
     renderPedidos();
   }catch(e){ toast('Error: '+e.message,'err'); }
 }
@@ -891,7 +891,7 @@ async function marcarEntregado(){
   p.comentario=document.getElementById('parada-comentario').value;
   E.fotoUrls=[];
   const btn=document.querySelector('.btn-success');
-  btn.disabled=true; btn.textContent='💾 Guardando...';
+  btn.disabled=true; btn.textContent='[GUARDAR] Guardando...';
   try{
     for(const foto of E.fotos){
       const nombre=`${EMPRESA}/${p.name.replace(/[\/\\:*?"<>|]/g,'_')}_foto_${Date.now()}.jpg`;
@@ -919,11 +919,11 @@ async function marcarEntregado(){
     }catch(err){ console.warn('No se pudo guardar entrega:', err.message); }
     // Persistir estado en sessionStorage también
     try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo, JSON.stringify(E.pedidos)); }catch(_){}
-    toast('✓ Entrega registrada');
+    toast('OK Entrega registrada');
     renderPedidos();
     mostrarBotonesWhatsApp(p);
   }catch(e){ toast('Error: '+e.message,'err'); }
-  btn.disabled=false; btn.textContent='✅ Entregado';
+  btn.disabled=false; btn.textContent='[OK] Entregado';
 }
 
 async function marcarFallido(){
@@ -960,10 +960,10 @@ async function mostrarBotonesWhatsApp(p){
   }
 
   wrap.style.display='block';
-  wrap.innerHTML='<div class="section-label" style="margin-top:0">📱 Enviar albarán por WhatsApp</div>'+
+  wrap.innerHTML='<div class="section-label" style="margin-top:0">[TEL] Enviar albarán por WhatsApp</div>'+
     contactos.map(c=>`
       <button class="whatsapp-btn" onclick="enviarWhatsAppPedido(E.pedidos[E.pedidoActual],'${c.telefono}','${c.nombre}',E.fotoUrls||[])">
-        📱 ${c.nombre}${c.es_principal?' ⭐':''} <span style="font-size:12px;opacity:.8">${c.telefono}</span>
+        [TEL] ${c.nombre}${c.es_principal?' *':''} <span style="font-size:12px;opacity:.8">${c.telefono}</span>
       </button>
     `).join('');
   setTimeout(()=>wrap.scrollIntoView({behavior:'smooth', block:'nearest'}), 100);
@@ -983,8 +983,8 @@ async function reenviarWhatsApp(idx){
     // Si hay varios, mostrar selector en un toast visual
     const menu=document.createElement('div');
     menu.style.cssText='position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:16px;z-index:100';
-    menu.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent)">📱 Selecciona contacto</div>'+
-      contactos.map(c=>`<button onclick="enviarWhatsAppPedido(E.pedidos[${idx}],'${c.telefono}','${c.nombre}',E.pedidos[${idx}].fotoUrls||[]);this.parentNode.remove()" class="whatsapp-btn" style="margin-bottom:8px">📱 ${c.nombre}${c.es_principal?' ⭐':''} ${c.telefono}</button>`).join('')+
+    menu.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent)">[TEL] Selecciona contacto</div>'+
+      contactos.map(c=>`<button onclick="enviarWhatsAppPedido(E.pedidos[${idx}],'${c.telefono}','${c.nombre}',E.pedidos[${idx}].fotoUrls||[]);this.parentNode.remove()" class="whatsapp-btn" style="margin-bottom:8px">[TEL] ${c.nombre}${c.es_principal?' *':''} ${c.telefono}</button>`).join('')+
       `<button onclick="this.parentNode.remove()" style="width:100%;padding:12px;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);cursor:pointer;font-size:14px">Cancelar</button>`;
     document.body.appendChild(menu);
   }catch(e){ toast('Error: '+e.message,'err'); }
@@ -995,11 +995,11 @@ function enviarWhatsAppPedido(p, tel, nombre, fotoUrls){
   if(!telLimpio){ toast('Sin teléfono','err'); return; }
   const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${p.id}`;
   let msg=`Hola ${nombre}, le confirmamos la entrega de hoy.\n\n`;
-  msg+=`📦 Albarán: ${p.name}\n`;
-  msg+=`🏢 Cliente: ${p.partnerNombre}\n`;
-  msg+=`✅ Entregado y firmado\n\n`;
-  msg+=`📄 Albarán PDF: ${albaranUrl}\n`;
-  if(fotoUrls?.length) fotoUrls.forEach((url,i)=>{ msg+=`📷 Foto ${fotoUrls.length>1?i+1+' ':''}: ${url}\n`; });
+  msg+=`[PKG] Albarán: ${p.name}\n`;
+  msg+=`[EMP] Cliente: ${p.partnerNombre}\n`;
+  msg+=`[OK] Entregado y firmado\n\n`;
+  msg+=`[PDF] Albarán PDF: ${albaranUrl}\n`;
+  if(fotoUrls?.length) fotoUrls.forEach((url,i)=>{ msg+=`[CAM] Foto ${fotoUrls.length>1?i+1+' ':''}: ${url}\n`; });
   msg+=`\nUn saludo,\nDistribuciones Joaquín Infante`;
   window.open(`https://wa.me/${telLimpio}?text=${encodeURIComponent(msg)}`,'_blank');
 }
@@ -1008,13 +1008,13 @@ function enviarWhatsAppPedido(p, tel, nombre, fotoUrls){
   if(!telLimpio){ toast('Sin teléfono','err'); return; }
   const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${p.id}`;
   let msg=`Hola ${nombre}, le confirmamos la entrega de hoy.\n\n`;
-  msg+=`📦 Albarán: ${p.name}\n`;
-  msg+=`🏢 Cliente: ${p.partnerNombre}\n`;
-  msg+=`✅ Entregado y firmado\n\n`;
-  msg+=`📄 Albarán PDF: ${albaranUrl}\n`;
+  msg+=`[PKG] Albarán: ${p.name}\n`;
+  msg+=`[EMP] Cliente: ${p.partnerNombre}\n`;
+  msg+=`[OK] Entregado y firmado\n\n`;
+  msg+=`[PDF] Albarán PDF: ${albaranUrl}\n`;
   if(E.fotoUrls?.length){
     E.fotoUrls.forEach((url,i)=>{
-      msg+=`📷 Foto ${E.fotoUrls.length>1?i+1+' ':''}: ${url}\n`;
+      msg+=`[CAM] Foto ${E.fotoUrls.length>1?i+1+' ':''}: ${url}\n`;
     });
   }
   msg+=`\nUn saludo,\nDistribuciones Joaquín Infante`;
