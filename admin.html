@@ -232,7 +232,7 @@ async function cargarDatos(){
 
   try{
     // Cargar entregas del día desde Supabase
-    let query = `rutas_entregas_dia?empresa=eq.${EMPRESA}&fecha=eq.${fecha}&order=created_at.desc&select=*`;
+    let query = `rutas_entregas_dia?empresa=eq.${EMPRESA}&fecha=eq.${fecha}&order=created_at.asc&select=*`;
     if(rep)    query += `&repartidor=eq.${encodeURIComponent(rep)}`;
     if(estado === 'entregada') query += `&estado=eq.entregada`;
 
