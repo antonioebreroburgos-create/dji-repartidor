@@ -386,7 +386,7 @@
     </div>
 
     <!-- WHATSAPP -->
-    <div id="btn-whatsapp-wrap" style="display:none"></div>
+    <div id="btn-whatsapp-wrap"></div>
 
     <div style="height:20px"></div>
   </div>
@@ -587,6 +587,9 @@ function renderPedidos(){
         <a class="albaran-link" href="${albaranUrl}" target="_blank" onclick="event.stopPropagation()">
           📄 Ver albarán PDF
         </a>
+        <button class="whatsapp-btn" style="margin-top:8px;padding:10px;font-size:13px" onclick="event.stopPropagation();reenviarWhatsApp(${idx})">
+          📱 Reenviar por WhatsApp
+        </button>
       </div>`;
     }).join('');
   }
@@ -959,13 +962,47 @@ async function mostrarBotonesWhatsApp(p){
   wrap.style.display='block';
   wrap.innerHTML='<div class="section-label" style="margin-top:0">📱 Enviar albarán por WhatsApp</div>'+
     contactos.map(c=>`
-      <button class="whatsapp-btn" onclick="enviarWhatsApp('${c.telefono}','${c.nombre}')">
+      <button class="whatsapp-btn" onclick="enviarWhatsAppPedido(E.pedidos[E.pedidoActual],'${c.telefono}','${c.nombre}',E.fotoUrls||[])">
         📱 ${c.nombre}${c.es_principal?' ⭐':''} <span style="font-size:12px;opacity:.8">${c.telefono}</span>
       </button>
     `).join('');
+  setTimeout(()=>wrap.scrollIntoView({behavior:'smooth', block:'nearest'}), 100);
 }
 
-function enviarWhatsApp(tel,nombre){
+async function reenviarWhatsApp(idx){
+  const p=E.pedidos[idx];
+  if(!p.punto?.id){ toast('Sin contactos registrados','err'); return; }
+  try{
+    const contactos=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${p.punto.id}&order=es_principal.desc,nombre`);
+    if(!contactos?.length){ toast('Sin contactos de recepción','err'); return; }
+    // Si solo hay uno, enviar directo
+    if(contactos.length===1){
+      enviarWhatsAppPedido(p, contactos[0].telefono, contactos[0].nombre, p.fotoUrls||[]);
+      return;
+    }
+    // Si hay varios, mostrar selector en un toast visual
+    const menu=document.createElement('div');
+    menu.style.cssText='position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:16px;z-index:100';
+    menu.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent)">📱 Selecciona contacto</div>'+
+      contactos.map(c=>`<button onclick="enviarWhatsAppPedido(E.pedidos[${idx}],'${c.telefono}','${c.nombre}',E.pedidos[${idx}].fotoUrls||[]);this.parentNode.remove()" class="whatsapp-btn" style="margin-bottom:8px">📱 ${c.nombre}${c.es_principal?' ⭐':''} ${c.telefono}</button>`).join('')+
+      `<button onclick="this.parentNode.remove()" style="width:100%;padding:12px;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);cursor:pointer;font-size:14px">Cancelar</button>`;
+    document.body.appendChild(menu);
+  }catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+function enviarWhatsAppPedido(p, tel, nombre, fotoUrls){
+  const telLimpio=tel.replace(/\D/g,'');
+  if(!telLimpio){ toast('Sin teléfono','err'); return; }
+  const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${p.id}`;
+  let msg=`Hola ${nombre}, le confirmamos la entrega de hoy.\n\n`;
+  msg+=`📦 Albarán: ${p.name}\n`;
+  msg+=`🏢 Cliente: ${p.partnerNombre}\n`;
+  msg+=`✅ Entregado y firmado\n\n`;
+  msg+=`📄 Albarán PDF: ${albaranUrl}\n`;
+  if(fotoUrls?.length) fotoUrls.forEach((url,i)=>{ msg+=`📷 Foto ${fotoUrls.length>1?i+1+' ':''}: ${url}\n`; });
+  msg+=`\nUn saludo,\nDistribuciones Joaquín Infante`;
+  window.open(`https://wa.me/${telLimpio}?text=${encodeURIComponent(msg)}`,'_blank');
+}
   const p=E.pedidos[E.pedidoActual];
   const telLimpio=tel.replace(/\D/g,'');
   if(!telLimpio){ toast('Sin teléfono','err'); return; }
