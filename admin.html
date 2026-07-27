@@ -203,6 +203,17 @@
       </div>
     </div>
 
+    <!-- MANTENIMIENTO -->
+    <div class="section-title">🧹 Mantenimiento</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:14px;font-weight:700">Limpiar fotos antiguas</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">Elimina fotos de entrega y almacén con más de 45 días de Supabase Storage</div>
+      </div>
+      <button class="btn-refresh" style="background:var(--danger);margin-left:auto" onclick="limpiarFotosAntiguas()">🗑️ Limpiar fotos +45 días</button>
+      <div id="limpieza-resultado" style="width:100%;font-size:13px;color:var(--text2);display:none"></div>
+    </div>
+
     <!-- PRESUPUESTOS -->
     <div class="section-title">📋 Presupuestos asignados (sin confirmar)</div>
     <div class="filtros-bar" style="margin-bottom:12px">
@@ -642,7 +653,76 @@ document.getElementById('login-pass').addEventListener('keydown', e=>{
   if(e.key==='Enter') doLogin();
 });
 
-// ── PRESUPUESTOS ADMIN ────────────────────────────────────
+// ── LIMPIEZA DE FOTOS ────────────────────────────────────
+async function limpiarFotosAntiguas(){
+  const dias = 45;
+  const resultado = document.getElementById('limpieza-resultado');
+
+  if(!confirm(`¿Seguro que quieres eliminar todas las fotos con más de ${dias} días?\nEsta acción no se puede deshacer.`)) return;
+
+  resultado.style.display='block';
+  resultado.textContent='Buscando fotos antiguas...';
+
+  try{
+    const fechaLimite = new Date();
+    fechaLimite.setDate(fechaLimite.getDate() - dias);
+    const fechaStr = fechaLimite.toISOString().split('T')[0];
+
+    // Buscar registros antiguos en rutas_entregas_dia
+    const entregas = await supaFetch(`rutas_entregas_dia?fecha=lt.${fechaStr}&select=id,foto_urls`);
+    // Buscar registros antiguos en rutas_fotos_almacen
+    const fotosAlmacen = await supaFetch(`rutas_fotos_almacen?fecha=lt.${fechaStr}&select=id,foto_urls`);
+
+    const todosUrls = [
+      ...(entregas||[]).flatMap(e=>e.foto_urls||[]),
+      ...(fotosAlmacen||[]).flatMap(f=>f.foto_urls||[]),
+    ];
+
+    resultado.textContent=`Encontradas ${todosUrls.length} fotos en ${(entregas?.length||0)+(fotosAlmacen?.length||0)} registros anteriores al ${fechaStr}. Eliminando...`;
+
+    // Extraer nombres de fichero de las URLs y borrar de Storage
+    let borradas=0, errores=0;
+    for(const url of todosUrls){
+      try{
+        // Extraer path del fichero desde la URL pública
+        const path = url.split('/object/public/entregas/')[1];
+        if(!path) continue;
+        const r = await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${path}`,{
+          method:'DELETE',
+          headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`},
+        });
+        if(r.ok) borradas++; else errores++;
+      }catch(_){ errores++; }
+    }
+
+    // Limpiar URLs en los registros de Supabase
+    if(entregas?.length){
+      for(const e of entregas){
+        await fetch(`${SUPABASE_URL}/rest/v1/rutas_entregas_dia?id=eq.${e.id}`,{
+          method:'PATCH',
+          headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
+          body:JSON.stringify({foto_urls:[]}),
+        });
+      }
+    }
+    if(fotosAlmacen?.length){
+      for(const f of fotosAlmacen){
+        await fetch(`${SUPABASE_URL}/rest/v1/rutas_fotos_almacen?id=eq.${f.id}`,{
+          method:'PATCH',
+          headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
+          body:JSON.stringify({foto_urls:[]}),
+        });
+      }
+    }
+
+    resultado.style.color='var(--success)';
+    resultado.textContent=`✓ Limpieza completada: ${borradas} fotos eliminadas${errores>0?`, ${errores} errores`:''}.`;
+
+  }catch(e){
+    resultado.style.color='var(--danger)';
+    resultado.textContent=`Error: ${e.message}`;
+  }
+}
 const PROXY_URL_ADMIN = '/.netlify/functions/odoo-proxy';
 const DIAS_ORDEN_A = ['lunes','martes','miercoles','miércoles','jueves','viernes','sabado','sábado','domingo'];
 
