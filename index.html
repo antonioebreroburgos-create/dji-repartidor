@@ -198,18 +198,8 @@
     <div class="login-logo">🚚</div>
     <div class="login-title">DJI Reparto</div>
     <div class="login-sub">Distribuciones Joaquín Infante</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;text-align:center">Selecciona tu nombre para entrar</div>
     <div class="repartidores-grid" id="repartidores-grid"></div>
-    <div class="pin-label">Introduce tu PIN</div>
-    <div class="pin-dots">
-      <div class="pin-dot" id="dot-0"></div><div class="pin-dot" id="dot-1"></div>
-      <div class="pin-dot" id="dot-2"></div><div class="pin-dot" id="dot-3"></div>
-    </div>
-    <div class="pin-teclado">
-      <div class="pin-key" onclick="pinKey('1')">1</div><div class="pin-key" onclick="pinKey('2')">2</div><div class="pin-key" onclick="pinKey('3')">3</div>
-      <div class="pin-key" onclick="pinKey('4')">4</div><div class="pin-key" onclick="pinKey('5')">5</div><div class="pin-key" onclick="pinKey('6')">6</div>
-      <div class="pin-key" onclick="pinKey('7')">7</div><div class="pin-key" onclick="pinKey('8')">8</div><div class="pin-key" onclick="pinKey('9')">9</div>
-      <div class="pin-key empty"></div><div class="pin-key" onclick="pinKey('0')">0</div><div class="pin-key del" onclick="pinDel()">⌫</div>
-    </div>
   </div>
 </div>
 
@@ -435,12 +425,12 @@ const ODOO_URL     = 'https://distribucionesjoaquininfante.es';
 const EMPRESA      = 'DJI';
 
 const REPARTIDORES = [
-  { nombre:'JUAN PEDRO',    pin:'1947', rutaOdoo:'Pedro Juan' },
-  { nombre:'JAVIER',        pin:'2583', rutaOdoo:'Javier' },
-  { nombre:'ALFONSO',       pin:'3614', rutaOdoo:'Alfonso' },
-  { nombre:'JUANLU',        pin:'4829', rutaOdoo:'Juanlu' },
-  { nombre:'JUANJOROBLEDO', pin:'5731', rutaOdoo:'Robledo Juan Jose' },
-  { nombre:'ZEKY',          pin:'6248', rutaOdoo:'Zeky' },
+  { nombre:'JUAN PEDRO',    rutaOdoo:'Pedro Juan' },
+  { nombre:'JAVIER',        rutaOdoo:'Javier' },
+  { nombre:'ALFONSO',       rutaOdoo:'Alfonso' },
+  { nombre:'JUANLU',        rutaOdoo:'Juanlu' },
+  { nombre:'JUANJOROBLEDO', rutaOdoo:'Robledo Juan Jose' },
+  { nombre:'ZEKY',          rutaOdoo:'Zeky' },
 ];
 
 // ═══════════════════════════════════════════
@@ -484,14 +474,11 @@ function initLogin(){
   document.getElementById('repartidores-grid').innerHTML=REPARTIDORES.map((r,i)=>
     `<button class="rep-btn" onclick="seleccionarRep(${i})">${r.nombre}</button>`).join('');
 }
-function seleccionarRep(i){ E.repIdx=i; E.pin=''; actualizarDots(); document.querySelectorAll('.rep-btn').forEach((b,j)=>b.classList.toggle('selected',i===j)); }
-function pinKey(k){ if(E.repIdx===null){toast('Selecciona tu nombre','err');return;} if(E.pin.length>=4)return; E.pin+=k; actualizarDots(); if(E.pin.length===4)comprobarPin(); }
-function pinDel(){ E.pin=E.pin.slice(0,-1); actualizarDots(); }
-function actualizarDots(){ for(let i=0;i<4;i++) document.getElementById('dot-'+i).classList.toggle('filled',i<E.pin.length); }
-function comprobarPin(){
-  const rep=REPARTIDORES[E.repIdx];
-  if(E.pin===rep.pin){ E.usuario=rep; entrarMenu(); }
-  else{ toast('PIN incorrecto','err'); setTimeout(()=>{E.pin='';actualizarDots();},600); }
+
+function seleccionarRep(i){
+  E.usuario=REPARTIDORES[i];
+  E.repIdx=i;
+  entrarMenu();
 }
 function entrarMenu(){
   document.getElementById('menu-nombre').textContent=E.usuario.nombre;
@@ -505,7 +492,7 @@ function entrarMenu(){
   }catch(_){}
   irA('menu');
 }
-function cerrarSesion(){ E.usuario=null; E.repIdx=null; E.pin=''; actualizarDots(); document.querySelectorAll('.rep-btn').forEach(b=>b.classList.remove('selected')); irA('login'); }
+function cerrarSesion(){ E.usuario=null; E.repIdx=null; E.pedidos=[]; irA('login'); }
 
 // ═══════════════════════════════════════════
 // PEDIDOS
