@@ -462,7 +462,37 @@ let E = {
 // ═══════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════
-function irA(s){ document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active')); document.getElementById('screen-'+s).classList.add('active'); window.scrollTo(0,0); }
+// Navegación con hash para interceptar botón atrás en Android
+function irA(s){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  document.getElementById('screen-'+s).classList.add('active');
+  window.scrollTo(0,0);
+  // Actualizar hash sin disparar popstate
+  history.pushState({screen:s}, '', '#'+s);
+}
+
+// Interceptar botón atrás
+window.addEventListener('popstate', function(e){
+  const activa = document.querySelector('.screen.active')?.id?.replace('screen-','');
+  const ORDEN = ['login','menu','pedidos','parada','presupuestos'];
+
+  if(!activa || activa === 'login'){
+    if(!confirm('¿Quieres salir de la aplicación?')){
+      history.pushState({screen:'login'}, '', '#login');
+    }
+    return;
+  }
+
+  // Navegar a la pantalla anterior
+  if(activa === 'parada')          irA('pedidos');
+  else if(activa === 'pedidos')    irA('menu');
+  else if(activa === 'presupuestos') irA('menu');
+  else if(activa === 'menu')       irA('login');
+  else irA('menu');
+});
+
+// Estado inicial
+history.replaceState({screen:'login'}, '', '#login');
 
 let toastT;
 function toast(msg,tipo='ok'){ const t=document.getElementById('toast'); t.textContent=msg; t.className='show '+tipo; clearTimeout(toastT); toastT=setTimeout(()=>t.className='',3000); }
@@ -1280,32 +1310,6 @@ async function subirFotoAlmacen(input, orderId, orderName, partnerNombre){
 }
 initLogin();
 
-// Interceptar botón atrás del móvil (Android)
-// Añadir estado al historial al cargar
-window.history.pushState({page:'app'}, '', window.location.href);
-
-window.addEventListener('popstate', function(e){
-  const activa = document.querySelector('.screen.active')?.id;
-
-  if(activa === 'screen-login'){
-    // En login — preguntar si quiere salir
-    const salir = confirm('¿Quieres salir de la aplicación?');
-    if(salir){
-      // Dejar que el navegador salga
-      return;
-    }
-    // No salir — volver a añadir estado
-    window.history.pushState({page:'app'}, '', window.location.href);
-  } else {
-    // En cualquier otra pantalla — navegar hacia atrás dentro de la app
-    window.history.pushState({page:'app'}, '', window.location.href);
-    if(activa === 'screen-parada')           irA('pedidos');
-    else if(activa === 'screen-pedidos')     irA('menu');
-    else if(activa === 'screen-presupuestos') irA('menu');
-    else if(activa === 'screen-menu')        irA('login');
-    else irA('menu');
-  }
-});
 </script>
 </body>
 </html>
