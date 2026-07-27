@@ -188,11 +188,17 @@ exports.handler = async (event) => {
       // Traer presupuestos (draft/sent) con esa ruta
       const presupuestos = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
         [[['route_id', '=', rutaId], ['state', 'in', ['draft', 'sent']]]],
-        { fields: ['id', 'name', 'partner_id', 'so_tag_ids', 'amount_total', 'date_order'], limit: 200 }
+        { fields: ['id', 'name', 'partner_id', 'so_tag_ids', 'amount_total', 'date_order', 'state'], limit: 200 }
       );
 
-      // Traer nombres de tags con el modelo correcto
-      const allTagIds = [...new Set(presupuestos.flatMap(p => p.so_tag_ids||[]))];
+      // Traer pedidos confirmados con picking asignado (no done) — para foto de almacén
+      const confirmados = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
+        [[['route_id', '=', rutaId], ['state', 'in', ['sale', 'done']], ['picking_ids.state', '=', 'assigned']]],
+        { fields: ['id', 'name', 'partner_id', 'so_tag_ids', 'amount_total', 'date_order', 'state'], limit: 200 }
+      );
+
+      const todos = [...presupuestos, ...confirmados];
+      const allTagIds = [...new Set(todos.flatMap(p => p.so_tag_ids||[]))];
       let tagMap = {};
       if (allTagIds.length > 0) {
         try{
@@ -203,8 +209,8 @@ exports.handler = async (event) => {
       }
 
       // Enriquecer con tag_names
-      presupuestos.forEach(p => { p.tag_names = (p.so_tag_ids||[]).map(id => tagMap[id]||'').filter(Boolean); });
-      result = { presupuestos };
+      todos.forEach(p => { p.tag_names = (p.so_tag_ids||[]).map(id => tagMap[id]||'').filter(Boolean); });
+      result = { presupuestos: todos };
 
     } else if (action === 'get_presupuestos_todos') {
       // Todos los presupuestos con ruta asignada (para admin)
@@ -224,7 +230,31 @@ exports.handler = async (event) => {
       presupuestos.forEach(p=>{ p.tag_names = (p.so_tag_ids||[]).map(id=>tagMap2[id]||'').filter(Boolean); });
       result = { presupuestos };
 
-    } else if (action === 'search_read') {
+    } else if (action === 'get_pickings_done_hoy') {
+      const { fecha } = params;
+      // Buscar todos los pickings outgoing done del día con su ruta
+      const pickings = await odooCallKw(cfg, cookie, 'stock.picking', 'search_read',
+        [[
+          ['state', '=', 'done'],
+          ['picking_type_code', '=', 'outgoing'],
+          ['date_done', '>=', fecha + ' 00:00:00'],
+          ['date_done', '<=', fecha + ' 23:59:59'],
+        ]],
+        { fields: ['id', 'name', 'partner_id', 'sale_id', 'date_done'], limit: 500 }
+      );
+      // Añadir info de ruta desde sale.order
+      const saleIds = pickings.map(p=>Array.isArray(p.sale_id)?p.sale_id[0]:p.sale_id).filter(Boolean);
+      let routeMap = {};
+      if(saleIds.length){
+        const sales = await odooCallKw(cfg, cookie, 'sale.order', 'read',
+          [saleIds], { fields: ['id', 'route_id'] });
+        sales.forEach(s=>{ routeMap[s.id] = Array.isArray(s.route_id)?s.route_id[1]:''; });
+      }
+      pickings.forEach(p=>{
+        const saleId = Array.isArray(p.sale_id)?p.sale_id[0]:p.sale_id;
+        p.route_name = routeMap[saleId]||'';
+      });
+      result = { pickings };
       const { model, domain, fields, limit } = params;
       result = await odooCallKw(cfg, cookie, model, 'search_read', [domain||[]], { fields, limit: limit||100 });
 
