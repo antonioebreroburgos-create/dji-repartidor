@@ -334,10 +334,6 @@
           <label class="toggle-switch"><input type="checkbox" id="fc-estricto"/><span class="toggle-slider"></span></label>
         </div>
         <div class="toggle-row">
-          <div><div class="toggle-label">🍳 Descarga por cocina</div><div class="toggle-sub">Entrada por cocina o trastienda</div></div>
-          <label class="toggle-switch"><input type="checkbox" id="fc-cocina"/><span class="toggle-slider"></span></label>
-        </div>
-        <div class="toggle-row">
           <div><div class="toggle-label">✍️ No firma en móvil</div><div class="toggle-sub">Rechaza firma digital</div></div>
           <label class="toggle-switch"><input type="checkbox" id="fc-no-firma"/><span class="toggle-slider"></span></label>
         </div>
@@ -395,6 +391,16 @@
 
     <!-- WHATSAPP -->
     <div id="btn-whatsapp-wrap"></div>
+
+    <!-- TIEMPO ESTIMADO — aparece tras entregar -->
+    <div id="tiempo-wrap" style="display:none;margin-bottom:12px">
+      <div class="section-label" style="margin-top:0">⏱️ Tiempo de descarga real</div>
+      <div style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px">
+        <input class="tiempo-input" type="number" id="tiempo-real" placeholder="15" min="1" max="120"/>
+        <span style="font-size:13px;color:var(--text2)">minutos</span>
+        <button onclick="guardarTiempoReal()" style="background:var(--accent);color:var(--bg);border:none;border-radius:var(--radius-sm);padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;margin-left:auto">Guardar</button>
+      </div>
+    </div>
 
     <div style="height:20px"></div>
   </div>
@@ -690,6 +696,8 @@ async function abrirParada(i){
   document.getElementById('foto-preview').innerHTML='';
   document.getElementById('btn-whatsapp-wrap').style.display='none';
   document.getElementById('btn-whatsapp-wrap').innerHTML='';
+  document.getElementById('tiempo-wrap').style.display='none';
+  document.getElementById('tiempo-real').value='';
   document.getElementById('odoo-firmado').style.display='none';
 
   // Alertas
@@ -765,7 +773,6 @@ async function cargarFichaIntegrada(p){
   const n=punto?.notas_logisticas||'';
   document.getElementById('fc-primero').checked=punto?.descargar_primero||false;
   document.getElementById('fc-estricto').checked=punto?.estricto_horario||false;
-  document.getElementById('fc-cocina').checked=n.includes('COCINA');
   document.getElementById('fc-no-firma').checked=n.includes('NO_FIRMA');
   document.getElementById('fc-factura').checked=n.includes('FACTURA');
   document.getElementById('fc-repasar').checked=n.includes('REPASAR');
@@ -840,7 +847,6 @@ async function guardarFichaIntegrada(){
   if(!p){ return; }
 
   const flags=[];
-  if(document.getElementById('fc-cocina').checked)   flags.push('COCINA');
   if(document.getElementById('fc-no-firma').checked)  flags.push('NO_FIRMA');
   if(document.getElementById('fc-factura').checked)   flags.push('FACTURA');
   if(document.getElementById('fc-repasar').checked)   flags.push('REPASAR');
@@ -983,6 +989,10 @@ async function marcarEntregado(){
       if(r.ok) E.fotoUrls.push(`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`);
     }
     p.estado='entregada'; p.fotoUrls=E.fotoUrls;
+    // Mostrar campo de tiempo real
+    document.getElementById('tiempo-wrap').style.display='block';
+    // Precargar tiempo estimado si existe en la ficha
+    if(p.punto?.tiempo_descarga_min) document.getElementById('tiempo-real').value=p.punto.tiempo_descarga_min;
     // Guardar entrega en Supabase — upsert para evitar duplicados
     try{
       await fetch(SUPABASE_URL+'/rest/v1/rutas_entregas_dia?on_conflict=odoo_picking_id,repartidor',{
@@ -1009,6 +1019,17 @@ async function marcarEntregado(){
     mostrarBotonesWhatsApp(p);
   }catch(e){ toast('Error: '+e.message,'err'); }
   btn.disabled=false; btn.textContent='[OK] Entregado';
+}
+
+async function guardarTiempoReal(){
+  const p=E.pedidos[E.pedidoActual];
+  const tiempo=parseInt(document.getElementById('tiempo-real').value);
+  if(!tiempo||!p.punto?.id) return;
+  try{
+    await supaFetch(`rutas_puntos_entrega?id=eq.${p.punto.id}`,'PATCH',{tiempo_descarga_min:tiempo});
+    p.punto.tiempo_descarga_min=tiempo;
+    toast('Tiempo guardado ✓');
+  }catch(e){ toast('Error: '+e.message,'err'); }
 }
 
 async function marcarFallido(){
