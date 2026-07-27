@@ -1280,27 +1280,30 @@ async function subirFotoAlmacen(input, orderId, orderName, partnerNombre){
 }
 initLogin();
 
-// Interceptar botón atrás del móvil
-window.history.pushState(null,'',window.location.href);
-window.addEventListener('popstate', ()=>{
-  const activa=document.querySelector('.screen.active')?.id;
-  if(activa==='screen-login'){
-    if(confirm('¿Quieres salir de la aplicación?')){
-      window.history.back();
-    } else {
-      window.history.pushState(null,'',window.location.href);
+// Interceptar botón atrás del móvil (Android)
+// Añadir estado al historial al cargar
+window.history.pushState({page:'app'}, '', window.location.href);
+
+window.addEventListener('popstate', function(e){
+  const activa = document.querySelector('.screen.active')?.id;
+
+  if(activa === 'screen-login'){
+    // En login — preguntar si quiere salir
+    const salir = confirm('¿Quieres salir de la aplicación?');
+    if(salir){
+      // Dejar que el navegador salga
+      return;
     }
-  } else if(activa==='screen-parada'){
-    irA('pedidos');
-    window.history.pushState(null,'',window.location.href);
-  } else if(activa==='screen-pedidos'||activa==='screen-presupuestos'){
-    irA('menu');
-    window.history.pushState(null,'',window.location.href);
-  } else if(activa==='screen-menu'){
-    irA('login');
-    window.history.pushState(null,'',window.location.href);
+    // No salir — volver a añadir estado
+    window.history.pushState({page:'app'}, '', window.location.href);
   } else {
-    window.history.pushState(null,'',window.location.href);
+    // En cualquier otra pantalla — navegar hacia atrás dentro de la app
+    window.history.pushState({page:'app'}, '', window.location.href);
+    if(activa === 'screen-parada')           irA('pedidos');
+    else if(activa === 'screen-pedidos')     irA('menu');
+    else if(activa === 'screen-presupuestos') irA('menu');
+    else if(activa === 'screen-menu')        irA('login');
+    else irA('menu');
   }
 });
 </script>
