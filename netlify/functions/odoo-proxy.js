@@ -176,7 +176,54 @@ exports.handler = async (event) => {
         result = { ok: false, validated: false, error: e.message };
       }
 
-    } else if (action === 'search_read') {
+    } else if (action === 'get_presupuestos') {
+      const { rutaNombre } = params;
+
+      // Buscar ruta por nombre
+      const rutas = await odooCallKw(cfg, cookie, 'stock.location.route', 'search_read',
+        [[['name', 'ilike', rutaNombre]]], { fields: ['id', 'name'], limit: 5 });
+      if (!rutas.length) throw new Error(`Ruta "${rutaNombre}" no encontrada`);
+      const rutaId = rutas[0].id;
+
+      // Traer presupuestos (draft) con esa ruta
+      const presupuestos = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
+        [[['route_id', '=', rutaId], ['state', 'in', ['draft', 'sent']]]],
+        { fields: ['id', 'name', 'partner_id', 'tag_ids', 'amount_total', 'date_order'], limit: 200 }
+      );
+
+      // Traer nombres de tags
+      const allTagIds = [...new Set(presupuestos.flatMap(p => p.tag_ids))];
+      let tagMap = {};
+      if (allTagIds.length > 0) {
+        const tags = await odooCallKw(cfg, cookie, 'crm.tag', 'read',
+          [allTagIds], { fields: ['id', 'name'] });
+        tags.forEach(t => { tagMap[t.id] = t.name; });
+      }
+
+      // Enriquecer presupuestos con nombres de tags
+      presupuestos.forEach(p => {
+        p.tag_names = p.tag_ids.map(id => tagMap[id] || '');
+      });
+
+      result = { presupuestos };
+
+    } else if (action === 'get_presupuestos_todos') {
+      // Para el panel admin — todos los presupuestos con ruta asignada
+      const presupuestos = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
+        [[['route_id', '!=', false], ['state', 'in', ['draft', 'sent']]]],
+        { fields: ['id', 'name', 'partner_id', 'route_id', 'tag_ids', 'amount_total', 'date_order'], limit: 500 }
+      );
+      const allTagIds = [...new Set(presupuestos.flatMap(p => p.tag_ids))];
+      let tagMap = {};
+      if (allTagIds.length > 0) {
+        const tags = await odooCallKw(cfg, cookie, 'crm.tag', 'read',
+          [allTagIds], { fields: ['id', 'name'] });
+        tags.forEach(t => { tagMap[t.id] = t.name; });
+      }
+      presupuestos.forEach(p => {
+        p.tag_names = p.tag_ids.map(id => tagMap[id] || '');
+      });
+      result = { presupuestos };
       const { model, domain, fields, limit } = params;
       result = await odooCallKw(cfg, cookie, model, 'search_read', [domain], { fields, limit: limit || 100 });
 
