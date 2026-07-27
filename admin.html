@@ -144,9 +144,9 @@
 
     <!-- STATS GLOBALES -->
     <div class="stats-grid">
-      <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Total pedidos</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-entregados" style="color:var(--success)">—</div><div class="stat-lbl">Entregados</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-pendientes" style="color:var(--warn)">—</div><div class="stat-lbl">Pendientes</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Entregados hoy</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-entregados" style="color:var(--success)">—</div><div class="stat-lbl">Con registro en app</div></div>
+      <div class="stat-card"><div class="stat-num" id="s-pendientes" style="color:var(--warn)">—</div><div class="stat-lbl">Ver pendientes abajo ↓</div></div>
       <div class="stat-card"><div class="stat-num" id="s-fotos" style="color:var(--accent)">—</div><div class="stat-lbl">Fotos tomadas</div></div>
     </div>
 
@@ -341,16 +341,14 @@ async function cargarDatos(){
 
     const entregas = await supaFetch(query);
 
-    // Stats globales
+    // Stats globales — entregados de Supabase
     const totalEntregas = entregas.length;
     const totalFotos = entregas.reduce((a,e)=>a+(e.foto_urls?.length||0),0);
     document.getElementById('s-entregados').textContent = totalEntregas;
     document.getElementById('s-fotos').textContent = totalFotos;
-
-    // Pendientes: necesitamos consultar el proxy para traer pickings assigned
-    // Por ahora mostramos lo que tenemos en Supabase
     document.getElementById('s-total').textContent = totalEntregas;
     document.getElementById('s-pendientes').textContent = '—';
+    // Nota: pendientes se ven en la sección "Pedidos pendientes por repartidor"
 
     // Resumen por repartidor
     renderRepGrid(entregas, rep);
