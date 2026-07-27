@@ -185,7 +185,7 @@ exports.handler = async (event) => {
       if (!rutas.length) throw new Error(`Ruta "${rutaNombre}" no encontrada`);
       const rutaId = rutas[0].id;
 
-      // Traer presupuestos (draft) con esa ruta
+      // Traer presupuestos (draft/sent) con esa ruta
       const presupuestos = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
         [[['route_id', '=', rutaId], ['state', 'in', ['draft', 'sent']]]],
         { fields: ['id', 'name', 'partner_id', 'so_tag_ids', 'amount_total', 'date_order'], limit: 200 }
