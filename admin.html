@@ -176,6 +176,23 @@
       </table>
     </div>
 
+    <!-- MAPA DE RUTA -->
+    <div class="section-title">🗺️ Mapa de ruta del repartidor</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
+      <div class="filtros-bar" style="margin-bottom:12px">
+        <span class="filtro-label">Repartidor:</span>
+        <select id="mapa-rep">
+          <option value="">Selecciona repartidor</option>
+          <option>JUAN PEDRO</option><option>JAVIER</option><option>ALFONSO</option>
+          <option>JUANLU</option><option>JUANJOROBLEDO</option><option>ZEKY</option>
+        </select>
+        <button class="btn-refresh" onclick="cargarMapa()">Ver ruta</button>
+      </div>
+      <div id="mapa-container" style="height:500px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text2)">
+        Selecciona un repartidor para ver su ruta del día
+      </div>
+    </div>
+
     <!-- PRESUPUESTOS -->
     <div class="section-title">📋 Presupuestos asignados (sin confirmar)</div>
     <div class="filtros-bar" style="margin-bottom:12px">
@@ -346,7 +363,142 @@ function closeLightbox(){
   document.getElementById('lightbox-img').src='';
 }
 
-document.getElementById('login-pass').addEventListener('keydown', e=>{
+// ── MAPA DE RUTA ─────────────────────────────────────────
+const GMAPS_KEY = 'AIzaSyBwKRw_m6EnKAvI8p5MEZLMvXyspJ14ENU';
+let mapaIniciado = false;
+let mapaObj = null;
+
+function cargarGoogleMaps(){
+  return new Promise(resolve=>{
+    if(window.google){ resolve(); return; }
+    const s=document.createElement('script');
+    s.src=`https://maps.googleapis.com/maps/api/js?key=${GMAPS_KEY}&language=es`;
+    s.onload=resolve;
+    document.head.appendChild(s);
+  });
+}
+
+async function cargarMapa(){
+  const rep = document.getElementById('mapa-rep').value;
+  if(!rep){ alert('Selecciona un repartidor'); return; }
+
+  const fecha = document.getElementById('filtro-fecha').value;
+  const container = document.getElementById('mapa-container');
+  container.innerHTML='<div class="spinner"></div>';
+
+  try{
+    // Cargar entregas del repartidor con coordenadas
+    const entregas = await supaFetch(
+      `rutas_entregas_dia?empresa=eq.${EMPRESA}&repartidor=eq.${encodeURIComponent(rep)}&fecha=eq.${fecha}&order=created_at.asc&select=*`
+    );
+
+    if(!entregas?.length){
+      container.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)">Sin entregas registradas para este repartidor en esta fecha</div>';
+      return;
+    }
+
+    // Buscar coordenadas de cada punto de entrega
+    const puntos = [];
+    for(const e of entregas){
+      if(!e.delivery_id) continue;
+      try{
+        const pts = await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${e.delivery_id}&select=latitud,longitud,direccion_texto`);
+        const pt = pts?.[0];
+        if(pt?.latitud && pt?.longitud){
+          puntos.push({
+            lat: parseFloat(pt.latitud),
+            lng: parseFloat(pt.longitud),
+            nombre: e.partner_nombre,
+            albaran: e.odoo_picking_name,
+            hora: new Date(e.created_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),
+            fotos: e.foto_urls||[],
+            dir: pt.direccion_texto||'',
+          });
+        }
+      }catch(_){}
+    }
+
+    if(!puntos.length){
+      container.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)">Sin coordenadas GPS registradas para las entregas de este repartidor.<br><small>Los repartidores deben capturar la ubicación en la ficha del cliente.</small></div>';
+      return;
+    }
+
+    // Inicializar mapa
+    await cargarGoogleMaps();
+    container.innerHTML='<div id="mapa-div" style="height:500px;border-radius:8px"></div>';
+
+    const centro = { lat: puntos[0].lat, lng: puntos[0].lng };
+    mapaObj = new google.maps.Map(document.getElementById('mapa-div'), {
+      center: centro, zoom: 11,
+      styles: [
+        {elementType:'geometry',stylers:[{color:'#1a2a38'}]},
+        {elementType:'labels.text.fill',stylers:[{color:'#8ab4c4'}]},
+        {elementType:'labels.text.stroke',stylers:[{color:'#0f1923'}]},
+        {featureType:'road',elementType:'geometry',stylers:[{color:'#2a4055'}]},
+        {featureType:'water',elementType:'geometry',stylers:[{color:'#0f1923'}]},
+      ]
+    });
+
+    const infoWindow = new google.maps.InfoWindow();
+
+    // Marcadores numerados
+    puntos.forEach((p, i) => {
+      const marker = new google.maps.Marker({
+        position: { lat: p.lat, lng: p.lng },
+        map: mapaObj,
+        label: { text: String(i+1), color: '#0f2027', fontWeight: 'bold' },
+        title: p.nombre,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 18,
+          fillColor: i===0 ? '#00c9a7' : '#f59e0b',
+          fillOpacity: 1,
+          strokeColor: '#fff',
+          strokeWeight: 2,
+        }
+      });
+
+      marker.addListener('click', ()=>{
+        const fotoHtml = p.fotos.slice(0,2).map(f=>
+          `<img src="${f}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;margin-right:4px"/>`
+        ).join('');
+        infoWindow.setContent(`
+          <div style="font-family:sans-serif;max-width:220px">
+            <div style="font-weight:800;font-size:14px;margin-bottom:4px">${i+1}. ${p.nombre}</div>
+            <div style="font-size:12px;color:#666;margin-bottom:4px">⏰ ${p.hora}</div>
+            <div style="font-size:11px;color:#888;margin-bottom:6px">${p.dir}</div>
+            ${fotoHtml}
+          </div>
+        `);
+        infoWindow.open(mapaObj, marker);
+      });
+    });
+
+    // Línea de ruta
+    const ruta = new google.maps.Polyline({
+      path: puntos.map(p=>({lat:p.lat,lng:p.lng})),
+      geodesic: true,
+      strokeColor: '#00c9a7',
+      strokeOpacity: 0.8,
+      strokeWeight: 3,
+      map: mapaObj,
+    });
+
+    // Ajustar zoom
+    const bounds = new google.maps.LatLngBounds();
+    puntos.forEach(p => bounds.extend({lat:p.lat,lng:p.lng}));
+    mapaObj.fitBounds(bounds);
+
+    // Info resumen
+    const resumen = document.createElement('div');
+    resumen.style.cssText='margin-top:12px;font-size:13px;color:var(--text2);text-align:center';
+    resumen.textContent=`${puntos.length} paradas con GPS de ${entregas.length} entregas totales · ${rep} · ${fecha}`;
+    container.appendChild(resumen);
+
+  }catch(e){
+    container.innerHTML=`<div style="text-align:center;padding:40px;color:var(--danger)">${e.message}</div>`;
+  }
+}
   if(e.key==='Enter') doLogin();
 });
 
