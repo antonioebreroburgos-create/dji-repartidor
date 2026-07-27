@@ -499,6 +499,8 @@ async function cargarMapa(){
     container.innerHTML=`<div style="text-align:center;padding:40px;color:var(--danger)">${e.message}</div>`;
   }
 }
+
+document.getElementById('login-pass').addEventListener('keydown', e=>{
   if(e.key==='Enter') doLogin();
 });
 
