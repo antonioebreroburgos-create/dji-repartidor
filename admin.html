@@ -425,10 +425,12 @@ async function cargarMapa(){
 
     // Inicializar mapa
     await cargarGoogleMaps();
-    container.innerHTML='<div id="mapa-div" style="height:500px;border-radius:8px"></div>';
+    container.style.height = '520px';
+    container.style.padding = '0';
+    container.innerHTML = '<div id="mapa-div" style="width:100%;height:500px;border-radius:8px"></div><div id="mapa-resumen" style="padding:12px;font-size:13px;color:#8ab4c4;text-align:center"></div>';
 
-    // Esperar a que el DOM renderice el div
-    await new Promise(r=>setTimeout(r,100));
+    // Esperar dos frames para que el DOM renderice
+    await new Promise(r => requestAnimationFrame(()=>requestAnimationFrame(r)));
 
     const centro = { lat: puntos[0].lat, lng: puntos[0].lng };
     mapaObj = new google.maps.Map(document.getElementById('mapa-div'), {
@@ -493,10 +495,7 @@ async function cargarMapa(){
     mapaObj.fitBounds(bounds);
 
     // Info resumen
-    const resumen = document.createElement('div');
-    resumen.style.cssText='margin-top:12px;font-size:13px;color:var(--text2);text-align:center';
-    resumen.textContent=`${puntos.length} paradas con GPS de ${entregas.length} entregas totales · ${rep} · ${fecha}`;
-    container.appendChild(resumen);
+    document.getElementById('mapa-resumen').textContent=`${puntos.length} paradas con GPS de ${entregas.length} entregas totales · ${rep} · ${fecha}`;
 
   }catch(e){
     container.innerHTML=`<div style="text-align:center;padding:40px;color:var(--danger)">${e.message}</div>`;
