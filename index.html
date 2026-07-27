@@ -986,18 +986,22 @@ async function marcarEntregado(){
       if(r.ok) E.fotoUrls.push(`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`);
     }
     p.estado='entregada'; p.fotoUrls=E.fotoUrls;
-    // Guardar entrega en Supabase para persistencia
+    // Guardar entrega en Supabase — upsert para evitar duplicados
     try{
-      await supaFetch('rutas_entregas_dia','POST',{
-        empresa:EMPRESA,
-        repartidor:E.usuario.nombre,
-        odoo_picking_id:p.id,
-        odoo_picking_name:p.name,
-        partner_nombre:p.partnerNombre,
-        delivery_id:p.deliveryId,
-        foto_urls:E.fotoUrls,
-        comentario:p.comentario||null,
-        estado:'entregada',
+      await fetch(SUPABASE_URL+'/rest/v1/rutas_entregas_dia?on_conflict=odoo_picking_id,repartidor',{
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify({
+          empresa:EMPRESA,
+          repartidor:E.usuario.nombre,
+          odoo_picking_id:p.id,
+          odoo_picking_name:p.name,
+          partner_nombre:p.partnerNombre,
+          delivery_id:p.deliveryId,
+          foto_urls:E.fotoUrls,
+          comentario:p.comentario||null,
+          estado:'entregada',
+        }),
       });
     }catch(err){ console.warn('No se pudo guardar entrega:', err.message); }
     // Persistir estado en sessionStorage también
