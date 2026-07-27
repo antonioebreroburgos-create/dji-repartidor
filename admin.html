@@ -165,7 +165,8 @@
             <th>Albarán</th>
             <th>Cliente</th>
             <th>Estado</th>
-            <th>Fotos</th>
+            <th>Fotos entrega</th>
+            <th>Fotos almacén</th>
             <th>Comentario</th>
             <th>Acciones</th>
           </tr>
@@ -328,17 +329,28 @@ function renderRepGrid(entregas, filtroRep){
   }).join('');
 }
 
-function renderTabla(entregas){
+async function renderTabla(entregas){
   if(!entregas.length){
-    document.getElementById('tabla-body').innerHTML='<tr><td colspan="8"><div class="empty">Sin entregas para esta selección</div></td></tr>';
+    document.getElementById('tabla-body').innerHTML='<tr><td colspan="9"><div class="empty">Sin entregas para esta selección</div></td></tr>';
     return;
   }
+
+  // Cargar fotos de almacén del día
+  const fecha = document.getElementById('filtro-fecha').value;
+  let fotosAlmacenMap = {};
+  try{
+    const fa = await supaFetch(`rutas_fotos_almacen?empresa=eq.${EMPRESA}&fecha=eq.${fecha}&select=odoo_order_id,foto_urls`);
+    (fa||[]).forEach(f=>{ fotosAlmacenMap[f.odoo_order_id]=(f.foto_urls||[]); });
+  }catch(_){}
 
   document.getElementById('tabla-body').innerHTML = entregas.map(e=>{
     const hora = new Date(e.created_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
     const fotos = (e.foto_urls||[]).map(url=>
       `<img class="foto-thumb" src="${url}" onclick="openLightbox('${url}')" title="Ver foto"/>`
     ).join('');
+    const fotosAlmacen = (fotosAlmacenMap[e.odoo_picking_id]||[]).map(url=>
+      `<img class="foto-thumb" src="${url}" onclick="openLightbox('${url}')" title="Foto almacén" style="border-color:var(--warn)"/>`
+    ).join('') || '<span style="color:var(--text3);font-size:12px">—</span>';
     const albaranUrl = `${ODOO_URL}/report/pdf/stock.report_deliveryslip/${e.odoo_picking_id}`;
 
     return `<tr>
@@ -348,6 +360,7 @@ function renderTabla(entregas){
       <td style="max-width:200px">${e.partner_nombre}</td>
       <td><span class="badge badge-ok">Entregado</span></td>
       <td><div class="fotos-wrap">${fotos||'<span style="color:var(--text3);font-size:12px">Sin fotos</span>'}</div></td>
+      <td><div class="fotos-wrap">${fotosAlmacen}</div></td>
       <td style="max-width:200px;color:var(--text2);font-size:13px">${e.comentario||'—'}</td>
       <td><a class="albaran-link" href="${albaranUrl}" target="_blank">📄 PDF</a></td>
     </tr>`;
