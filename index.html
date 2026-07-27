@@ -463,32 +463,39 @@ let E = {
 // HELPERS
 // ═══════════════════════════════════════════
 // Navegación con hash para interceptar botón atrás en Android
+let _navegandoInternamente = false;
+
 function irA(s){
   document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
   document.getElementById('screen-'+s).classList.add('active');
   window.scrollTo(0,0);
-  // Actualizar hash sin disparar popstate
-  history.pushState({screen:s}, '', '#'+s);
+  if(!_navegandoInternamente){
+    history.pushState({screen:s}, '', '#'+s);
+  }
 }
 
 // Interceptar botón atrás
 window.addEventListener('popstate', function(e){
+  _navegandoInternamente = true;
   const activa = document.querySelector('.screen.active')?.id?.replace('screen-','');
-  const ORDEN = ['login','menu','pedidos','parada','presupuestos'];
 
   if(!activa || activa === 'login'){
     if(!confirm('¿Quieres salir de la aplicación?')){
       history.pushState({screen:'login'}, '', '#login');
     }
+    _navegandoInternamente = false;
     return;
   }
 
-  // Navegar a la pantalla anterior
-  if(activa === 'parada')          irA('pedidos');
-  else if(activa === 'pedidos')    irA('menu');
-  else if(activa === 'presupuestos') irA('menu');
-  else if(activa === 'menu')       irA('login');
+  if(activa === 'parada')             irA('pedidos');
+  else if(activa === 'pedidos')       irA('menu');
+  else if(activa === 'presupuestos')  irA('menu');
+  else if(activa === 'menu')          irA('login');
   else irA('menu');
+
+  // Volver a añadir estado para que el siguiente atrás funcione
+  history.pushState({screen: document.querySelector('.screen.active')?.id?.replace('screen-','')}, '', window.location.href);
+  _navegandoInternamente = false;
 });
 
 // Estado inicial
