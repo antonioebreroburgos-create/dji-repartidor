@@ -280,6 +280,48 @@ function init(){
   cargarDatos();
 }
 
+async function sincronizarEntregados(fecha){
+  // Buscar pickings done de hoy en Odoo que no estén en rutas_entregas_dia
+  try{
+    const r = await fetch(PROXY_URL_ADMIN,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({empresa:EMPRESA, action:'get_pickings_done_hoy', params:{fecha}}),
+    });
+    const j = await r.json();
+    if(!j.ok || !j.result?.pickings?.length) return;
+
+    const pickingsDone = j.result.pickings;
+
+    // Ver cuáles ya están en Supabase
+    const existentes = await supaFetch(`rutas_entregas_dia?empresa=eq.${EMPRESA}&fecha=eq.${fecha}&select=odoo_picking_id`);
+    const idsExistentes = new Set((existentes||[]).map(e=>e.odoo_picking_id));
+
+    // Insertar los que faltan
+    const nuevos = pickingsDone.filter(p=>!idsExistentes.has(p.id));
+    for(const p of nuevos){
+      const cliente = Array.isArray(p.partner_id)?p.partner_id[1]:'-';
+      const partnerId = Array.isArray(p.partner_id)?p.partner_id[0]:p.partner_id;
+      // Buscar el repartidor por la ruta
+      const ruta = Array.isArray(p.route_name)?p.route_name[0]:p.route_name||'';
+      const repartidor = Object.entries(RUTAS_REPARTIDORES).find(([,v])=>ruta.includes(v))?.[0]||'Desconocido';
+
+      await fetch(SUPABASE_URL+'/rest/v1/rutas_entregas_dia',{
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify({
+          empresa:EMPRESA, repartidor,
+          odoo_picking_id:p.id, odoo_picking_name:p.name,
+          partner_nombre:cliente, delivery_id:partnerId,
+          foto_urls:[], estado:'entregada', fecha,
+          hora_entrega: p.date_done ? new Date(p.date_done).toISOString() : null,
+        }),
+      });
+    }
+    if(nuevos.length) console.log(`Sincronizados ${nuevos.length} pickings de Odoo`);
+  }catch(e){ console.warn('Error sincronizando:', e.message); }
+}
+
 async function cargarDatos(){
   const fecha  = document.getElementById('filtro-fecha').value;
   const rep    = document.getElementById('filtro-rep').value;
@@ -287,6 +329,9 @@ async function cargarDatos(){
 
   document.getElementById('rep-grid').innerHTML='<div class="spinner"></div>';
   document.getElementById('tabla-body').innerHTML='<tr><td colspan="8" style="text-align:center;padding:32px"><div class="spinner"></div></td></tr>';
+
+  // Sincronizar pickings done de Odoo que no estén registrados
+  await sincronizarEntregados(fecha);
 
   try{
     // Cargar entregas del día desde Supabase
@@ -353,7 +398,8 @@ async function renderTabla(entregas){
   }catch(_){}
 
   document.getElementById('tabla-body').innerHTML = entregas.map(e=>{
-    const hora = new Date(e.created_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+    const horaRef = e.hora_entrega || e.created_at;
+    const hora = new Date(horaRef).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
     const fotos = (e.foto_urls||[]).map(url=>
       `<img class="foto-thumb" src="${url}" onclick="openLightbox('${url}')" title="Ver foto"/>`
     ).join('');
