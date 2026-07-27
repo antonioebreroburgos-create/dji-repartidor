@@ -408,6 +408,16 @@
     <span class="header-sub" id="pres-count"></span>
   </div>
   <div class="content">
+    <div class="filtros" style="margin-bottom:12px">
+      <button class="filtro-btn active" id="fdía-todos" onclick="setFiltroDia('',this)">Todos</button>
+      <button class="filtro-btn" id="fdía-lunes" onclick="setFiltroDia('Lunes',this)">Lun</button>
+      <button class="filtro-btn" id="fdía-martes" onclick="setFiltroDia('Martes',this)">Mar</button>
+      <button class="filtro-btn" id="fdía-miercoles" onclick="setFiltroDia('Miércoles',this)">Mié</button>
+      <button class="filtro-btn" id="fdía-jueves" onclick="setFiltroDia('Jueves',this)">Jue</button>
+      <button class="filtro-btn" id="fdía-viernes" onclick="setFiltroDia('Viernes',this)">Vie</button>
+      <button class="filtro-btn" id="fdía-sabado" onclick="setFiltroDia('Sábado',this)">Sáb</button>
+      <button class="filtro-btn" id="fdía-sindia" onclick="setFiltroDia('sin-dia',this)">Sin día</button>
+    </div>
     <div id="pres-lista"></div>
   </div>
 </div>
@@ -1099,78 +1109,77 @@ function getDiaTag(tagNames){
 async function cargarPresupuestos(){
   irA('presupuestos');
   document.getElementById('pres-lista').innerHTML='<div class="spinner"></div>';
+  document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('fdía-todos')?.classList.add('active');
   try{
     const {presupuestos} = await odooProxy('get_presupuestos', {rutaNombre: E.usuario.rutaOdoo});
-
+    E_presupuestos = presupuestos;
     document.getElementById('pres-count').textContent=`${presupuestos.length} presupuestos`;
-
-    if(!presupuestos.length){
-      document.getElementById('pres-lista').innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Sin asignaciones</div><div class="empty-sub">No hay presupuestos pendientes asignados</div></div>';
-      return;
-    }
-
-    // Agrupar por día
-    const porDia = {};
-    const sinDia = [];
-
-    presupuestos.forEach(p=>{
-      const dia = getDiaTag(p.tag_names);
-      if(dia){
-        if(!porDia[dia]) porDia[dia]=[];
-        porDia[dia].push(p);
-      } else {
-        sinDia.push(p);
-      }
-    });
-
-    let html = '';
-
-    // Días en orden
-    const diasConDatos = DIAS_ORDEN.filter(d => porDia[d]);
-    // Deduplicar (miercoles/miércoles)
-    const diasUnicos = [...new Set(diasConDatos.map(d=>DIAS_LABEL[d]))];
-
-    diasUnicos.forEach(labelDia=>{
-      const claves = DIAS_ORDEN.filter(d=>DIAS_LABEL[d]===labelDia);
-      const items = claves.flatMap(k=>porDia[k]||[]);
-      const total = items.reduce((a,p)=>a+p.amount_total,0);
-      html+=`<div class="dia-section">
-        <div class="dia-header">
-          📅 ${labelDia}
-          <span class="dia-total">${items.length} pedidos · ${total.toLocaleString('es-ES',{style:'currency',currency:'EUR'})}</span>
-        </div>
-        ${items.map(p=>renderPresCard(p)).join('')}
-      </div>`;
-    });
-
-    // Sin día asignado
-    if(sinDia.length){
-      html+=`<div class="dia-section">
-        <div class="dia-header" style="color:var(--text3)">
-          ❓ Sin día asignado
-          <span class="dia-total">${sinDia.length} pedidos</span>
-        </div>
-        ${sinDia.map(p=>renderPresCard(p)).join('')}
-      </div>`;
-    }
-
-    document.getElementById('pres-lista').innerHTML=html;
-
+    renderPresupuestosFiltrados('');
     // Cargar fotos de almacén ya subidas hoy
     try{
       const hoy=new Date().toISOString().split('T')[0];
       const fotos=await supaFetch(`rutas_fotos_almacen?empresa=eq.${EMPRESA}&repartidor=eq.${E.usuario.nombre}&fecha=eq.${hoy}&select=odoo_order_id,foto_urls`);
-      if(fotos?.length){
-        fotos.forEach(f=>{
-          const preview=document.getElementById(`fotos_pres_${f.odoo_order_id}`);
-          if(preview && f.foto_urls?.length){
-            preview.innerHTML=f.foto_urls.map(url=>`<img src="${url}" class="foto-thumb"/>`).join('');
-          }
-        });
-      }
+      if(fotos?.length) fotos.forEach(f=>{
+        const preview=document.getElementById(`fotos_pres_${f.odoo_order_id}`);
+        if(preview && f.foto_urls?.length) preview.innerHTML=f.foto_urls.map(url=>`<img src="${url}" class="foto-thumb"/>`).join('');
+      });
     }catch(_){}
   }catch(e){
     document.getElementById('pres-lista').innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error</div><div class="empty-sub">${e.message}</div></div>`;
+  }
+}
+
+function setFiltroDia(dia, btn){
+  document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPresupuestosFiltrados(dia);
+}
+
+function renderPresupuestosFiltrados(filtroDia=''){
+  const lista = document.getElementById('pres-lista');
+  let presupuestos = E_presupuestos;
+
+  if(!presupuestos.length){
+    lista.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Sin asignaciones</div></div>';
+    return;
+  }
+
+  // Filtrar por día
+  if(filtroDia === 'sin-dia'){
+    presupuestos = presupuestos.filter(p=>!getDiaTag(p.tag_names));
+  } else if(filtroDia){
+    presupuestos = presupuestos.filter(p=>{
+      const dia=getDiaTag(p.tag_names);
+      return dia && DIAS_LABEL[dia]===filtroDia;
+    });
+  }
+
+  if(!presupuestos.length){
+    lista.innerHTML='<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">Sin pedidos para este día</div></div>';
+    return;
+  }
+
+  // Agrupar por día (solo si no hay filtro)
+  if(!filtroDia){
+    const porDia={}, sinDia=[];
+    presupuestos.forEach(p=>{
+      const dia=getDiaTag(p.tag_names);
+      if(dia){ if(!porDia[dia]) porDia[dia]=[]; porDia[dia].push(p); }
+      else sinDia.push(p);
+    });
+    let html='';
+    const diasUnicos=[...new Set(DIAS_ORDEN.filter(d=>porDia[d]).map(d=>DIAS_LABEL[d]))];
+    diasUnicos.forEach(labelDia=>{
+      const claves=DIAS_ORDEN.filter(d=>DIAS_LABEL[d]===labelDia);
+      const items=claves.flatMap(k=>porDia[k]||[]);
+      const total=items.reduce((a,p)=>a+p.amount_total,0);
+      html+=`<div class="dia-section"><div class="dia-header">📅 ${labelDia}<span class="dia-total">${items.length} pedidos · ${total.toLocaleString('es-ES',{style:'currency',currency:'EUR'})}</span></div>${items.map(p=>renderPresCard(p)).join('')}</div>`;
+    });
+    if(sinDia.length) html+=`<div class="dia-section"><div class="dia-header" style="color:var(--text3)">❓ Sin día<span class="dia-total">${sinDia.length} pedidos</span></div>${sinDia.map(p=>renderPresCard(p)).join('')}</div>`;
+    lista.innerHTML=html;
+  } else {
+    lista.innerHTML=presupuestos.map(p=>renderPresCard(p)).join('');
   }
 }
 
