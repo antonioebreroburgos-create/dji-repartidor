@@ -1250,8 +1250,12 @@ function renderPresCard(p){
     return !DIAS_ORDEN.map(d=>d.normalize('NFD').replace(/[\u0300-\u036f]/g,'')).includes(tNorm);
   });
   const idSafe = `pres_${p.id}`;
-  return `<div class="pres-card" id="card_${idSafe}">
-    <div class="pres-num">${p.name}</div>
+  const esConfirmado = p.state === 'sale' || p.state === 'done';
+  return `<div class="pres-card" id="card_${idSafe}" style="${esConfirmado?'border-color:var(--accent);background:rgba(0,201,167,.04)':''}">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <div class="pres-num">${p.name}</div>
+      ${esConfirmado?'<span class="tag-badge" style="background:rgba(0,201,167,.12);border-color:var(--accent);color:var(--accent)">✓ Confirmado</span>':'<span class="tag-badge">Presupuesto</span>'}
+    </div>
     <div class="pres-cliente">${clienteNombre}</div>
     <div class="pres-meta" style="margin-bottom:8px">
       <span class="pres-importe">${importe}</span>
