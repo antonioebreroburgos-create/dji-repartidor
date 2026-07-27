@@ -427,6 +427,9 @@ async function cargarMapa(){
     await cargarGoogleMaps();
     container.innerHTML='<div id="mapa-div" style="height:500px;border-radius:8px"></div>';
 
+    // Esperar a que el DOM renderice el div
+    await new Promise(r=>setTimeout(r,100));
+
     const centro = { lat: puntos[0].lat, lng: puntos[0].lng };
     mapaObj = new google.maps.Map(document.getElementById('mapa-div'), {
       center: centro, zoom: 11,
