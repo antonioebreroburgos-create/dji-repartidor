@@ -188,47 +188,40 @@ exports.handler = async (event) => {
       // Traer presupuestos (draft) con esa ruta
       const presupuestos = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
         [[['route_id', '=', rutaId], ['state', 'in', ['draft', 'sent']]]],
-        { fields: ['id', 'name', 'partner_id', 'tag_ids', 'amount_total', 'date_order'], limit: 200 }
+        { fields: ['id', 'name', 'partner_id', 'so_tag_ids', 'amount_total', 'date_order'], limit: 200 }
       );
 
-      // Traer nombres de tags — probar modelos posibles en Odoo 15
-      const allTagIds = [...new Set(presupuestos.flatMap(p => p.tag_ids))];
+      // Traer nombres de tags con el modelo correcto
+      const allTagIds = [...new Set(presupuestos.flatMap(p => p.so_tag_ids||[]))];
       let tagMap = {};
       if (allTagIds.length > 0) {
-        // Intentar con crm.tag primero, luego sale.order.tag
-        for(const tagModel of ['crm.tag', 'sale.order.tag', 'account.analytic.tag']){
-          try{
-            const tags = await odooCallKw(cfg, cookie, tagModel, 'read',
-              [allTagIds], { fields: ['id', 'name'] });
-            if(tags && tags.length > 0){
-              tags.forEach(t => { tagMap[t.id] = t.name; });
-              break;
-            }
-          }catch(_){ continue; }
-        }
+        try{
+          const tags = await odooCallKw(cfg, cookie, 'sale.order.tag', 'read',
+            [allTagIds], { fields: ['id', 'name'] });
+          tags.forEach(t => { tagMap[t.id] = t.name; });
+        }catch(_){}
       }
 
       // Enriquecer con tag_names
-      presupuestos.forEach(p => { p.tag_names = p.tag_ids.map(id => tagMap[id]||'').filter(Boolean); });
+      presupuestos.forEach(p => { p.tag_names = (p.so_tag_ids||[]).map(id => tagMap[id]||'').filter(Boolean); });
       result = { presupuestos };
 
     } else if (action === 'get_presupuestos_todos') {
       // Todos los presupuestos con ruta asignada (para admin)
       const presupuestos = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
         [[['route_id','!=',false],['state','in',['draft','sent']]]],
-        { fields:['id','name','partner_id','route_id','tag_ids','amount_total','date_order'], limit:500 }
+        { fields:['id','name','partner_id','route_id','so_tag_ids','amount_total','date_order'], limit:500 }
       );
-      const allTagIds2 = [...new Set(presupuestos.flatMap(p => p.tag_ids))];
+      const allTagIds2 = [...new Set(presupuestos.flatMap(p => p.so_tag_ids||[]))];
       let tagMap2 = {};
       if(allTagIds2.length > 0){
-        for(const m of ['crm.tag','sale.order.tag','account.analytic.tag']){
-          try{
-            const tags = await odooCallKw(cfg, cookie, m, 'read', [allTagIds2], {fields:['id','name']});
-            if(tags?.length){ tags.forEach(t=>{ tagMap2[t.id]=t.name; }); break; }
-          }catch(_){ continue; }
-        }
+        try{
+          const tags = await odooCallKw(cfg, cookie, 'sale.order.tag', 'read',
+            [allTagIds2], {fields:['id','name']});
+          tags.forEach(t=>{ tagMap2[t.id]=t.name; });
+        }catch(_){}
       }
-      presupuestos.forEach(p=>{ p.tag_names = p.tag_ids.map(id=>tagMap2[id]||'').filter(Boolean); });
+      presupuestos.forEach(p=>{ p.tag_names = (p.so_tag_ids||[]).map(id=>tagMap2[id]||'').filter(Boolean); });
       result = { presupuestos };
 
     } else if (action === 'search_read') {
