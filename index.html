@@ -163,7 +163,18 @@
     .whatsapp-btn{background:#25D366;color:#fff;border:none;border-radius:var(--radius);padding:14px;width:100%;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;transition:all .15s}
     .whatsapp-btn:active{transform:scale(0.97)}
 
-    .empty-state{text-align:center;padding:48px 24px}
+    /* PRESUPUESTOS */
+    .dia-section{margin-bottom:20px}
+    .dia-header{font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1px;padding:8px 0;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+    .dia-total{font-size:12px;color:var(--text2);font-weight:400}
+    .pres-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:6px}
+    .pres-num{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:2px}
+    .pres-cliente{font-size:15px;font-weight:700;margin-bottom:4px}
+    .pres-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+    .pres-importe{font-size:13px;font-weight:700;color:var(--success)}
+    .tag-badge{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:11px;color:var(--text2)}
+    .tag-badge.dia{background:rgba(245,158,11,.12);border-color:var(--warn);color:var(--warn);font-weight:700}
+    .sin-dia{background:rgba(239,68,68,.08);border:1px dashed var(--danger);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:6px;font-size:13px;color:var(--text2)}
     .empty-icon{font-size:48px;margin-bottom:12px}
     .empty-title{font-size:18px;font-weight:700;margin-bottom:6px}
     .empty-sub{font-size:14px;color:var(--text2)}
@@ -213,6 +224,11 @@
     <div class="menu-item" onclick="cargarPedidosHoy()">
       <div class="menu-icon orange">📦</div>
       <div class="menu-text"><h3>Mis pedidos pendientes</h3><p>Pickings listos para entregar</p></div>
+      <div class="menu-arrow">›</div>
+    </div>
+    <div class="menu-item" onclick="cargarPresupuestos()">
+      <div class="menu-icon" style="background:rgba(124,58,237,.15)">📋</div>
+      <div class="menu-text"><h3>Mis asignaciones</h3><p>Presupuestos pendientes por día</p></div>
       <div class="menu-arrow">›</div>
     </div>
     <button class="btn-cerrar-sesion" onclick="cerrarSesion()">Cerrar sesión</button>
@@ -391,6 +407,18 @@
     <div id="btn-whatsapp-wrap"></div>
 
     <div style="height:20px"></div>
+  </div>
+</div>
+
+<!-- PRESUPUESTOS -->
+<div id="screen-presupuestos" class="screen">
+  <div class="header">
+    <button class="btn-back" onclick="irA('menu')">‹ Volver</button>
+    <h1>Mis asignaciones</h1>
+    <span class="header-sub" id="pres-count"></span>
+  </div>
+  <div class="content">
+    <div id="pres-lista"></div>
   </div>
 </div>
 
@@ -1060,8 +1088,103 @@ function enviarWhatsAppPedido(p, tel, nombre, fotoUrls){
 }
 
 // ═══════════════════════════════════════════
-// INIT
+// PRESUPUESTOS / ASIGNACIONES
 // ═══════════════════════════════════════════
+const DIAS_ORDEN = ['lunes','martes','miercoles','miércoles','jueves','viernes','sabado','sábado','domingo'];
+const DIAS_LABEL = {
+  'lunes':'Lunes','martes':'Martes','miercoles':'Miércoles','miércoles':'Miércoles',
+  'jueves':'Jueves','viernes':'Viernes','sabado':'Sábado','sábado':'Sábado','domingo':'Domingo'
+};
+
+function getDiaTag(tagNames){
+  const tags = (tagNames||[]).map(t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+  for(const d of DIAS_ORDEN){
+    const dNorm = d.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if(tags.includes(dNorm)) return d;
+  }
+  return null;
+}
+
+async function cargarPresupuestos(){
+  irA('presupuestos');
+  document.getElementById('pres-lista').innerHTML='<div class="spinner"></div>';
+  try{
+    const {presupuestos} = await odooProxy('get_presupuestos', {rutaNombre: E.usuario.rutaOdoo});
+
+    document.getElementById('pres-count').textContent=`${presupuestos.length} presupuestos`;
+
+    if(!presupuestos.length){
+      document.getElementById('pres-lista').innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Sin asignaciones</div><div class="empty-sub">No hay presupuestos pendientes asignados</div></div>';
+      return;
+    }
+
+    // Agrupar por día
+    const porDia = {};
+    const sinDia = [];
+
+    presupuestos.forEach(p=>{
+      const dia = getDiaTag(p.tag_names);
+      if(dia){
+        if(!porDia[dia]) porDia[dia]=[];
+        porDia[dia].push(p);
+      } else {
+        sinDia.push(p);
+      }
+    });
+
+    let html = '';
+
+    // Días en orden
+    const diasConDatos = DIAS_ORDEN.filter(d => porDia[d]);
+    // Deduplicar (miercoles/miércoles)
+    const diasUnicos = [...new Set(diasConDatos.map(d=>DIAS_LABEL[d]))];
+
+    diasUnicos.forEach(labelDia=>{
+      const claves = DIAS_ORDEN.filter(d=>DIAS_LABEL[d]===labelDia);
+      const items = claves.flatMap(k=>porDia[k]||[]);
+      const total = items.reduce((a,p)=>a+p.amount_total,0);
+      html+=`<div class="dia-section">
+        <div class="dia-header">
+          📅 ${labelDia}
+          <span class="dia-total">${items.length} pedidos · ${total.toLocaleString('es-ES',{style:'currency',currency:'EUR'})}</span>
+        </div>
+        ${items.map(p=>renderPresCard(p)).join('')}
+      </div>`;
+    });
+
+    // Sin día asignado
+    if(sinDia.length){
+      html+=`<div class="dia-section">
+        <div class="dia-header" style="color:var(--text3)">
+          ❓ Sin día asignado
+          <span class="dia-total">${sinDia.length} pedidos</span>
+        </div>
+        ${sinDia.map(p=>renderPresCard(p)).join('')}
+      </div>`;
+    }
+
+    document.getElementById('pres-lista').innerHTML=html;
+  }catch(e){
+    document.getElementById('pres-lista').innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error</div><div class="empty-sub">${e.message}</div></div>`;
+  }
+}
+
+function renderPresCard(p){
+  const clienteNombre = Array.isArray(p.partner_id)?p.partner_id[1]:'-';
+  const importe = (p.amount_total||0).toLocaleString('es-ES',{style:'currency',currency:'EUR'});
+  const otrosTags = (p.tag_names||[]).filter(t=>{
+    const tNorm=t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    return !DIAS_ORDEN.map(d=>d.normalize('NFD').replace(/[\u0300-\u036f]/g,'')).includes(tNorm);
+  });
+  return `<div class="pres-card">
+    <div class="pres-num">${p.name}</div>
+    <div class="pres-cliente">${clienteNombre}</div>
+    <div class="pres-meta">
+      <span class="pres-importe">${importe}</span>
+      ${otrosTags.map(t=>`<span class="tag-badge">${t}</span>`).join('')}
+    </div>
+  </div>`;
+}
 initLogin();
 </script>
 </body>
