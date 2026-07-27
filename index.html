@@ -998,6 +998,7 @@ async function marcarEntregado(){
           foto_urls:E.fotoUrls,
           comentario:p.comentario||null,
           estado:'entregada',
+          hora_entrega: new Date().toISOString(),
         }),
       });
     }catch(err){ console.warn('No se pudo guardar entrega:', err.message); }
