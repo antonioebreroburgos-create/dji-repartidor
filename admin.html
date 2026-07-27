@@ -176,6 +176,37 @@
       </table>
     </div>
 
+    <!-- PRESUPUESTOS -->
+    <div class="section-title">📋 Presupuestos asignados (sin confirmar)</div>
+    <div class="filtros-bar" style="margin-bottom:12px">
+      <span class="filtro-label">Día:</span>
+      <select id="filtro-dia-pres">
+        <option value="">Todos los días</option>
+        <option>Lunes</option><option>Martes</option><option>Miércoles</option>
+        <option>Jueves</option><option>Viernes</option><option>Sábado</option><option>Domingo</option>
+      </select>
+      <span class="filtro-label">Repartidor:</span>
+      <select id="filtro-rep-pres">
+        <option value="">Todos</option>
+        <option>JUAN PEDRO</option><option>JAVIER</option><option>ALFONSO</option>
+        <option>JUANLU</option><option>JUANJOROBLEDO</option><option>ZEKY</option>
+      </select>
+      <button class="btn-refresh" onclick="cargarPresupuestos()">Buscar</button>
+    </div>
+    <div class="tabla-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Presupuesto</th><th>Cliente</th><th>Repartidor</th>
+            <th>Día asignado</th><th>Otros tags</th><th>Importe</th>
+          </tr>
+        </thead>
+        <tbody id="pres-body">
+          <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text2)">Pulsa "Buscar" para cargar</td></tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 </div>
 
@@ -318,6 +349,80 @@ function closeLightbox(){
 document.getElementById('login-pass').addEventListener('keydown', e=>{
   if(e.key==='Enter') doLogin();
 });
+
+// ── PRESUPUESTOS ADMIN ────────────────────────────────────
+const PROXY_URL_ADMIN = '/.netlify/functions/odoo-proxy';
+const DIAS_ORDEN_A = ['lunes','martes','miercoles','miércoles','jueves','viernes','sabado','sábado','domingo'];
+
+function getDiaTagA(tagNames){
+  const tags=(tagNames||[]).map(t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+  for(const d of DIAS_ORDEN_A){
+    if(tags.includes(d.normalize('NFD').replace(/[\u0300-\u036f]/g,''))) return d;
+  }
+  return null;
+}
+
+async function cargarPresupuestos(){
+  document.getElementById('pres-body').innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px"><div class="spinner"></div></td></tr>';
+  try{
+    const r=await fetch(PROXY_URL_ADMIN,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({empresa:'DJI',action:'get_presupuestos_todos',params:{}}),
+    });
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error);
+    let presupuestos=j.result.presupuestos;
+
+    const filtroRep=document.getElementById('filtro-rep-pres').value;
+    const filtroDia=document.getElementById('filtro-dia-pres').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+
+    if(filtroRep) presupuestos=presupuestos.filter(p=>{
+      const ruta=(Array.isArray(p.route_id)?p.route_id[1]:'')||'';
+      return ruta.toLowerCase().includes(filtroRep.toLowerCase().split(' ')[0]);
+    });
+
+    if(filtroDia) presupuestos=presupuestos.filter(p=>{
+      const dia=getDiaTagA(p.tag_names);
+      return dia && dia.normalize('NFD').replace(/[\u0300-\u036f]/g,'')===filtroDia;
+    });
+
+    if(!presupuestos.length){
+      document.getElementById('pres-body').innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text2)">Sin presupuestos para esta selección</td></tr>';
+      return;
+    }
+
+    // Ordenar por día
+    const diaOrder={'lunes':1,'martes':2,'miercoles':3,'miércoles':3,'jueves':4,'viernes':5,'sabado':6,'sábado':6,'domingo':7};
+    presupuestos.sort((a,b)=>{
+      const da=getDiaTagA(a.tag_names), db=getDiaTagA(b.tag_names);
+      return (diaOrder[da]||99)-(diaOrder[db]||99);
+    });
+
+    document.getElementById('pres-body').innerHTML=presupuestos.map(p=>{
+      const cliente=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
+      const ruta=Array.isArray(p.route_id)?p.route_id[1]:'-';
+      const rep=ruta.split(':')[0].trim();
+      const dia=getDiaTagA(p.tag_names);
+      const diaLabel=dia?dia.charAt(0).toUpperCase()+dia.slice(1):'—';
+      const otrosTags=(p.tag_names||[]).filter(t=>{
+        const tn=t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+        return !DIAS_ORDEN_A.map(d=>d.normalize('NFD').replace(/[\u0300-\u036f]/g,'')).includes(tn);
+      }).join(', ');
+      const importe=(p.amount_total||0).toLocaleString('es-ES',{style:'currency',currency:'EUR'});
+      return`<tr>
+        <td style="font-weight:700;color:var(--accent)">${p.name}</td>
+        <td>${cliente}</td>
+        <td style="font-size:13px">${rep}</td>
+        <td><span class="badge ${dia?'badge-warn':'badge-gray'}">${diaLabel}</span></td>
+        <td style="font-size:12px;color:var(--text2)">${otrosTags||'—'}</td>
+        <td style="font-weight:700;color:var(--success)">${importe}</td>
+      </tr>`;
+    }).join('');
+  }catch(e){
+    document.getElementById('pres-body').innerHTML=`<tr><td colspan="6" style="color:var(--danger);padding:16px">${e.message}</td></tr>`;
+  }
+}
 </script>
 </body>
 </html>
