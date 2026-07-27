@@ -177,6 +177,15 @@
       </table>
     </div>
 
+    <!-- PEDIDOS PENDIENTES -->
+    <div class="section-title">⏳ Pedidos pendientes por repartidor</div>
+    <div class="filtros-bar" style="margin-bottom:12px">
+      <button class="btn-refresh" onclick="cargarPendientesAdmin()">Cargar pendientes de hoy</button>
+    </div>
+    <div id="pendientes-wrap" style="margin-bottom:24px">
+      <div style="color:var(--text2);font-size:13px">Pulsa "Cargar pendientes" para consultar Odoo</div>
+    </div>
+
     <!-- MAPA DE RUTA -->
     <div class="section-title">🗺️ Mapa de ruta del repartidor</div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
@@ -376,7 +385,77 @@ function closeLightbox(){
   document.getElementById('lightbox-img').src='';
 }
 
-// ── MAPA DE RUTA ─────────────────────────────────────────
+// ── PEDIDOS PENDIENTES ADMIN ──────────────────────────────
+const RUTAS_REPARTIDORES = {
+  'JUAN PEDRO':    'Pedro Juan',
+  'JAVIER':        'Javier',
+  'ALFONSO':       'Alfonso',
+  'JUANLU':        'Juanlu',
+  'JUANJOROBLEDO': 'Robledo Juan Jose',
+  'ZEKY':          'Zeky',
+};
+
+async function cargarPendientesAdmin(){
+  const wrap = document.getElementById('pendientes-wrap');
+  wrap.innerHTML='<div class="spinner"></div>';
+
+  try{
+    // Consultar todos los repartidores en paralelo
+    const resultados = await Promise.all(
+      Object.entries(RUTAS_REPARTIDORES).map(async ([nombre, rutaOdoo])=>{
+        try{
+          const r = await fetch(PROXY_URL_ADMIN,{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({empresa:'DJI', action:'get_pickings_pendientes', params:{rutaNombre:rutaOdoo}}),
+          });
+          const j = await r.json();
+          return { nombre, pickings: j.ok ? j.result.pickings : [] };
+        }catch(_){ return { nombre, pickings:[] }; }
+      })
+    );
+
+    // Renderizar por repartidor
+    const totalGlobal = resultados.reduce((a,r)=>a+r.pickings.length,0);
+
+    wrap.innerHTML = `
+      <div class="stats-grid" style="margin-bottom:16px">
+        ${resultados.map(r=>`
+          <div class="stat-card">
+            <div style="font-size:13px;font-weight:700;margin-bottom:6px">${r.nombre}</div>
+            <div class="stat-num" style="color:${r.pickings.length>0?'var(--warn)':'var(--success)'}">${r.pickings.length}</div>
+            <div class="stat-lbl">pendientes</div>
+          </div>
+        `).join('')}
+      </div>
+      ${resultados.filter(r=>r.pickings.length>0).map(r=>`
+        <div style="margin-bottom:16px">
+          <div class="section-title" style="margin-bottom:8px">📦 ${r.nombre} — ${r.pickings.length} pendientes</div>
+          <div class="tabla-wrap">
+            <table>
+              <thead><tr><th>Albarán</th><th>Cliente</th><th>Fecha programada</th></tr></thead>
+              <tbody>
+                ${r.pickings.map(p=>{
+                  const cliente=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
+                  const fecha=p.scheduled_date?new Date(p.scheduled_date).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+                  const albaranUrl=`${ODOO_URL}/web#id=${p.id}&model=stock.picking&view_type=form`;
+                  return `<tr>
+                    <td><a class="albaran-link" href="${albaranUrl}" target="_blank">${p.name}</a></td>
+                    <td>${cliente}</td>
+                    <td style="font-size:13px;color:var(--text2)">${fecha}</td>
+                  </tr>`;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `).join('')}
+      ${totalGlobal===0?'<div class="empty">Todos los repartidores tienen sus pedidos entregados 🎉</div>':''}
+    `;
+  }catch(e){
+    wrap.innerHTML=`<div style="color:var(--danger);padding:16px">${e.message}</div>`;
+  }
+}
 const GMAPS_KEY = 'AIzaSyBwKRw_m6EnKAvI8p5MEZLMvXyspJ14ENU';
 let mapaIniciado = false;
 let mapaObj = null;
