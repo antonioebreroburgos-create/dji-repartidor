@@ -751,7 +751,17 @@ async function cargarPresupuestos(){
 
     if(filtroRep) presupuestos=presupuestos.filter(p=>{
       const ruta=(Array.isArray(p.route_id)?p.route_id[1]:'')||'';
-      return ruta.toLowerCase().includes(filtroRep.toLowerCase().split(' ')[0]);
+      // Buscar el nombre exacto de la ruta del repartidor
+      const RUTAS_EXACTAS = {
+        'JUAN PEDRO':    'Pedro Juan',
+        'JAVIER':        'Javier',
+        'ALFONSO':       'Alfonso',
+        'JUANLU':        'Juanlu',
+        'JUANJOROBLEDO': 'Robledo Juan Jose',
+        'ZEKY':          'Zeky',
+      };
+      const rutaExacta = RUTAS_EXACTAS[filtroRep];
+      return rutaExacta ? ruta.startsWith(rutaExacta) : ruta.toLowerCase().includes(filtroRep.toLowerCase());
     });
 
     if(filtroDia) presupuestos=presupuestos.filter(p=>{
