@@ -1040,6 +1040,7 @@ async function marcarEntregado(){
           repartidor:E.usuario.nombre,
           odoo_picking_id:p.id,
           odoo_picking_name:p.name,
+          odoo_sale_id: Array.isArray(p.sale_id)?p.sale_id[0]:p.sale_id||null,
           partner_nombre:p.partnerNombre,
           delivery_id:p.deliveryId,
           foto_urls:E.fotoUrls,
