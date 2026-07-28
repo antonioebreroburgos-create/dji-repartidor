@@ -429,16 +429,32 @@ async function renderTabla(entregas){
     (fa||[]).forEach(f=>{ fotosAlmacenMap[f.odoo_order_id]=(f.foto_urls||[]); });
   }catch(_){}
 
-  document.getElementById('tabla-body').innerHTML = entregas.map(e=>{
+  // Cache global de datos para el modal
+  window._fotosCache = {};
+
+  document.getElementById('tabla-body').innerHTML = entregas.map((e,idx)=>{
     const horaRef = e.hora_entrega || e.created_at;
     const hora = new Date(horaRef).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-    const fotos = (e.foto_urls||[]).map(url=>
+    const fotasEntregaArr = e.foto_urls||[];
+    const fotasAlmacenArr = fotosAlmacenMap[e.odoo_sale_id]||fotosAlmacenMap[e.odoo_picking_id]||[];
+    const fotos = fotasEntregaArr.map(url=>
       `<img class="foto-thumb" src="${url}" onclick="openLightbox('${url}')" title="Ver foto"/>`
     ).join('');
-    const fotosAlmacen = (fotosAlmacenMap[e.odoo_sale_id]||fotosAlmacenMap[e.odoo_picking_id]||[]).map(url=>
+    const fotosAlmacen = fotasAlmacenArr.map(url=>
       `<img class="foto-thumb" src="${url}" onclick="openLightbox('${url}')" title="Foto almacén" style="border-color:var(--warn)"/>`
     ).join('') || '<span style="color:var(--text3);font-size:12px">—</span>';
     const albaranUrl = `${ODOO_URL}/report/pdf/stock.report_deliveryslip/${e.odoo_picking_id}`;
+
+    // Guardar en cache para el modal
+    window._fotosCache[idx] = {
+      albaran: e.odoo_picking_name,
+      cliente: e.partner_nombre,
+      repartidor: e.repartidor,
+      hora,
+      fotosEntrega: fotasEntregaArr,
+      fotosAlmacen: fotasAlmacenArr,
+      albaranUrl,
+    };
 
     return `<tr>
       <td style="white-space:nowrap;font-weight:700">${hora}</td>
@@ -450,12 +466,17 @@ async function renderTabla(entregas){
       <td><div class="fotos-wrap">${fotosAlmacen}</div></td>
       <td style="max-width:200px;color:var(--text2);font-size:13px">${e.comentario||'—'}</td>
       <td>
-        <a class="albaran-link" href="${albaranUrl}" target="_blank">📄 PDF</a>
-        <br>
-        <button onclick="verFotosPedido('${e.odoo_picking_name}','${e.partner_nombre}','${e.repartidor}','${hora}',${JSON.stringify(e.foto_urls||[])},${JSON.stringify(fotosAlmacenMap[e.odoo_sale_id]||fotosAlmacenMap[e.odoo_picking_id]||[])},'${albaranUrl}')" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;padding:2px 0">🖼️ Ver fotos</button>
+        <a class="albaran-link" href="${albaranUrl}" target="_blank">📄 PDF</a><br>
+        <button onclick="verFotosPedidoIdx(${idx})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;padding:2px 0">🖼️ Ver fotos</button>
       </td>
     </tr>`;
   }).join('');
+}
+
+function verFotosPedidoIdx(idx){
+  const d = window._fotosCache?.[idx];
+  if(!d) return;
+  verFotosPedido(d.albaran, d.cliente, d.repartidor, d.hora, d.fotosEntrega, d.fotosAlmacen, d.albaranUrl);
 }
 
 function verFotosPedido(albaran, cliente, repartidor, hora, fotosEntrega, fotosAlmacen, albaranUrl){
