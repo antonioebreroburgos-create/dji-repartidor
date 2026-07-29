@@ -677,7 +677,12 @@ function renderPedidos(){
         <div class="pedido-meta">
           <span class="badge badge-gray">Pendiente</span>
           ${alertas.length?`<span class="badge badge-warn">[!] ${alertas.length} alertas</span>`:''}
-          ${p.punto?.geocodificado?'<span class="badge badge-blue">[GPS] GPS</span>':'<span class="badge badge-red">Sin GPS</span>'}
+          ${(()=>{
+            const ef=evaluarFicha(p.punto,[]);
+            if(ef==='sin-ficha') return '<span class="badge" style="background:rgba(239,68,68,.2);color:var(--danger)">🔴 Sin ficha</span>';
+            if(ef==='parcial')   return '<span class="badge" style="background:rgba(245,158,11,.15);color:var(--warn)">🟡 Incompleta</span>';
+            return '<span class="badge" style="background:rgba(34,197,94,.15);color:var(--success)">🟢 Completa</span>';
+          })()}
         </div>
       </div>`;
     }).join('');
@@ -783,6 +788,29 @@ function cerrarFicha(){
 async function cargarFichaIntegrada(p){
   const punto=p.punto;
   E.coordsGPS=null;
+
+  // Cargar contactos primero para evaluar ficha
+  await cargarContactosFicha(punto?.id);
+
+  // Evaluar estado de la ficha
+  const estadoFicha = evaluarFicha(punto, E.contactos);
+  const icono = iconoFicha(estadoFicha);
+
+  // Actualizar badge y estilo del toggle
+  const toggle = document.getElementById('ficha-toggle');
+  const estilos = {
+    'sin-ficha': 'background:rgba(239,68,68,.1);border:2px solid var(--danger)',
+    'parcial':   'background:rgba(245,158,11,.08);border:2px solid var(--warn)',
+    'completa':  'background:rgba(34,197,94,.06);border:1px solid var(--success)',
+  };
+  toggle.style.cssText = estilos[estadoFicha] + ';border-radius:var(--radius);padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;transition:all .15s';
+
+  const mensajes = {
+    'sin-ficha': 'Sin GPS ni datos — completar urgente',
+    'parcial':   'Ficha incompleta — faltan datos',
+    'completa':  'Ficha completa',
+  };
+  document.getElementById('ficha-badge-mini').textContent = `${icono} ${mensajes[estadoFicha]}`;
 
   // GPS
   const gpsCard=document.getElementById('ficha-gps-card');
@@ -967,6 +995,22 @@ function navegarCliente(){
   else if(p.punto?.direccion_texto)
     window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.punto.direccion_texto)}`,'_blank');
   else toast('Sin dirección disponible','err');
+}
+
+function evaluarFicha(punto, contactos){
+  if(!punto || !punto.geocodificado) return 'sin-ficha';
+  const n = punto.notas_logisticas||'';
+  const tieneToggle = n.includes('NO_FIRMA')||n.includes('FACTURA')||n.includes('REPASAR')||punto.estricto_horario||punto.descargar_primero;
+  const tieneHorario = !!(punto.hora_max_llegada||punto.hora_apertura||punto.hora_cierre||(punto.dias_cerrado&&punto.dias_cerrado.length>0));
+  const tieneContacto = contactos && contactos.length > 0;
+  if(tieneHorario && tieneContacto && tieneToggle) return 'completa';
+  return 'parcial';
+}
+
+function iconoFicha(estado){
+  if(estado==='sin-ficha') return '🔴';
+  if(estado==='parcial')   return '🟡';
+  return '🟢';
 }
 
 function abrirOdooAlbaran(){
