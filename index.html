@@ -2,600 +2,509 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-  <title>DJI Admin — Panel de Reparto</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
+  <meta name="mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="theme-color" content="#0f2027"/>
+  <title>DJI Reparto</title>
+  <link rel="manifest" href="manifest.json"/>
   <style>
     :root{
-      --bg:#0f1923;--bg2:#162230;--bg3:#1e2f40;--card:#1a2a38;
-      --border:#2a4055;--accent:#00c9a7;--warn:#f59e0b;--danger:#ef4444;
-      --success:#22c55e;--text:#e8f4f8;--text2:#8ab4c4;--text3:#5a8a9a;
-      --radius:10px;
+      --bg:#0f2027;--bg2:#1a3a4a;--bg3:#1e4a5c;--card:#162e3a;
+      --border:#2a5066;--accent:#00c9a7;--accent2:#00a888;
+      --warn:#f59e0b;--danger:#ef4444;--success:#22c55e;
+      --morado:#7c3aed;
+      --text:#e8f4f8;--text2:#8ab4c4;--text3:#5a8a9a;
+      --radius:14px;--radius-sm:8px;--shadow:0 4px 24px rgba(0,0,0,0.4);
     }
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
-
-    /* LOGIN */
-    #login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;flex-direction:column;gap:16px}
-    .login-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:40px;width:360px;text-align:center}
-    .login-logo{font-size:48px;margin-bottom:12px}
-    .login-title{font-size:22px;font-weight:800;margin-bottom:4px}
-    .login-sub{font-size:14px;color:var(--text2);margin-bottom:28px}
-    .login-input{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-size:16px;outline:none;margin-bottom:12px}
-    .login-input:focus{border-color:var(--accent)}
-    .login-btn{width:100%;background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:14px;font-size:16px;font-weight:700;cursor:pointer}
-    .login-btn:hover{opacity:.9}
-    .login-err{color:var(--danger);font-size:13px;margin-top:8px}
-
-    /* LAYOUT */
-    #app{display:none}
-    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:16px}
-    .topbar-logo{font-size:20px;font-weight:800;color:var(--accent)}
-    .topbar-title{font-size:16px;font-weight:600;color:var(--text2)}
-    .topbar-right{margin-left:auto;display:flex;align-items:center;gap:12px}
-    .main{padding:24px;max-width:1400px;margin:0 auto}
-
-    /* FILTROS */
-    .filtros-bar{display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap;align-items:center}
-    .filtro-label{font-size:13px;color:var(--text2);font-weight:600}
-    select, input[type=date]{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;outline:none;cursor:pointer}
-    select:focus, input[type=date]:focus{border-color:var(--accent)}
-    .btn-refresh{background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:8px 16px;font-size:14px;font-weight:700;cursor:pointer}
-    .btn-refresh:hover{opacity:.9}
-
-    /* STATS */
-    .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px}
-    .stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center}
-    .stat-num{font-size:28px;font-weight:800}
-    .stat-lbl{font-size:12px;color:var(--text2);margin-top:4px}
-
-    /* TABLA */
-    .section-title{font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-    .tabla-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:24px}
-    table{width:100%;border-collapse:collapse}
-    thead{background:var(--bg3)}
-    th{padding:12px 16px;text-align:left;font-size:12px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
-    td{padding:12px 16px;border-top:1px solid var(--border);font-size:14px;vertical-align:middle}
-    tr:hover td{background:rgba(255,255,255,.02)}
-    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
-    .badge-ok{background:rgba(34,197,94,.15);color:var(--success)}
-    .badge-warn{background:rgba(245,158,11,.15);color:var(--warn)}
-    .badge-gray{background:var(--bg3);color:var(--text2)}
-
-    /* FOTOS */
-    .fotos-wrap{display:flex;gap:6px;flex-wrap:wrap}
-    .foto-thumb{width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:transform .15s}
-    .foto-thumb:hover{transform:scale(1.1)}
-
-    /* LIGHTBOX */
-    #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;align-items:center;justify-content:center;cursor:pointer}
-    #lightbox.show{display:flex}
-    #lightbox img{max-width:90vw;max-height:90vh;border-radius:8px;object-fit:contain}
-    #lightbox-close{position:absolute;top:20px;right:20px;color:#fff;font-size:32px;cursor:pointer;background:none;border:none}
-
-    /* REPARTIDORES */
-    .rep-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:24px}
-    .rep-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
-    .rep-nombre{font-size:15px;font-weight:800;margin-bottom:8px}
-    .rep-stats{display:flex;gap:12px}
-    .rep-stat{text-align:center;flex:1;background:var(--bg3);border-radius:8px;padding:8px}
-    .rep-num{font-size:20px;font-weight:800}
-    .rep-lbl{font-size:11px;color:var(--text2)}
-    .progreso{height:6px;background:var(--bg3);border-radius:3px;margin-top:10px;overflow:hidden}
-    .progreso-bar{height:100%;background:var(--accent);border-radius:3px;transition:width .3s}
-
-    /* EMPTY */
-    .empty{text-align:center;padding:48px;color:var(--text2)}
-    .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:32px auto}
+    *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100dvh;overflow-x:hidden}
+    .screen{display:none;min-height:100dvh;flex-direction:column}
+    .screen.active{display:flex}
+    .header{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+    .header-logo{width:32px;height:32px;background:var(--accent);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:var(--bg)}
+    .header h1{font-size:17px;font-weight:700}
+    .header-sub{font-size:12px;color:var(--text2);margin-left:auto}
+    .btn-back{background:none;border:none;color:var(--accent);font-size:15px;cursor:pointer;padding:4px 0;display:flex;align-items:center;gap:4px}
+    .content{flex:1;padding:20px 16px;overflow-y:auto}
+    .btn{width:100%;padding:16px;border:none;border-radius:var(--radius);font-size:16px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+    .btn:active{transform:scale(0.97)}
+    .btn-primary{background:var(--accent);color:var(--bg)}
+    .btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border)}
+    .btn-success{background:var(--success);color:#fff}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+    .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+    #toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg2);color:var(--text);border:1px solid var(--border);padding:12px 20px;border-radius:30px;font-size:14px;font-weight:600;box-shadow:var(--shadow);z-index:999;transition:transform .3s ease;white-space:nowrap}
+    #toast.show{transform:translateX(-50%) translateY(0)}
+    #toast.ok{border-color:var(--accent);color:var(--accent)}
+    #toast.err{border-color:var(--danger);color:var(--danger)}
+    .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:32px auto}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    .dia-btn-admin{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s}
-    .dia-btn-admin.active{background:rgba(245,158,11,.15);border-color:var(--warn);color:var(--warn);font-weight:700}
-    .cliente-fila{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px;cursor:pointer;transition:all .15s}
-    .cliente-fila:hover{background:var(--bg3)}
-    .cliente-nombre-admin{font-size:14px;font-weight:700;margin-bottom:4px}
-    .dir-item{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;color:var(--text2);cursor:pointer}
-    .dir-item:hover{color:var(--accent)}
-    .dir-estado{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-    .contacto-admin-item{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;margin-bottom:4px}
-    .spinner-sm{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
-    .albaran-link:hover{text-decoration:underline}
+    /* LOGIN */
+    #screen-login .content{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100dvh - 61px)}
+    .login-logo{width:72px;height:72px;background:linear-gradient(135deg,var(--accent),var(--bg3));border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:12px;box-shadow:0 8px 32px rgba(0,201,167,.25)}
+    .login-title{font-size:24px;font-weight:800;margin-bottom:4px}
+    .login-sub{font-size:14px;color:var(--text2);margin-bottom:32px}
+    .repartidores-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-bottom:28px}
+    .rep-btn{background:var(--bg2);border:2px solid var(--border);border-radius:var(--radius);padding:14px 10px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;transition:all .15s;text-align:center}
+    .rep-btn:active{transform:scale(0.96)}
+    .rep-btn.selected{border-color:var(--accent);color:var(--accent);background:rgba(0,201,167,.08)}
+    .pin-label{font-size:13px;color:var(--text2);margin-bottom:12px;text-align:center;letter-spacing:.5px;text-transform:uppercase}
+    .pin-dots{display:flex;gap:12px;justify-content:center;margin-bottom:24px}
+    .pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:all .2s}
+    .pin-dot.filled{background:var(--accent);border-color:var(--accent)}
+    .pin-teclado{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
+    .pin-key{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 10px;font-size:22px;font-weight:700;color:var(--text);cursor:pointer;text-align:center;transition:all .12s;user-select:none}
+    .pin-key:active{background:var(--bg3);transform:scale(0.94)}
+    .pin-key.del{font-size:18px;color:var(--text2)}
+    .pin-key.empty{background:transparent;border-color:transparent;cursor:default}
+
+    /* MENU */
+    .usuario-card{background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px;display:flex;align-items:center;gap:14px}
+    .usuario-avatar{width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0}
+    .usuario-nombre{font-size:20px;font-weight:800}
+    .usuario-sub{font-size:13px;color:var(--text2);margin-top:2px}
+    .menu-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .15s}
+    .menu-item:active{transform:scale(0.98);background:var(--bg3)}
+    .menu-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+    .menu-icon.green{background:rgba(34,197,94,.15)}
+    .menu-icon.blue{background:rgba(0,201,167,.12)}
+    .menu-icon.orange{background:rgba(245,158,11,.12)}
+    .menu-text h3{font-size:16px;font-weight:700}
+    .menu-text p{font-size:13px;color:var(--text2);margin-top:2px}
+    .menu-arrow{margin-left:auto;color:var(--text3);font-size:18px}
+    .btn-cerrar-sesion{background:none;border:1px solid var(--border);border-radius:var(--radius);padding:14px;color:var(--text2);font-size:14px;cursor:pointer;width:100%;margin-top:8px;transition:all .15s}
+
+    /* PEDIDOS */
+    .pedido-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;cursor:pointer;transition:all .15s}
+    .pedido-card:active{transform:scale(0.98)}
+    .pedido-card.entregado{opacity:.6;border-color:var(--success)}
+    .pedido-num{font-size:13px;color:var(--accent);font-weight:700;margin-bottom:4px}
+    .pedido-cliente{font-size:17px;font-weight:800;margin-bottom:4px}
+    .pedido-dir{font-size:13px;color:var(--text2);margin-bottom:8px}
+    .pedido-meta{display:flex;gap:8px;flex-wrap:wrap}
+    .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
+    .badge-blue{background:rgba(0,201,167,.12);color:var(--accent)}
+    .badge-warn{background:rgba(245,158,11,.15);color:var(--warn)}
+    .badge-ok{background:rgba(34,197,94,.15);color:var(--success)}
+    .badge-gray{background:var(--bg2);color:var(--text2)}
+    .badge-red{background:rgba(239,68,68,.15);color:var(--danger)}
+    .stats-bar{display:flex;gap:8px;margin-bottom:16px}
+    .stat-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center}
+    .stat-num{font-size:22px;font-weight:800;color:var(--accent)}
+    .stat-lbl{font-size:11px;color:var(--text2);margin-top:2px}
+
+    /* PARADA */
+    .parada-header{background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px}
+    .parada-num{font-size:13px;color:var(--accent);font-weight:700;margin-bottom:4px}
+    .parada-cliente{font-size:20px;font-weight:800;margin-bottom:4px}
+    .parada-dir{font-size:13px;color:var(--text2)}
+    .alerta-item{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--warn)}
+    .btn-navegar{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;width:100%;font-size:15px;font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;transition:all .15s}
+    .btn-navegar:active{transform:scale(0.97)}
+    .foto-preview{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+    .foto-thumb{width:72px;height:72px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border)}
+    .comentario-input{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;color:var(--text);font-size:15px;width:100%;min-height:70px;resize:none;outline:none;font-family:inherit;margin-bottom:12px}
+    .comentario-input:focus{border-color:var(--accent)}
+    .acciones-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+    .section-label{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px}
+
+    /* FICHA DESPLEGABLE */
+    .ficha-toggle{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;transition:all .15s}
+    .ficha-toggle:active{background:var(--bg3)}
+    .ficha-toggle-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+    .ficha-toggle-arrow{font-size:18px;color:var(--text3);transition:transform .2s}
+    .ficha-toggle.open .ficha-toggle-arrow{transform:rotate(180deg)}
+    .ficha-body{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
+    .ficha-body.open{display:block}
+
+    /* INPUTS FICHA */
+    .hora-input{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-size:16px;width:100%;outline:none}
+    .hora-input:focus{border-color:var(--accent)}
+    .tiempo-input{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;color:var(--text);font-size:18px;font-weight:700;width:80px;text-align:center;outline:none}
+    .notas-input{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;color:var(--text);font-size:14px;width:100%;min-height:70px;resize:none;outline:none;font-family:inherit}
+    .notas-input:focus{border-color:var(--accent)}
+    .dias-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+    .dia-btn{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s}
+    .dia-btn.active{background:rgba(245,158,11,.15);border-color:var(--warn);color:var(--warn);font-weight:700}
+
+    /* TOGGLE SWITCH */
+    .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+    .toggle-row:last-child{border-bottom:none}
+    .toggle-label{font-size:14px;font-weight:600}
+    .toggle-sub{font-size:12px;color:var(--text2);margin-top:2px}
+    .toggle-switch{position:relative;width:44px;height:24px;flex-shrink:0}
+    .toggle-switch input{opacity:0;width:0;height:0}
+    .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:24px;transition:.2s;cursor:pointer}
+    .toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
+    input:checked+.toggle-slider{background:var(--accent)}
+    input:checked+.toggle-slider:before{transform:translateX(20px)}
+
+    /* GPS */
+    .gps-card{background:var(--bg);border:2px dashed var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;margin-bottom:8px}
+    .gps-card.ok{border-style:solid;border-color:var(--success);background:rgba(34,197,94,.05)}
+    .gps-coords{font-size:13px;font-weight:700;color:var(--success);font-family:monospace}
+    .gps-label{font-size:11px;color:var(--text2);margin-top:4px}
+
+    /* CONTACTOS */
+    .contacto-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+    .contacto-info{flex:1}
+    .contacto-nombre{font-size:14px;font-weight:700}
+    .contacto-tel{font-size:12px;color:var(--text2)}
+    .contacto-del{background:none;border:none;color:var(--danger);font-size:16px;cursor:pointer;padding:4px}
+    .input-row{display:flex;gap:6px;margin-bottom:6px}
+    .input-small{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;color:var(--text);font-size:14px;flex:1;outline:none}
+    .input-small:focus{border-color:var(--accent)}
+
+    /* WHATSAPP */
+    .whatsapp-btn{background:#25D366;color:#fff;border:none;border-radius:var(--radius);padding:14px;width:100%;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;transition:all .15s}
+    .whatsapp-btn:active{transform:scale(0.97)}
+
+    /* PRESUPUESTOS */
+    .dia-section{margin-bottom:20px}
+    .dia-header{font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1px;padding:8px 0;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+    .dia-total{font-size:12px;color:var(--text2);font-weight:400}
+    .pres-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:6px}
+    .pres-num{font-size:12px;color:var(--accent);font-weight:700;margin-bottom:2px}
+    .pres-cliente{font-size:15px;font-weight:700;margin-bottom:4px}
+    .pres-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+    .pres-importe{font-size:13px;font-weight:700;color:var(--success)}
+    .tag-badge{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:11px;color:var(--text2)}
+    .tag-badge.dia{background:rgba(245,158,11,.12);border-color:var(--warn);color:var(--warn);font-weight:700}
+    .sin-dia{background:rgba(239,68,68,.08);border:1px dashed var(--danger);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:6px;font-size:13px;color:var(--text2)}
+    .empty-icon{font-size:48px;margin-bottom:12px}
+    .empty-title{font-size:18px;font-weight:700;margin-bottom:6px}
+    .empty-sub{font-size:14px;color:var(--text2)}
+
+    /* PESTAÑAS PEDIDOS */
+    .filtro-tab{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s}
+    .filtro-tab.active{background:rgba(0,201,167,.12);border-color:var(--accent);color:var(--accent)}
+
+    /* PEDIDO ENTREGADO */
+    .pedido-entregado-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px;cursor:pointer;transition:all .15s;opacity:.75}
+    .pedido-entregado-card:active{transform:scale(0.98)}
+    .albaran-link{display:flex;align-items:center;gap:6px;color:var(--accent);font-size:13px;font-weight:700;margin-top:8px;text-decoration:none}
+    .albaran-link:active{opacity:.7}
   </style>
 </head>
 <body>
 
 <!-- LOGIN -->
-<div id="login-screen">
-  <div class="login-box">
+<div id="screen-login" class="screen active">
+  <div class="content">
     <div class="login-logo">🚚</div>
-    <div class="login-title">DJI Admin</div>
-    <div class="login-sub">Panel de control de reparto</div>
-    <input class="login-input" type="password" id="login-pass" placeholder="Contraseña" onkeydown="if(event.key==='Enter')doLogin()"/>
-    <button class="login-btn" onclick="doLogin()">Entrar</button>
-    <div class="login-err" id="login-err"></div>
+    <div class="login-title">DJI Reparto</div>
+    <div class="login-sub">Distribuciones Joaquín Infante</div>
+    <div style="font-size:13px;color:var(--text2);margin-bottom:16px;text-align:center">Selecciona tu nombre para entrar</div>
+    <div class="repartidores-grid" id="repartidores-grid"></div>
   </div>
 </div>
 
-<!-- APP -->
-<div id="app">
-  <div class="topbar">
-    <div class="topbar-logo">DJI</div>
-    <div class="topbar-title">Panel de Reparto</div>
-    <div class="topbar-right">
-      <span id="topbar-fecha" style="font-size:13px;color:var(--text2)"></span>
-      <button class="btn-refresh" onclick="cargarDatos()">🔄 Actualizar</button>
+<!-- MENÚ -->
+<div id="screen-menu" class="screen">
+  <div class="header"><div class="header-logo">DJI</div><h1>DJI Reparto</h1></div>
+  <div class="content">
+    <div class="usuario-card">
+      <div class="usuario-avatar" id="menu-avatar">J</div>
+      <div><div class="usuario-nombre" id="menu-nombre">NOMBRE</div><div class="usuario-sub" id="menu-fecha"></div></div>
     </div>
-  </div>
-
-  <div class="main">
-
-    <!-- FILTROS -->
-    <div class="filtros-bar">
-      <span class="filtro-label">Fecha:</span>
-      <input type="date" id="filtro-fecha"/>
-      <span class="filtro-label">Repartidor:</span>
-      <select id="filtro-rep">
-        <option value="">Todos</option>
-        <option>JUAN PEDRO</option>
-        <option>JAVIER</option>
-        <option>ALFONSO</option>
-        <option>JUANLU</option>
-        <option>JUANJOROBLEDO</option>
-        <option>ZEKY</option>
-      </select>
-      <span class="filtro-label">Estado:</span>
-      <select id="filtro-estado">
-        <option value="">Todos</option>
-        <option value="entregada">Entregados</option>
-        <option value="pendiente">Pendientes</option>
-      </select>
-      <button class="btn-refresh" onclick="cargarDatos()">Buscar</button>
+    <div class="menu-item" onclick="cargarPedidosHoy()">
+      <div class="menu-icon orange">📦</div>
+      <div class="menu-text"><h3>Mis pedidos pendientes</h3><p>Pickings listos para entregar</p></div>
+      <div class="menu-arrow">›</div>
     </div>
-
-    <!-- STATS GLOBALES -->
-    <div class="stats-grid">
-      <div class="stat-card"><div class="stat-num" id="s-total">—</div><div class="stat-lbl">Entregados hoy</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-entregados" style="color:var(--success)">—</div><div class="stat-lbl">Con registro en app</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-pendientes" style="color:var(--warn)">—</div><div class="stat-lbl">Ver pendientes abajo ↓</div></div>
-      <div class="stat-card"><div class="stat-num" id="s-fotos" style="color:var(--accent)">—</div><div class="stat-lbl">Fotos tomadas</div></div>
+    <div class="menu-item" onclick="cargarPresupuestos()">
+      <div class="menu-icon" style="background:rgba(124,58,237,.15)">📋</div>
+      <div class="menu-text"><h3>Mis asignaciones</h3><p>Presupuestos pendientes por día</p></div>
+      <div class="menu-arrow">›</div>
     </div>
-
-    <!-- RESUMEN POR REPARTIDOR -->
-    <div class="section-title">👥 Resumen por repartidor</div>
-    <div class="rep-grid" id="rep-grid"><div class="spinner"></div></div>
-
-    <!-- TABLA DE ENTREGAS -->
-    <div class="section-title">📦 Detalle de entregas</div>
-    <div class="tabla-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Hora</th>
-            <th>Repartidor</th>
-            <th>Albarán</th>
-            <th>Cliente</th>
-            <th>Estado</th>
-            <th>Fotos entrega</th>
-            <th>Fotos almacén</th>
-            <th>Comentario</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tabla-body">
-          <tr><td colspan="8" style="text-align:center;padding:32px"><div class="spinner"></div></td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- PEDIDOS PENDIENTES -->
-    <div class="section-title">⏳ Pedidos pendientes por repartidor</div>
-    <div class="filtros-bar" style="margin-bottom:12px">
-      <button class="btn-refresh" onclick="cargarPendientesAdmin()">Cargar pendientes de hoy</button>
-    </div>
-    <div id="pendientes-wrap" style="margin-bottom:24px">
-      <div style="color:var(--text2);font-size:13px">Pulsa "Cargar pendientes" para consultar Odoo</div>
-    </div>
-
-    <!-- MAPA DE RUTA -->
-    <div class="section-title">🗺️ Mapa de ruta del repartidor</div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
-      <div class="filtros-bar" style="margin-bottom:12px">
-        <span class="filtro-label">Repartidor:</span>
-        <select id="mapa-rep">
-          <option value="">Selecciona repartidor</option>
-          <option>JUAN PEDRO</option><option>JAVIER</option><option>ALFONSO</option>
-          <option>JUANLU</option><option>JUANJOROBLEDO</option><option>ZEKY</option>
-        </select>
-        <button class="btn-refresh" onclick="cargarMapa()">Ver ruta</button>
-      </div>
-      <div id="mapa-container" style="height:500px;border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;color:var(--text2)">
-        Selecciona un repartidor para ver su ruta del día
-      </div>
-    </div>
-
-    <!-- GESTOR DE CLIENTES -->
-    <div class="section-title">👥 Gestor de clientes y direcciones</div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
-      <div class="filtros-bar" style="margin-bottom:12px">
-        <input type="text" id="cliente-buscar" placeholder="🔍 Buscar cliente..." style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;flex:1;outline:none" oninput="filtrarClientes()"/>
-        <select id="cliente-filtro-estado" onchange="filtrarClientes()" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;outline:none">
-          <option value="">Todos los estados</option>
-          <option value="sin-ficha">🔴 Sin ficha</option>
-          <option value="parcial">🟡 Incompleta</option>
-          <option value="completa">🟢 Completa</option>
-        </select>
-        <button class="btn-refresh" onclick="cargarClientes()">Cargar clientes</button>
-      </div>
-      <div id="clientes-stats" style="font-size:13px;color:var(--text2);margin-bottom:10px"></div>
-      <div id="clientes-lista" style="max-height:500px;overflow-y:auto"></div>
-    </div>
-
-    <!-- MODAL FICHA CLIENTE ADMIN -->
-    <div id="modal-ficha" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:998;overflow-y:auto">
-      <div style="max-width:700px;margin:40px auto;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;position:relative">
-        <button onclick="cerrarModalFicha()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text2);font-size:24px;cursor:pointer">✕</button>
-        <div id="modal-ficha-titulo" style="font-size:18px;font-weight:800;margin-bottom:2px"></div>
-        <div id="modal-ficha-sub" style="font-size:13px;color:var(--text2);margin-bottom:20px"></div>
-
-        <!-- GPS -->
-        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📍 Ubicación GPS</div>
-        <div id="admin-gps-info" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;font-size:13px"></div>
-        <div style="display:flex;gap:8px;margin-bottom:16px">
-          <input type="number" id="admin-lat" placeholder="Latitud" step="0.000001" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/>
-          <input type="number" id="admin-lng" placeholder="Longitud" step="0.000001" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/>
-          <button onclick="buscarCoordenadasGoogleMaps()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--accent);cursor:pointer;font-size:13px;white-space:nowrap">🗺️ Buscar en Maps</button>
-        </div>
-
-        <!-- HORARIOS -->
-        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">⏰ Horarios</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
-          <div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">Apertura</div><input type="time" id="admin-apertura" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/></div>
-          <div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">Cierre</div><input type="time" id="admin-cierre" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/></div>
-          <div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">Límite entrega</div><input type="time" id="admin-hora-max" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/></div>
-        </div>
-
-        <!-- DÍAS CERRADO -->
-        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📅 Días de cierre</div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
-          <button class="dia-btn-admin" data-dia="lunes" onclick="toggleDiaAdmin(this)">Lun</button>
-          <button class="dia-btn-admin" data-dia="martes" onclick="toggleDiaAdmin(this)">Mar</button>
-          <button class="dia-btn-admin" data-dia="miercoles" onclick="toggleDiaAdmin(this)">Mié</button>
-          <button class="dia-btn-admin" data-dia="jueves" onclick="toggleDiaAdmin(this)">Jue</button>
-          <button class="dia-btn-admin" data-dia="viernes" onclick="toggleDiaAdmin(this)">Vie</button>
-          <button class="dia-btn-admin" data-dia="sabado" onclick="toggleDiaAdmin(this)">Sáb</button>
-          <button class="dia-btn-admin" data-dia="domingo" onclick="toggleDiaAdmin(this)">Dom</button>
-        </div>
-
-        <!-- CARACTERÍSTICAS -->
-        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">⚙️ Características</div>
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 14px;margin-bottom:12px">
-          <div class="toggle-row"><div><div class="toggle-label">⚡ Descargar primero</div></div><label class="toggle-switch"><input type="checkbox" id="admin-primero"/><span class="toggle-slider"></span></label></div>
-          <div class="toggle-row"><div><div class="toggle-label">🕐 Estricto con horarios</div></div><label class="toggle-switch"><input type="checkbox" id="admin-estricto"/><span class="toggle-slider"></span></label></div>
-          <div class="toggle-row"><div><div class="toggle-label">✍️ No firma en móvil</div></div><label class="toggle-switch"><input type="checkbox" id="admin-no-firma"/><span class="toggle-slider"></span></label></div>
-          <div class="toggle-row"><div><div class="toggle-label">🧾 Quiere factura siempre</div></div><label class="toggle-switch"><input type="checkbox" id="admin-factura"/><span class="toggle-slider"></span></label></div>
-          <div class="toggle-row"><div><div class="toggle-label">📋 Repasar nota con él</div></div><label class="toggle-switch"><input type="checkbox" id="admin-repasar"/><span class="toggle-slider"></span></label></div>
-        </div>
-
-        <!-- TIEMPO Y NOTAS -->
-        <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-bottom:12px">
-          <div>
-            <div style="font-size:12px;color:var(--text2);margin-bottom:4px">⏱️ Tiempo descarga (min)</div>
-            <input type="number" id="admin-tiempo" min="1" max="120" placeholder="15" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/>
-          </div>
-          <div>
-            <div style="font-size:12px;color:var(--text2);margin-bottom:4px">📝 Notas</div>
-            <input type="text" id="admin-notas" placeholder="Tocar timbre, preguntar por..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/>
-          </div>
-        </div>
-
-        <!-- CONTACTOS -->
-        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📱 Contactos de recepción</div>
-        <div id="admin-contactos-lista" style="margin-bottom:8px"></div>
-        <div style="display:flex;gap:8px;margin-bottom:16px">
-          <input type="text" id="admin-c-nombre" placeholder="Nombre" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:13px;outline:none"/>
-          <input type="tel" id="admin-c-tel" placeholder="Teléfono (34...)" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:13px;outline:none"/>
-          <button onclick="añadirContactoAdmin()" style="background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer">+</button>
-        </div>
-
-        <button onclick="guardarFichaAdmin()" style="width:100%;background:var(--accent);color:var(--bg);border:none;border-radius:var(--radius);padding:16px;font-size:16px;font-weight:800;cursor:pointer">💾 Guardar ficha</button>
-      </div>
-    </div>
-
-    <!-- MANTENIMIENTO -->
-    <div class="section-title">🧹 Mantenimiento</div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-      <div>
-        <div style="font-size:14px;font-weight:700">Limpiar fotos antiguas</div>
-        <div style="font-size:12px;color:var(--text2);margin-top:2px">Elimina fotos de entrega y almacén con más de 45 días de Supabase Storage</div>
-      </div>
-      <button class="btn-refresh" style="background:var(--danger);margin-left:auto" onclick="limpiarFotosAntiguas()">🗑️ Limpiar fotos +45 días</button>
-      <div id="limpieza-resultado" style="width:100%;font-size:13px;color:var(--text2);display:none"></div>
-    </div>
-
-    <!-- PRESUPUESTOS -->
-    <div class="section-title">📋 Presupuestos asignados (sin confirmar)</div>
-    <div class="filtros-bar" style="margin-bottom:12px">
-      <span class="filtro-label">Día:</span>
-      <select id="filtro-dia-pres">
-        <option value="">Todos los días</option>
-        <option>Lunes</option><option>Martes</option><option>Miércoles</option>
-        <option>Jueves</option><option>Viernes</option><option>Sábado</option><option>Domingo</option>
-      </select>
-      <span class="filtro-label">Repartidor:</span>
-      <select id="filtro-rep-pres">
-        <option value="">Todos</option>
-        <option>JUAN PEDRO</option><option>JAVIER</option><option>ALFONSO</option>
-        <option>JUANLU</option><option>JUANJOROBLEDO</option><option>ZEKY</option>
-      </select>
-      <button class="btn-refresh" onclick="cargarPresupuestos()">Buscar</button>
-    </div>
-    <div class="tabla-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>Presupuesto</th><th>Cliente</th><th>Repartidor</th>
-            <th>Día asignado</th><th>Otros tags</th><th>Importe</th>
-          </tr>
-        </thead>
-        <tbody id="pres-body">
-          <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text2)">Pulsa "Buscar" para cargar</td></tr>
-        </tbody>
-      </table>
-    </div>
-
+    <button class="btn-cerrar-sesion" onclick="cerrarSesion()">Cerrar sesión</button>
   </div>
 </div>
 
-<!-- MODAL FOTOS PEDIDO -->
-<div id="modal-fotos" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:998;overflow-y:auto">
-  <div style="max-width:800px;margin:40px auto;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;position:relative">
-    <button onclick="document.getElementById('modal-fotos').style.display='none'" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text2);font-size:24px;cursor:pointer">✕</button>
-    <div id="modal-fotos-titulo" style="font-size:18px;font-weight:800;margin-bottom:4px"></div>
-    <div id="modal-fotos-sub" style="font-size:13px;color:var(--text2);margin-bottom:20px"></div>
-
-    <div style="margin-bottom:20px">
-      <div style="font-size:12px;font-weight:700;color:var(--warn);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📦 Fotos de almacén</div>
-      <div id="modal-fotos-almacen" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+<!-- PEDIDOS -->
+<div id="screen-pedidos" class="screen">
+  <div class="header">
+    <button class="btn-back" onclick="irA('menu')">‹ Volver</button>
+    <h1>Mis pedidos</h1>
+    <span class="header-sub" id="pedidos-sub" onclick="recargarPedidos()" style="cursor:pointer;color:var(--accent)">🔄 <span id="pedidos-count"></span></span>
+  </div>
+  <div class="content">
+    <div class="stats-bar">
+      <div class="stat-box"><div class="stat-num" id="stat-pedidos">0</div><div class="stat-lbl">Total</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-entregados" style="color:var(--success)">0</div><div class="stat-lbl">Entregados</div></div>
+      <div class="stat-box"><div class="stat-num" id="stat-pendientes" style="color:var(--warn)">0</div><div class="stat-lbl">Pendientes</div></div>
     </div>
-
-    <div>
-      <div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📷 Fotos de entrega</div>
-      <div id="modal-fotos-entrega" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="filtro-tab active" id="tab-pendientes" onclick="setTabPedidos('pendientes')">⏳ Pendientes</button>
+      <button class="filtro-tab" id="tab-entregados" onclick="setTabPedidos('entregados')">✅ Entregados</button>
     </div>
-
-    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border)">
-      <a id="modal-albaran-link" href="" target="_blank" class="albaran-link">📄 Ver albarán PDF en Odoo</a>
-    </div>
+    <div id="pedidos-lista"></div>
   </div>
 </div>
 
-<!-- LIGHTBOX -->
-<div id="lightbox" onclick="closeLightbox()">
-  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img id="lightbox-img" src="" alt=""/>
+<!-- PARADA ACTIVA -->
+<div id="screen-parada" class="screen">
+  <div class="header">
+    <button class="btn-back" onclick="irA('pedidos')">‹ Pedidos</button>
+    <h1>Entrega</h1>
+    <span class="header-sub" id="parada-progreso"></span>
+  </div>
+  <div class="content">
+
+    <!-- Cabecera cliente -->
+    <div class="parada-header">
+      <div class="parada-num" id="parada-num"></div>
+      <div class="parada-cliente" id="parada-cliente"></div>
+      <div class="parada-dir" id="parada-dir"></div>
+    </div>
+
+    <!-- Alertas -->
+    <div id="parada-alertas"></div>
+
+    <!-- Navegar -->
+    <button class="btn-navegar" onclick="navegarCliente()">🗺️ Navegar con Google Maps</button>
+
+    <!-- FICHA CLIENTE DESPLEGABLE -->
+    <div class="ficha-toggle" id="ficha-toggle" onclick="toggleFicha()">
+      <div class="ficha-toggle-title">📋 Ficha del cliente <span id="ficha-badge-mini" style="font-size:11px;font-weight:400;color:var(--text2)"></span></div>
+      <span class="ficha-toggle-arrow">▼</span>
+    </div>
+    <div class="ficha-body" id="ficha-body">
+
+      <!-- GPS -->
+      <div class="section-label" style="margin-top:0">📍 Ubicación GPS</div>
+      <div class="gps-card" id="ficha-gps-card">
+        <div style="font-size:12px;color:var(--text3)">Sin ubicación registrada</div>
+      </div>
+      <button class="btn btn-secondary" style="padding:10px;margin-bottom:12px;font-size:14px" onclick="capturarGPSFicha()">
+        📍 Capturar ubicación actual
+      </button>
+
+      <!-- Contactos -->
+      <div class="section-label">📱 Contactos de recepción</div>
+      <div id="ficha-contactos"></div>
+      <div class="input-row">
+        <input class="input-small" id="fc-nombre" placeholder="Nombre" onclick="event.stopPropagation()"/>
+        <input class="input-small" id="fc-tel" placeholder="Teléfono (34...)" type="tel" onclick="event.stopPropagation()"/>
+      </div>
+      <button class="btn btn-secondary" style="padding:10px;margin-bottom:12px;font-size:13px" onclick="añadirContactoFicha()">+ Añadir contacto</button>
+
+      <!-- Horarios -->
+      <div class="section-label">⏰ Horarios</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+        <div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Apertura</div>
+          <input class="hora-input" type="time" id="fc-apertura"/>
+        </div>
+        <div>
+          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Cierre</div>
+          <input class="hora-input" type="time" id="fc-cierre"/>
+        </div>
+      </div>
+      <div style="margin-bottom:8px">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Hora límite de entrega</div>
+        <input class="hora-input" type="time" id="fc-hora-max"/>
+      </div>
+
+      <!-- Días cerrado -->
+      <div class="section-label">📅 Días de cierre</div>
+      <div class="dias-wrap">
+        <button class="dia-btn" data-dia="lunes" onclick="toggleDiaFicha(this)">Lun</button>
+        <button class="dia-btn" data-dia="martes" onclick="toggleDiaFicha(this)">Mar</button>
+        <button class="dia-btn" data-dia="miercoles" onclick="toggleDiaFicha(this)">Mié</button>
+        <button class="dia-btn" data-dia="jueves" onclick="toggleDiaFicha(this)">Jue</button>
+        <button class="dia-btn" data-dia="viernes" onclick="toggleDiaFicha(this)">Vie</button>
+        <button class="dia-btn" data-dia="sabado" onclick="toggleDiaFicha(this)">Sáb</button>
+        <button class="dia-btn" data-dia="domingo" onclick="toggleDiaFicha(this)">Dom</button>
+      </div>
+
+      <!-- Características toggles -->
+      <div class="section-label">⚙️ Características</div>
+      <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 12px;margin-bottom:8px">
+        <div class="toggle-row">
+          <div><div class="toggle-label">⚡ Descargar primero</div><div class="toggle-sub">Prioritario sobre otros en la misma zona</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="fc-primero"/><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">🕐 Estricto con horarios</div><div class="toggle-sub">No admite entregas fuera de hora</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="fc-estricto"/><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">✍️ No firma en móvil</div><div class="toggle-sub">Rechaza firma digital</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="fc-no-firma"/><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">🧾 Quiere factura siempre</div><div class="toggle-sub">Llevar factura impresa</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="fc-factura"/><span class="toggle-slider"></span></label>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">📋 Repasar nota con él</div><div class="toggle-sub">Confirmar pedido al entregar</div></div>
+          <label class="toggle-switch"><input type="checkbox" id="fc-repasar"/><span class="toggle-slider"></span></label>
+        </div>
+      </div>
+
+      <!-- Tiempo descarga -->
+      <div class="section-label">⏱️ Tiempo de descarga</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <input class="tiempo-input" type="number" id="fc-tiempo" placeholder="15" min="1" max="120"/>
+        <span style="font-size:13px;color:var(--text2)">minutos estimados</span>
+      </div>
+
+      <!-- Notas -->
+      <div class="section-label">📝 Notas</div>
+      <textarea class="notas-input" id="fc-notas" placeholder="Tocar timbre, preguntar por Juan..."></textarea>
+
+      <button class="btn btn-primary" style="margin-top:12px" onclick="guardarFichaIntegrada()">💾 Guardar ficha</button>
+    </div>
+
+    <!-- FOTO -->
+    <div class="section-label">📷 Fotos de la entrega</div>
+    <div class="foto-preview" id="foto-preview"></div>
+    <input type="file" id="input-foto" accept="image/*" capture="environment" style="display:none" onchange="procesarFoto(this)"/>
+    <button class="btn btn-secondary" onclick="document.getElementById('input-foto').click()" style="margin-bottom:12px;padding:12px">
+      📷 Añadir foto <span id="foto-count" style="font-size:12px;opacity:.7"></span>
+    </button>
+
+    <!-- FIRMA ODOO -->
+    <button class="btn" style="background:var(--morado);color:#fff;margin-bottom:8px" onclick="abrirOdooAlbaran()">
+      ✍️ Firmar y validar en Odoo
+    </button>
+    <div id="odoo-firmado" style="display:none;background:rgba(34,197,94,.08);border:1px solid var(--success);border-radius:var(--radius);padding:10px;margin-bottom:12px;font-size:13px;font-weight:700;color:var(--success);text-align:center">
+      ✓ Abierto en Odoo — firma y valida, luego vuelve aquí
+    </div>
+
+    <!-- COMENTARIO -->
+    <div class="section-label">💬 Comentario</div>
+    <textarea class="comentario-input" id="parada-comentario" placeholder="Observaciones de la entrega..."></textarea>
+
+    <!-- ACCIONES — solo si no está entregado -->
+    <div id="acciones-wrap">
+      <div class="acciones-grid">
+        <button class="btn btn-success" onclick="marcarEntregado()">✅ Entregado</button>
+        <button class="btn btn-danger" onclick="marcarFallido()">❌ No entregado</button>
+      </div>
+    </div>
+
+    <!-- WHATSAPP -->
+    <div id="btn-whatsapp-wrap"></div>
+
+    <!-- TIEMPO ESTIMADO — aparece tras entregar -->
+    <div id="tiempo-wrap" style="display:none;margin-bottom:12px">
+      <div class="section-label" style="margin-top:0">⏱️ Tiempo de descarga real</div>
+      <div style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px">
+        <input class="tiempo-input" type="number" id="tiempo-real" placeholder="15" min="1" max="120"/>
+        <span style="font-size:13px;color:var(--text2)">minutos</span>
+        <button onclick="guardarTiempoReal()" style="background:var(--accent);color:var(--bg);border:none;border-radius:var(--radius-sm);padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;margin-left:auto">Guardar</button>
+      </div>
+    </div>
+
+    <div style="height:20px"></div>
+  </div>
 </div>
+
+<!-- PRESUPUESTOS -->
+<div id="screen-presupuestos" class="screen">
+  <div class="header">
+    <button class="btn-back" onclick="irA('menu')">‹ Volver</button>
+    <h1>Mis asignaciones</h1>
+    <span class="header-sub" id="pres-count"></span>
+  </div>
+  <div class="content">
+    <div class="filtros" style="margin-bottom:12px">
+      <button class="filtro-btn active" id="fdía-todos" onclick="setFiltroDia('',this)">Todos</button>
+      <button class="filtro-btn" id="fdía-lunes" onclick="setFiltroDia('Lunes',this)">Lun</button>
+      <button class="filtro-btn" id="fdía-martes" onclick="setFiltroDia('Martes',this)">Mar</button>
+      <button class="filtro-btn" id="fdía-miercoles" onclick="setFiltroDia('Miércoles',this)">Mié</button>
+      <button class="filtro-btn" id="fdía-jueves" onclick="setFiltroDia('Jueves',this)">Jue</button>
+      <button class="filtro-btn" id="fdía-viernes" onclick="setFiltroDia('Viernes',this)">Vie</button>
+      <button class="filtro-btn" id="fdía-sabado" onclick="setFiltroDia('Sábado',this)">Sáb</button>
+      <button class="filtro-btn" id="fdía-sindia" onclick="setFiltroDia('sin-dia',this)">Sin día</button>
+    </div>
+    <div id="pres-lista"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
 
 <script>
+// ═══════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════
 const SUPABASE_URL = 'https://pkxjsbgizxntmgtixbwt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_7RsdYecYwSQhsI_PAbhczQ_49wMNVID';
+const PROXY_URL    = '/.netlify/functions/odoo-proxy';
 const ODOO_URL     = 'https://distribucionesjoaquininfante.es';
-const ADMIN_PASS   = 'dji2026admin';
 const EMPRESA      = 'DJI';
 
-const REPARTIDORES = ['JUAN PEDRO','JAVIER','ALFONSO','JUANLU','JUANJOROBLEDO','ZEKY'];
+const REPARTIDORES = [
+  { nombre:'JUAN PEDRO',    rutaOdoo:'Pedro Juan' },
+  { nombre:'JAVIER',        rutaOdoo:'Javier' },
+  { nombre:'ALFONSO',       rutaOdoo:'Alfonso' },
+  { nombre:'JUANLU',        rutaOdoo:'Juanlu' },
+  { nombre:'JUANJOROBLEDO', rutaOdoo:'Robledo Juan Jose' },
+  { nombre:'ZEKY',          rutaOdoo:'Zeky' },
+];
 
-// ── GESTOR DE CLIENTES ───────────────────────────────────
-let _clientes = [], _puntos = [], _fichaActual = null, _contactosAdmin = [];
+// ═══════════════════════════════════════════
+// ESTADO
+// ═══════════════════════════════════════════
+let E = {
+  usuario:null, pin:'', repIdx:null,
+  pedidos:[], pedidoActual:null,
+  fotos:[], fotoUrls:[],
+  contactos:[], coordsGPS:null,
+};
 
-async function cargarClientes(){
-  document.getElementById('clientes-lista').innerHTML='<div class="spinner-sm" style="margin:20px auto"></div>';
-  try{
-    const [clientes, puntos] = await Promise.all([
-      supaFetch('rutas_clientes?empresa=eq.DJI&activo=eq.true&order=nombre&select=id,nombre,odoo_partner_id&limit=5000'),
-      supaFetch('rutas_puntos_entrega?empresa=eq.DJI&select=id,cliente_id,nombre_punto,direccion_texto,latitud,longitud,geocodificado,hora_max_llegada,hora_apertura,hora_cierre,dias_cerrado,tiempo_descarga_min,notas_logisticas,descargar_primero,estricto_horario&limit=6000'),
-    ]);
-    _clientes = clientes||[];
-    _puntos   = puntos||[];
-    filtrarClientes();
-  }catch(e){
-    document.getElementById('clientes-lista').innerHTML=`<div style="color:var(--danger);padding:16px">${e.message}</div>`;
+// ═══════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════
+// Navegación con hash para interceptar botón atrás en Android
+let _navegandoInternamente = false;
+
+function irA(s){
+  document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
+  document.getElementById('screen-'+s).classList.add('active');
+  window.scrollTo(0,0);
+  if(!_navegandoInternamente){
+    history.pushState({screen:s}, '', '#'+s);
   }
 }
 
-function evaluarFichaAdmin(punto){
-  if(!punto||!punto.geocodificado) return 'sin-ficha';
-  const n=punto.notas_logisticas||'';
-  const tieneToggle=n.includes('NO_FIRMA')||n.includes('FACTURA')||n.includes('REPASAR')||punto.estricto_horario||punto.descargar_primero;
-  const tieneHorario=!!(punto.hora_max_llegada||punto.hora_apertura||punto.hora_cierre||(punto.dias_cerrado&&punto.dias_cerrado.length>0));
-  if(tieneHorario&&tieneToggle) return 'completa';
-  return 'parcial';
-}
+// Interceptar botón atrás
+window.addEventListener('popstate', function(e){
+  _navegandoInternamente = true;
+  const activa = document.querySelector('.screen.active')?.id?.replace('screen-','');
 
-function colorEstado(e){ return e==='sin-ficha'?'var(--danger)':e==='parcial'?'var(--warn)':'var(--success)'; }
-function iconoEstado(e){ return e==='sin-ficha'?'🔴':e==='parcial'?'🟡':'🟢'; }
-
-function filtrarClientes(){
-  const busq = document.getElementById('cliente-buscar').value.toLowerCase();
-  const filtroE = document.getElementById('cliente-filtro-estado').value;
-
-  let lista = _clientes;
-  if(busq) lista = lista.filter(c=>c.nombre.toLowerCase().includes(busq));
-
-  if(filtroE){
-    lista = lista.filter(c=>{
-      const pts = _puntos.filter(p=>p.cliente_id===c.id);
-      if(!pts.length) return filtroE==='sin-ficha';
-      return pts.some(p=>evaluarFichaAdmin(p)===filtroE);
-    });
-  }
-
-  const sinFicha = lista.filter(c=>{ const pts=_puntos.filter(p=>p.cliente_id===c.id); return !pts.length||pts.every(p=>evaluarFichaAdmin(p)==='sin-ficha'); }).length;
-  const parcial  = lista.filter(c=>{ const pts=_puntos.filter(p=>p.cliente_id===c.id); return pts.some(p=>evaluarFichaAdmin(p)==='parcial'); }).length;
-  const completa = lista.filter(c=>{ const pts=_puntos.filter(p=>p.cliente_id===c.id); return pts.every(p=>evaluarFichaAdmin(p)==='completa')&&pts.length>0; }).length;
-
-  document.getElementById('clientes-stats').textContent=`${lista.length} clientes · 🔴 ${sinFicha} sin ficha · 🟡 ${parcial} incompletas · 🟢 ${completa} completas`;
-
-  if(!lista.length){
-    document.getElementById('clientes-lista').innerHTML='<div style="text-align:center;padding:24px;color:var(--text2)">Sin resultados</div>';
+  if(!activa || activa === 'login'){
+    if(!confirm('¿Quieres salir de la aplicación?')){
+      history.pushState({screen:'login'}, '', '#login');
+    }
+    _navegandoInternamente = false;
     return;
   }
 
-  // Mostrar máx 100 para rendimiento
-  const pagina = lista.slice(0,100);
-  document.getElementById('clientes-lista').innerHTML = pagina.map(c=>{
-    const pts = _puntos.filter(p=>p.cliente_id===c.id);
-    const dirs = pts.length
-      ? pts.map(p=>{
-          const ef=evaluarFichaAdmin(p);
-          return `<div class="dir-item" onclick="abrirFichaAdmin('${p.id}','${c.nombre.replace(/'/g,'')}')">
-            <div class="dir-estado" style="background:${colorEstado(ef)}"></div>
-            <span>${iconoEstado(ef)} ${p.nombre_punto||'Principal'} — ${p.direccion_texto||'Sin dirección'}</span>
-          </div>`;
-        }).join('')
-      : `<div class="dir-item" style="color:var(--danger)" onclick="crearPuntoAdmin('${c.id}','${c.nombre.replace(/'/g,'')}')">
-          🔴 Sin direcciones de entrega — click para crear
-        </div>`;
-    return `<div class="cliente-fila">
-      <div class="cliente-nombre-admin">${c.nombre}</div>
-      ${dirs}
-    </div>`;
-  }).join('');
+  if(activa === 'parada')             irA('pedidos');
+  else if(activa === 'pedidos')       irA('menu');
+  else if(activa === 'presupuestos')  irA('menu');
+  else if(activa === 'menu')          irA('login');
+  else irA('menu');
 
-  if(lista.length>100) document.getElementById('clientes-lista').innerHTML+=
-    `<div style="text-align:center;padding:12px;color:var(--text2);font-size:13px">Mostrando 100 de ${lista.length} — usa el buscador para filtrar</div>`;
-}
+  // Volver a añadir estado para que el siguiente atrás funcione
+  history.pushState({screen: document.querySelector('.screen.active')?.id?.replace('screen-','')}, '', window.location.href);
+  _navegandoInternamente = false;
+});
 
-async function abrirFichaAdmin(puntoId, clienteNombre){
-  const punto = _puntos.find(p=>p.id===puntoId);
-  if(!punto) return;
-  _fichaActual = punto;
-  _contactosAdmin = [];
+// Estado inicial
+history.replaceState({screen:'login'}, '', '#login');
 
-  document.getElementById('modal-ficha-titulo').textContent = clienteNombre;
-  document.getElementById('modal-ficha-sub').textContent = punto.nombre_punto + (punto.direccion_texto?' — '+punto.direccion_texto:'');
+let toastT;
+function toast(msg,tipo='ok'){ const t=document.getElementById('toast'); t.textContent=msg; t.className='show '+tipo; clearTimeout(toastT); toastT=setTimeout(()=>t.className='',3000); }
 
-  // GPS
-  const gpsInfo = document.getElementById('admin-gps-info');
-  if(punto.latitud&&punto.longitud){
-    gpsInfo.innerHTML=`<span style="color:var(--success)">✓ GPS guardado: ${parseFloat(punto.latitud).toFixed(6)}, ${parseFloat(punto.longitud).toFixed(6)}</span> — <a href="https://maps.google.com/?q=${punto.latitud},${punto.longitud}" target="_blank" style="color:var(--accent)">Ver en mapa</a>`;
-    document.getElementById('admin-lat').value=punto.latitud;
-    document.getElementById('admin-lng').value=punto.longitud;
-  } else {
-    gpsInfo.innerHTML='<span style="color:var(--danger)">Sin GPS registrado</span>';
-    document.getElementById('admin-lat').value='';
-    document.getElementById('admin-lng').value='';
-  }
-
-  // Horarios
-  document.getElementById('admin-apertura').value=punto.hora_apertura?.slice(0,5)||'';
-  document.getElementById('admin-cierre').value=punto.hora_cierre?.slice(0,5)||'';
-  document.getElementById('admin-hora-max').value=punto.hora_max_llegada?.slice(0,5)||'';
-
-  // Días
-  const dias=punto.dias_cerrado||[];
-  document.querySelectorAll('.dia-btn-admin').forEach(b=>b.classList.toggle('active',dias.includes(b.dataset.dia)));
-
-  // Toggles
-  const n=punto.notas_logisticas||'';
-  document.getElementById('admin-primero').checked=punto.descargar_primero||false;
-  document.getElementById('admin-estricto').checked=punto.estricto_horario||false;
-  document.getElementById('admin-no-firma').checked=n.includes('NO_FIRMA');
-  document.getElementById('admin-factura').checked=n.includes('FACTURA');
-  document.getElementById('admin-repasar').checked=n.includes('REPASAR');
-  document.getElementById('admin-tiempo').value=punto.tiempo_descarga_min||'';
-  const notas=n.replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'').replace(/REPASAR\|?/g,'').trim();
-  document.getElementById('admin-notas').value=notas;
-
-  // Contactos
-  try{
-    const c=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${puntoId}&order=es_principal.desc,nombre`);
-    _contactosAdmin=c||[];
-    renderContactosAdmin();
-  }catch(_){ _contactosAdmin=[]; }
-
-  document.getElementById('modal-ficha').style.display='block';
-  document.getElementById('modal-ficha').scrollTop=0;
-}
-
-function cerrarModalFicha(){ document.getElementById('modal-ficha').style.display='none'; }
-
-function toggleDiaAdmin(btn){ btn.classList.toggle('active'); }
-
-function buscarCoordenadasGoogleMaps(){
-  const p=_fichaActual;
-  if(!p) return;
-  const dir=encodeURIComponent(p.direccion_texto||'');
-  window.open(`https://www.google.com/maps/search/?api=1&query=${dir}`,'_blank');
-}
-
-function renderContactosAdmin(){
-  const lista=document.getElementById('admin-contactos-lista');
-  if(!_contactosAdmin.length){ lista.innerHTML='<div style="font-size:12px;color:var(--text3);margin-bottom:4px">Sin contactos</div>'; return; }
-  lista.innerHTML=_contactosAdmin.map((c,i)=>`
-    <div class="contacto-admin-item">
-      <div style="flex:1"><strong>${c.nombre}</strong>${c.es_principal?' ⭐':''} <span style="color:var(--text2)">${c.telefono}</span></div>
-      <button onclick="eliminarContactoAdmin(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px">✕</button>
-    </div>`).join('');
-}
-
-async function añadirContactoAdmin(){
-  const nombre=document.getElementById('admin-c-nombre').value.trim();
-  const tel=document.getElementById('admin-c-tel').value.trim();
-  if(!nombre||!tel){ alert('Rellena nombre y teléfono'); return; }
-  try{
-    await supaFetch('rutas_contactos_recepcion','POST',{
-      punto_entrega_id:_fichaActual.id, nombre, telefono:tel, es_principal:_contactosAdmin.length===0
-    });
-    document.getElementById('admin-c-nombre').value='';
-    document.getElementById('admin-c-tel').value='';
-    const c=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${_fichaActual.id}&order=es_principal.desc,nombre`);
-    _contactosAdmin=c||[]; renderContactosAdmin();
-  }catch(e){ alert('Error: '+e.message); }
-}
-
-async function eliminarContactoAdmin(i){
-  const c=_contactosAdmin[i];
-  await supaFetch(`rutas_contactos_recepcion?id=eq.${c.id}`,'DELETE');
-  const r=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${_fichaActual.id}&order=es_principal.desc,nombre`);
-  _contactosAdmin=r||[]; renderContactosAdmin();
-}
-
-async function guardarFichaAdmin(){
-  if(!_fichaActual) return;
-  const flags=[];
-  if(document.getElementById('admin-no-firma').checked) flags.push('NO_FIRMA');
-  if(document.getElementById('admin-factura').checked)  flags.push('FACTURA');
-  if(document.getElementById('admin-repasar').checked)  flags.push('REPASAR');
-  const notasLibres=document.getElementById('admin-notas').value.trim();
-  const notas=[...flags,notasLibres].filter(Boolean).join('|');
-  const dias=[...document.querySelectorAll('.dia-btn-admin.active')].map(b=>b.dataset.dia);
-  const lat=parseFloat(document.getElementById('admin-lat').value)||null;
-  const lng=parseFloat(document.getElementById('admin-lng').value)||null;
-
-  const datos={
-    notas_logisticas:notas||null,
-    hora_apertura:document.getElementById('admin-apertura').value||null,
-    hora_cierre:document.getElementById('admin-cierre').value||null,
-    hora_max_llegada:document.getElementById('admin-hora-max').value||null,
-    dias_cerrado:dias,
-    tiempo_descarga_min:parseInt(document.getElementById('admin-tiempo').value)||15,
-    descargar_primero:document.getElementById('admin-primero').checked,
-    estricto_horario:document.getElementById('admin-estricto').checked,
-    latitud:lat, longitud:lng,
-    geocodificado:!!(lat&&lng),
-  };
-
-  try{
-    await supaFetch(`rutas_puntos_entrega?id=eq.${_fichaActual.id}`,'PATCH',datos);
-    // Actualizar en memoria local
-    const idx=_puntos.findIndex(p=>p.id===_fichaActual.id);
-    if(idx>=0) Object.assign(_puntos[idx], datos);
-    cerrarModalFicha();
-    filtrarClientes();
-    alert('✓ Ficha guardada');
-  }catch(e){ alert('Error: '+e.message); }
-}
-
-async function supaFetch(path, method='GET', body=null){
+async function supaFetch(path,method='GET',body=null){
   const opts={method,headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':method==='POST'?'return=minimal':''}};
   if(body) opts.body=JSON.stringify(body);
   const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,opts);
@@ -604,585 +513,859 @@ async function supaFetch(path, method='GET', body=null){
   return txt?JSON.parse(txt):null;
 }
 
+async function odooProxy(action,params){
+  const r=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa:EMPRESA,action,params})});
+  const j=await r.json();
+  if(!j.ok) throw new Error(j.error||'Error proxy');
+  return j.result;
+}
+
+// ═══════════════════════════════════════════
 // LOGIN
-function doLogin(){
-  const pass = document.getElementById('login-pass').value;
-  if(pass === ADMIN_PASS){
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app').style.display='block';
-    init();
-  } else {
-    document.getElementById('login-err').textContent='Contraseña incorrecta';
+// ═══════════════════════════════════════════
+function initLogin(){
+  document.getElementById('repartidores-grid').innerHTML=REPARTIDORES.map((r,i)=>
+    `<button class="rep-btn" onclick="seleccionarRep(${i})">${r.nombre}</button>`).join('');
+}
+
+function seleccionarRep(i){
+  E.usuario=REPARTIDORES[i];
+  E.repIdx=i;
+  entrarMenu();
+}
+function entrarMenu(){
+  document.getElementById('menu-nombre').textContent=E.usuario.nombre;
+  document.getElementById('menu-avatar').textContent=E.usuario.nombre[0];
+  const hoy=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
+  document.getElementById('menu-fecha').textContent=hoy.charAt(0).toUpperCase()+hoy.slice(1);
+  // Restaurar pedidos del día si existen en sessionStorage
+  try{
+    const saved=sessionStorage.getItem('dji_pedidos_'+E.usuario.rutaOdoo);
+    if(saved){ E.pedidos=JSON.parse(saved); }
+  }catch(_){}
+  irA('menu');
+}
+function cerrarSesion(){ E.usuario=null; E.repIdx=null; E.pedidos=[]; irA('login'); }
+
+// ═══════════════════════════════════════════
+// PEDIDOS
+// ═══════════════════════════════════════════
+async function cargarPedidosHoy(){
+  // Si ya hay pedidos en memoria, ir directo sin recargar
+  if(E.pedidos.length > 0){
+    irA('pedidos');
+    renderPedidos();
+    return;
   }
-}
-
-function init(){
-  const hoy = new Date().toISOString().split('T')[0];
-  document.getElementById('filtro-fecha').value = hoy;
-  document.getElementById('topbar-fecha').textContent =
-    new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
-  cargarDatos();
-}
-
-async function sincronizarEntregados(fecha){
-  // Buscar pickings done de hoy en Odoo que no estén en rutas_entregas_dia
+  irA('pedidos');
+  document.getElementById('pedidos-lista').innerHTML='<div class="spinner"></div>';
   try{
-    const r = await fetch(PROXY_URL_ADMIN,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({empresa:EMPRESA, action:'get_pickings_done_hoy', params:{fecha}}),
-    });
-    const j = await r.json();
-    if(!j.ok || !j.result?.pickings?.length) return;
+    const rutaNombre=E.usuario.rutaOdoo;
+    // Sin filtro de fecha — todos los pickings assigned del repartidor
+    const {pickings}=await odooProxy('get_pickings_pendientes',{rutaNombre});
+    E.pedidos=await Promise.all(pickings.map(async p=>{
+      const partnerId=Array.isArray(p.partner_id)?p.partner_id[0]:p.partner_id;
+      const partnerNombre=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
+      const deliveryId=Array.isArray(p.delivery_address_id)?p.delivery_address_id[0]:(p.delivery_address_id||partnerId);
+      const deliveryNombre=Array.isArray(p.delivery_address_id)?p.delivery_address_id[1]:null;
+      let punto=null;
+      try{
+        let pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${deliveryId}&select=*`);
+        if(!pts?.length && deliveryId!==partnerId){
+          pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${partnerId}&select=*`);
+        }
+        punto=pts?.[0]||null;
+      }catch(_){}
+      return{...p,partnerNombre,partnerId,deliveryId,deliveryNombre,punto,estado:'pendiente'};
+    }));
 
-    const pickingsDone = j.result.pickings;
+    // Cruzar con entregados del día en Supabase
+    try{
+      const hoy=new Date().toISOString().split('T')[0];
+      const entregados=await supaFetch(`rutas_entregas_dia?empresa=eq.${EMPRESA}&repartidor=eq.${E.usuario.nombre}&fecha=eq.${hoy}&select=*`);
+      if(entregados?.length){
+        entregados.forEach(e=>{
+          // Buscar si el picking ya está en la lista
+          const p=E.pedidos.find(p=>p.id===e.odoo_picking_id);
+          if(p){
+            // Ya está — actualizar estado
+            p.estado='entregada';
+            p.fotoUrls=e.foto_urls||[];
+            p.comentario=e.comentario;
+          } else {
+            // No está en Odoo (ya validado) — añadirlo como entregado
+            E.pedidos.push({
+              id: e.odoo_picking_id,
+              name: e.odoo_picking_name,
+              partnerNombre: e.partner_nombre,
+              partnerId: e.delivery_id,
+              deliveryId: e.delivery_id,
+              deliveryNombre: null,
+              punto: null,
+              estado: 'entregada',
+              fotoUrls: e.foto_urls||[],
+              comentario: e.comentario,
+              _soloHistorico: true, // no tiene picking en Odoo
+            });
+          }
+        });
+        // Cargar puntos de entrega para los históricos
+        for(const p of E.pedidos.filter(x=>x._soloHistorico && !x.punto)){
+          try{
+            const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${p.deliveryId}&select=*`);
+            p.punto=pts?.[0]||null;
+          }catch(_){}
+        }
+      }
+    }catch(err){ console.warn('Error cargando entregados:', err.message); }
 
-    // Ver cuáles ya están en Supabase
-    const existentes = await supaFetch(`rutas_entregas_dia?empresa=eq.${EMPRESA}&fecha=eq.${fecha}&select=odoo_picking_id`);
-    const idsExistentes = new Set((existentes||[]).map(e=>e.odoo_picking_id));
-
-    // Insertar los que faltan
-    const nuevos = pickingsDone.filter(p=>!idsExistentes.has(p.id));
-    for(const p of nuevos){
-      const cliente = Array.isArray(p.partner_id)?p.partner_id[1]:'-';
-      const partnerId = Array.isArray(p.partner_id)?p.partner_id[0]:p.partner_id;
-      // Buscar el repartidor por la ruta
-      const ruta = Array.isArray(p.route_name)?p.route_name[0]:p.route_name||'';
-      const repartidor = Object.entries(RUTAS_REPARTIDORES).find(([,v])=>ruta.includes(v))?.[0]||'Desconocido';
-
-      await fetch(SUPABASE_URL+'/rest/v1/rutas_entregas_dia',{
-        method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
-        body:JSON.stringify({
-          empresa:EMPRESA, repartidor,
-          odoo_picking_id:p.id, odoo_picking_name:p.name,
-          partner_nombre:cliente, delivery_id:partnerId,
-          foto_urls:[], estado:'entregada', fecha,
-          hora_entrega: p.date_done ? new Date(p.date_done).toISOString() : null,
-        }),
-      });
-    }
-    if(nuevos.length) console.log(`Sincronizados ${nuevos.length} pickings de Odoo`);
-  }catch(e){ console.warn('Error sincronizando:', e.message); }
-}
-
-async function cargarDatos(){
-  const fecha  = document.getElementById('filtro-fecha').value;
-  const rep    = document.getElementById('filtro-rep').value;
-  const estado = document.getElementById('filtro-estado').value;
-
-  document.getElementById('rep-grid').innerHTML='<div class="spinner"></div>';
-  document.getElementById('tabla-body').innerHTML='<tr><td colspan="8" style="text-align:center;padding:32px"><div class="spinner"></div></td></tr>';
-
-  // Sincronizar pickings done de Odoo que no estén registrados
-  await sincronizarEntregados(fecha);
-
-  try{
-    // Cargar entregas del día desde Supabase
-    let query = `rutas_entregas_dia?empresa=eq.${EMPRESA}&fecha=eq.${fecha}&order=created_at.asc&select=*`;
-    if(rep)    query += `&repartidor=eq.${encodeURIComponent(rep)}`;
-    if(estado === 'entregada') query += `&estado=eq.entregada`;
-
-    const entregas = await supaFetch(query);
-
-    // Stats globales — entregados de Supabase
-    const totalEntregas = entregas.length;
-    const totalFotos = entregas.reduce((a,e)=>a+(e.foto_urls?.length||0),0);
-    document.getElementById('s-entregados').textContent = totalEntregas;
-    document.getElementById('s-fotos').textContent = totalFotos;
-    document.getElementById('s-total').textContent = totalEntregas;
-    document.getElementById('s-pendientes').textContent = '—';
-    // Nota: pendientes se ven en la sección "Pedidos pendientes por repartidor"
-
-    // Resumen por repartidor
-    renderRepGrid(entregas, rep);
-
-    // Tabla detalle
-    if(estado === 'pendiente'){
-      document.getElementById('tabla-body').innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text2)">Los pedidos pendientes no están disponibles en el panel — consulta la app del repartidor</td></tr>';
-      return;
-    }
-
-    renderTabla(entregas);
-
+    // Persistir en sessionStorage
+    try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo, JSON.stringify(E.pedidos)); }catch(_){}
+    renderPedidos();
   }catch(e){
-    document.getElementById('tabla-body').innerHTML=`<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--danger)">${e.message}</td></tr>`;
+    document.getElementById('pedidos-lista').innerHTML=`<div class="empty-state"><div class="empty-icon">[!]</div><div class="empty-title">Error</div><div class="empty-sub">${e.message}</div></div>`;
   }
 }
 
-function renderRepGrid(entregas, filtroRep){
-  const reps = filtroRep ? [filtroRep] : REPARTIDORES;
-  document.getElementById('rep-grid').innerHTML = reps.map(nombre=>{
-    const mis = entregas.filter(e=>e.repartidor===nombre);
-    const fotos = mis.reduce((a,e)=>a+(e.foto_urls?.length||0),0);
-    return `<div class="rep-card">
-      <div class="rep-nombre">${nombre}</div>
-      <div class="rep-stats">
-        <div class="rep-stat"><div class="rep-num" style="color:var(--success)">${mis.length}</div><div class="rep-lbl">Entregados</div></div>
-        <div class="rep-stat"><div class="rep-num" style="color:var(--accent)">${fotos}</div><div class="rep-lbl">Fotos</div></div>
-      </div>
-    </div>`;
-  }).join('');
+// ═══════════════════════════════════════════
+// PESTAÑAS PEDIDOS
+// ═══════════════════════════════════════════
+let tabActiva='pendientes';
+
+function setTabPedidos(tab){
+  tabActiva=tab;
+  document.getElementById('tab-pendientes').classList.toggle('active',tab==='pendientes');
+  document.getElementById('tab-entregados').classList.toggle('active',tab==='entregados');
+  renderPedidos();
 }
 
-async function renderTabla(entregas){
-  if(!entregas.length){
-    document.getElementById('tabla-body').innerHTML='<tr><td colspan="9"><div class="empty">Sin entregas para esta selección</div></td></tr>';
+async function recargarPedidos(){
+  E.pedidos=[];
+  await cargarPedidosHoy();
+}
+
+function renderPedidos(){
+  const total=E.pedidos.length;
+  const entregados=E.pedidos.filter(p=>p.estado==='entregada').length;
+  document.getElementById('stat-pedidos').textContent=total;
+  document.getElementById('stat-entregados').textContent=entregados;
+  document.getElementById('stat-pendientes').textContent=total-entregados;
+  document.getElementById('pedidos-sub').innerHTML=`🔄 <span id="pedidos-count">${entregados}/${total}</span>`;
+
+  const lista=tabActiva==='pendientes'
+    ? E.pedidos.filter(p=>p.estado!=='entregada')
+    : E.pedidos.filter(p=>p.estado==='entregada');
+
+  if(!lista.length){
+    document.getElementById('pedidos-lista').innerHTML=`<div class="empty-state">
+      <div class="empty-icon">${tabActiva==='pendientes'?'[OK]':'[PKG]'}</div>
+      <div class="empty-title">${tabActiva==='pendientes'?'Sin pendientes':'Sin entregados aún'}</div>
+    </div>`;
     return;
   }
 
-  // Cargar fotos de almacén del día — indexadas por odoo_order_id (=sale_id)
-  const fecha = document.getElementById('filtro-fecha').value;
-  let fotosAlmacenMap = {};
-  try{
-    const fa = await supaFetch(`rutas_fotos_almacen?empresa=eq.${EMPRESA}&fecha=eq.${fecha}&select=odoo_order_id,foto_urls`);
-    (fa||[]).forEach(f=>{ fotosAlmacenMap[f.odoo_order_id]=(f.foto_urls||[]); });
-  }catch(_){}
-
-  // Cache global de datos para el modal
-  window._fotosCache = {};
-
-  document.getElementById('tabla-body').innerHTML = entregas.map((e,idx)=>{
-    const horaRef = e.hora_entrega || e.created_at;
-    const hora = new Date(horaRef).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-    const fotasEntregaArr = e.foto_urls||[];
-    const fotasAlmacenArr = fotosAlmacenMap[e.odoo_sale_id]||fotosAlmacenMap[e.odoo_picking_id]||[];
-    const fotos = fotasEntregaArr.map(url=>
-      `<img class="foto-thumb" src="${url}" onclick="openLightbox('${url}')" title="Ver foto"/>`
-    ).join('');
-    const fotosAlmacen = fotasAlmacenArr.map(url=>
-      `<img class="foto-thumb" src="${url}" onclick="openLightbox('${url}')" title="Foto almacén" style="border-color:var(--warn)"/>`
-    ).join('') || '<span style="color:var(--text3);font-size:12px">—</span>';
-    const albaranUrl = `${ODOO_URL}/report/pdf/stock.report_deliveryslip/${e.odoo_picking_id}`;
-
-    // Guardar en cache para el modal
-    window._fotosCache[idx] = {
-      albaran: e.odoo_picking_name,
-      cliente: e.partner_nombre,
-      repartidor: e.repartidor,
-      hora,
-      fotosEntrega: fotasEntregaArr,
-      fotosAlmacen: fotasAlmacenArr,
-      albaranUrl,
-    };
-
-    return `<tr>
-      <td style="white-space:nowrap;font-weight:700">${hora}</td>
-      <td><span style="font-size:13px;font-weight:600">${e.repartidor}</span></td>
-      <td><a class="albaran-link" href="${albaranUrl}" target="_blank">${e.odoo_picking_name}</a></td>
-      <td style="max-width:200px">${e.partner_nombre}</td>
-      <td><span class="badge badge-ok">Entregado</span></td>
-      <td><div class="fotos-wrap">${fotos||'<span style="color:var(--text3);font-size:12px">Sin fotos</span>'}</div></td>
-      <td><div class="fotos-wrap">${fotosAlmacen}</div></td>
-      <td style="max-width:200px;color:var(--text2);font-size:13px">${e.comentario||'—'}</td>
-      <td>
-        <a class="albaran-link" href="${albaranUrl}" target="_blank">📄 PDF</a><br>
-        <button onclick="verFotosPedidoIdx(${idx})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;padding:2px 0">🖼️ Ver fotos</button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-function verFotosPedidoIdx(idx){
-  const d = window._fotosCache?.[idx];
-  if(!d) return;
-  verFotosPedido(d.albaran, d.cliente, d.repartidor, d.hora, d.fotosEntrega, d.fotosAlmacen, d.albaranUrl);
-}
-
-function verFotosPedido(albaran, cliente, repartidor, hora, fotosEntrega, fotosAlmacen, albaranUrl){
-  document.getElementById('modal-fotos-titulo').textContent=`${albaran} — ${cliente}`;
-  document.getElementById('modal-fotos-sub').textContent=`${repartidor} · ${hora}`;
-  document.getElementById('modal-albaran-link').href=albaranUrl;
-
-  const divAlmacen=document.getElementById('modal-fotos-almacen');
-  const divEntrega=document.getElementById('modal-fotos-entrega');
-
-  divAlmacen.innerHTML = fotosAlmacen.length
-    ? fotosAlmacen.map(url=>`<img src="${url}" onclick="openLightbox('${url}')" style="width:160px;height:160px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid var(--warn)" title="Foto almacén"/>`).join('')
-    : '<span style="color:var(--text3);font-size:13px">Sin fotos de almacén</span>';
-
-  divEntrega.innerHTML = fotosEntrega.length
-    ? fotosEntrega.map(url=>`<img src="${url}" onclick="openLightbox('${url}')" style="width:160px;height:160px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid var(--accent)" title="Foto entrega"/>`).join('')
-    : '<span style="color:var(--text3);font-size:13px">Sin fotos de entrega</span>';
-
-  document.getElementById('modal-fotos').style.display='block';
-  document.getElementById('modal-fotos').scrollTop=0;
-}
-
-function openLightbox(url){
-  document.getElementById('lightbox-img').src=url;
-  document.getElementById('lightbox').classList.add('show');
-}
-function closeLightbox(){
-  document.getElementById('lightbox').classList.remove('show');
-  document.getElementById('lightbox-img').src='';
-}
-
-// ── PEDIDOS PENDIENTES ADMIN ──────────────────────────────
-const RUTAS_REPARTIDORES = {
-  'JUAN PEDRO':    'Pedro Juan',
-  'JAVIER':        'Javier',
-  'ALFONSO':       'Alfonso',
-  'JUANLU':        'Juanlu',
-  'JUANJOROBLEDO': 'Robledo Juan Jose',
-  'ZEKY':          'Zeky',
-};
-
-async function cargarPendientesAdmin(){
-  const wrap = document.getElementById('pendientes-wrap');
-  wrap.innerHTML='<div class="spinner"></div>';
-
-  try{
-    // Consultar todos los repartidores en paralelo
-    const resultados = await Promise.all(
-      Object.entries(RUTAS_REPARTIDORES).map(async ([nombre, rutaOdoo])=>{
-        try{
-          const r = await fetch(PROXY_URL_ADMIN,{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({empresa:'DJI', action:'get_pickings_pendientes', params:{rutaNombre:rutaOdoo}}),
-          });
-          const j = await r.json();
-          return { nombre, pickings: j.ok ? j.result.pickings : [] };
-        }catch(_){ return { nombre, pickings:[] }; }
-      })
-    );
-
-    // Renderizar por repartidor
-    const totalGlobal = resultados.reduce((a,r)=>a+r.pickings.length,0);
-
-    wrap.innerHTML = `
-      <div class="stats-grid" style="margin-bottom:16px">
-        ${resultados.map(r=>`
-          <div class="stat-card">
-            <div style="font-size:13px;font-weight:700;margin-bottom:6px">${r.nombre}</div>
-            <div class="stat-num" style="color:${r.pickings.length>0?'var(--warn)':'var(--success)'}">${r.pickings.length}</div>
-            <div class="stat-lbl">pendientes</div>
-          </div>
-        `).join('')}
-      </div>
-      ${resultados.filter(r=>r.pickings.length>0).map(r=>`
-        <div style="margin-bottom:16px">
-          <div class="section-title" style="margin-bottom:8px">📦 ${r.nombre} — ${r.pickings.length} pendientes</div>
-          <div class="tabla-wrap">
-            <table>
-              <thead><tr><th>Albarán</th><th>Cliente</th><th>Fecha programada</th></tr></thead>
-              <tbody>
-                ${r.pickings.map(p=>{
-                  const cliente=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
-                  const fecha=p.scheduled_date?new Date(p.scheduled_date).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-                  const albaranUrl=`${ODOO_URL}/web#id=${p.id}&model=stock.picking&view_type=form`;
-                  return `<tr>
-                    <td><a class="albaran-link" href="${albaranUrl}" target="_blank">${p.name}</a></td>
-                    <td>${cliente}</td>
-                    <td style="font-size:13px;color:var(--text2)">${fecha}</td>
-                  </tr>`;
-                }).join('')}
-              </tbody>
-            </table>
-          </div>
+  if(tabActiva==='pendientes'){
+    document.getElementById('pedidos-lista').innerHTML=lista.map((p,i)=>{
+      const idx=E.pedidos.indexOf(p);
+      const alertas=getAlertas(p.punto);
+      const esPrimero=p.punto?.descargar_primero;
+      return`<div class="pedido-card" onclick="abrirParada(${idx})">
+        ${esPrimero?'<div style="font-size:11px;color:var(--warn);font-weight:700;margin-bottom:4px">⚡ DESCARGAR PRIMERO</div>':''}
+        <div class="pedido-num">${p.name}</div>
+        <div class="pedido-cliente">${p.partnerNombre}</div>
+        <div class="pedido-dir">${p.punto?.direccion_texto||'Sin dirección'}</div>
+        <div class="pedido-meta">
+          <span class="badge badge-gray">Pendiente</span>
+          ${alertas.length?`<span class="badge badge-warn">[!] ${alertas.length} alertas</span>`:''}
+          ${(()=>{
+            const ef=evaluarFicha(p.punto,[]);
+            if(ef==='sin-ficha') return '<span class="badge" style="background:rgba(239,68,68,.2);color:var(--danger)">🔴 Sin ficha</span>';
+            if(ef==='parcial')   return '<span class="badge" style="background:rgba(245,158,11,.15);color:var(--warn)">🟡 Incompleta</span>';
+            return '<span class="badge" style="background:rgba(34,197,94,.15);color:var(--success)">🟢 Completa</span>';
+          })()}
         </div>
-      `).join('')}
-      ${totalGlobal===0?'<div class="empty">Todos los repartidores tienen sus pedidos entregados 🎉</div>':''}
-    `;
-  }catch(e){
-    wrap.innerHTML=`<div style="color:var(--danger);padding:16px">${e.message}</div>`;
+      </div>`;
+    }).join('');
+  } else {
+    document.getElementById('pedidos-lista').innerHTML=lista.map((p,i)=>{
+      const idx=E.pedidos.indexOf(p);
+      const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${p.id}`;
+      return`<div class="pedido-entregado-card" onclick="abrirParada(${idx})">
+        <div class="pedido-num">${p.name}</div>
+        <div class="pedido-cliente">${p.partnerNombre}</div>
+        <div class="pedido-dir">${p.punto?.direccion_texto||'Sin dirección'}</div>
+        <div class="pedido-meta" style="margin-bottom:8px">
+          <span class="badge badge-ok">OK Entregado</span>
+          ${p.fotoUrls?.length?`<span class="badge badge-blue">[CAM] ${p.fotoUrls.length} foto${p.fotoUrls.length>1?'s':''}</span>`:''}
+        </div>
+        <a class="albaran-link" href="${albaranUrl}" target="_blank" onclick="event.stopPropagation()">
+          [PDF] Ver albarán PDF
+        </a>
+        <button class="whatsapp-btn" style="margin-top:8px;padding:10px;font-size:13px" onclick="event.stopPropagation();reenviarWhatsApp(${idx})">
+          [TEL] Reenviar por WhatsApp
+        </button>
+      </div>`;
+    }).join('');
   }
 }
-const GMAPS_KEY = 'AIzaSyBwKRw_m6EnKAvI8p5MEZLMvXyspJ14ENU';
-let mapaIniciado = false;
-let mapaObj = null;
 
-function cargarGoogleMaps(){
-  return new Promise(resolve=>{
-    if(window.google){ resolve(); return; }
-    const s=document.createElement('script');
-    s.src=`https://maps.googleapis.com/maps/api/js?key=${GMAPS_KEY}&language=es`;
-    s.onload=resolve;
-    document.head.appendChild(s);
-  });
+function getAlertas(punto){
+  if(!punto) return[];
+  const a=[];
+  const n=punto.notas_logisticas||'';
+  if(n.includes('NO_FIRMA'))    a.push('No firma en el móvil');
+  if(n.includes('FACTURA'))     a.push('Llevar factura');
+  if(n.includes('COCINA'))      a.push('Descarga por cocina');
+  if(n.includes('REPASAR'))     a.push('Repasar nota');
+  if(punto.hora_max_llegada)    a.push(`Límite ${punto.hora_max_llegada.slice(0,5)}`);
+  if(punto.estricto_horario)    a.push('Estricto con horarios');
+  if(punto.descargar_primero)   a.push('Descargar primero');
+  return a;
 }
 
-async function cargarMapa(){
-  const rep = document.getElementById('mapa-rep').value;
-  if(!rep){ alert('Selecciona un repartidor'); return; }
+// ═══════════════════════════════════════════
+// PARADA ACTIVA
+// ═══════════════════════════════════════════
+async function abrirParada(i){
+  E.pedidoActual=i;
+  E.fotos=[]; E.fotoUrls=[];
+  const p=E.pedidos[i];
+  document.getElementById('parada-progreso').textContent=`${i+1}/${E.pedidos.length}`;
+  document.getElementById('parada-num').textContent=p.name;
+  document.getElementById('parada-cliente').textContent=p.partnerNombre;
+  document.getElementById('parada-dir').textContent=p.punto?.direccion_texto||'Sin dirección';
+  document.getElementById('parada-comentario').value='';
+  document.getElementById('foto-preview').innerHTML='';
+  document.getElementById('btn-whatsapp-wrap').style.display='none';
+  document.getElementById('btn-whatsapp-wrap').innerHTML='';
+  document.getElementById('tiempo-wrap').style.display='none';
+  document.getElementById('tiempo-real').value='';
+  document.getElementById('odoo-firmado').style.display='none';
 
-  const fecha = document.getElementById('filtro-fecha').value;
-  const container = document.getElementById('mapa-container');
-  container.innerHTML='<div class="spinner"></div>';
+  // Alertas
+  const alertas=getAlertas(p.punto);
+  document.getElementById('parada-alertas').innerHTML=alertas.map(a=>`<div class="alerta-item">[!] ${a}</div>`).join('');
+  if(p.punto?.notas_logisticas){
+    const notas=p.punto.notas_logisticas.replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'').replace(/COCINA\|?/g,'').replace(/REPASAR\|?/g,'').trim();
+    if(notas) document.getElementById('parada-alertas').innerHTML+=`<div class="alerta-item" style="color:var(--text2);border-color:var(--border)">[NOTA] ${notas}</div>`;
+  }
+
+  // Cerrar ficha y cargar datos
+  cerrarFicha();
+  await cargarFichaIntegrada(p);
+
+  irA('parada');
+
+  // Si ya está entregado, ocultar acciones y firma
+  const yaEntregado = p.estado === 'entregada';
+  document.getElementById('acciones-wrap').style.display = yaEntregado ? 'none' : 'block';
+  document.querySelector('.btn-navegar').style.display = 'flex';
+  // Ocultar firma y foto si ya entregado
+  const firmaBtn = document.querySelector('button[onclick="abrirOdooAlbaran()"]');
+  if(firmaBtn) firmaBtn.style.display = yaEntregado ? 'none' : 'flex';
+  const fotoBtn = document.querySelector('button[onclick="document.getElementById(\'input-foto\').click()"]');
+  if(fotoBtn) fotoBtn.style.display = yaEntregado ? 'none' : 'flex';
+  document.getElementById('odoo-firmado').style.display = 'none';
+
+  // Si ya entregado, mostrar directamente los botones WhatsApp
+  if(yaEntregado){ mostrarBotonesWhatsApp(p); }
+}
+
+// ═══════════════════════════════════════════
+// FICHA DESPLEGABLE
+// ═══════════════════════════════════════════
+function toggleFicha(){
+  const toggle=document.getElementById('ficha-toggle');
+  const body=document.getElementById('ficha-body');
+  toggle.classList.toggle('open');
+  body.classList.toggle('open');
+}
+function cerrarFicha(){
+  document.getElementById('ficha-toggle').classList.remove('open');
+  document.getElementById('ficha-body').classList.remove('open');
+}
+
+async function cargarFichaIntegrada(p){
+  const punto=p.punto;
+  E.coordsGPS=null;
+
+  // Cargar contactos primero para evaluar ficha
+  await cargarContactosFicha(punto?.id);
+
+  // Evaluar estado de la ficha
+  const estadoFicha = evaluarFicha(punto, E.contactos);
+  const icono = iconoFicha(estadoFicha);
+
+  // Actualizar badge y estilo del toggle
+  const toggle = document.getElementById('ficha-toggle');
+  const estilos = {
+    'sin-ficha': 'background:rgba(239,68,68,.1);border:2px solid var(--danger)',
+    'parcial':   'background:rgba(245,158,11,.08);border:2px solid var(--warn)',
+    'completa':  'background:rgba(34,197,94,.06);border:1px solid var(--success)',
+  };
+  toggle.style.cssText = estilos[estadoFicha] + ';border-radius:var(--radius);padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;transition:all .15s';
+
+  const mensajes = {
+    'sin-ficha': 'Sin GPS ni datos — completar urgente',
+    'parcial':   'Ficha incompleta — faltan datos',
+    'completa':  'Ficha completa',
+  };
+  document.getElementById('ficha-badge-mini').textContent = `${icono} ${mensajes[estadoFicha]}`;
+
+  // GPS
+  const gpsCard=document.getElementById('ficha-gps-card');
+  if(punto?.latitud&&punto?.longitud){
+    E.coordsGPS={lat:punto.latitud,lng:punto.longitud};
+    gpsCard.className='gps-card ok';
+    gpsCard.innerHTML=`<div class="gps-coords">${parseFloat(punto.latitud).toFixed(6)}, ${parseFloat(punto.longitud).toFixed(6)}</div><div class="gps-label">OK Ubicación guardada</div>`;
+    document.getElementById('ficha-badge-mini').textContent='[GPS] Con GPS';
+  } else {
+    gpsCard.className='gps-card';
+    gpsCard.innerHTML='<div style="font-size:12px;color:var(--text3)">Sin ubicación registrada</div>';
+    document.getElementById('ficha-badge-mini').textContent='[!] Sin GPS';
+  }
+
+  // Horarios
+  document.getElementById('fc-apertura').value=punto?.hora_apertura?.slice(0,5)||'';
+  document.getElementById('fc-cierre').value=punto?.hora_cierre?.slice(0,5)||'';
+  document.getElementById('fc-hora-max').value=punto?.hora_max_llegada?.slice(0,5)||'';
+
+  // Días
+  const dias=punto?.dias_cerrado||[];
+  document.querySelectorAll('.dia-btn').forEach(b=>b.classList.toggle('active',dias.includes(b.dataset.dia)));
+
+  // Toggles
+  const n=punto?.notas_logisticas||'';
+  document.getElementById('fc-primero').checked=punto?.descargar_primero||false;
+  document.getElementById('fc-estricto').checked=punto?.estricto_horario||false;
+  document.getElementById('fc-no-firma').checked=n.includes('NO_FIRMA');
+  document.getElementById('fc-factura').checked=n.includes('FACTURA');
+  document.getElementById('fc-repasar').checked=n.includes('REPASAR');
+
+  // Tiempo y notas
+  document.getElementById('fc-tiempo').value=punto?.tiempo_descarga_min||'';
+  const notas=n.replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'').replace(/COCINA\|?/g,'').replace(/REPASAR\|?/g,'').trim();
+  document.getElementById('fc-notas').value=notas;
+
+  // Contactos
+  await cargarContactosFicha(punto?.id);
+}
+
+async function cargarContactosFicha(puntoId){
+  const lista=document.getElementById('ficha-contactos');
+  if(!puntoId){ lista.innerHTML='<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Guarda la ficha primero</div>'; E.contactos=[]; return; }
+  try{
+    const c=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${puntoId}&order=es_principal.desc,nombre`);
+    E.contactos=c||[];
+    lista.innerHTML=E.contactos.length
+      ? E.contactos.map((c,i)=>`<div class="contacto-item"><div class="contacto-info"><div class="contacto-nombre">${c.nombre}${c.es_principal?' *':''}</div><div class="contacto-tel">${c.telefono}</div></div><button class="contacto-del" onclick="eliminarContactoFicha(${i})">✕</button></div>`).join('')
+      : '<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Sin contactos</div>';
+  }catch(_){ lista.innerHTML=''; E.contactos=[]; }
+}
+
+function toggleDiaFicha(btn){ btn.classList.toggle('active'); }
+
+async function añadirContactoFicha(){
+  const nombre=document.getElementById('fc-nombre').value.trim();
+  const tel=document.getElementById('fc-tel').value.trim();
+  if(!nombre||!tel){ toast('Rellena nombre y teléfono','err'); return; }
+  const p=E.pedidos[E.pedidoActual];
+  if(!p.punto?.id){ toast('Guarda la ficha primero','err'); return; }
+  try{
+    await supaFetch('rutas_contactos_recepcion','POST',{punto_entrega_id:p.punto.id,nombre,telefono:tel,es_principal:E.contactos.length===0});
+    document.getElementById('fc-nombre').value='';
+    document.getElementById('fc-tel').value='';
+    await cargarContactosFicha(p.punto.id);
+    toast('Contacto añadido OK');
+  }catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+async function eliminarContactoFicha(i){
+  const c=E.contactos[i];
+  const p=E.pedidos[E.pedidoActual];
+  try{
+    await supaFetch(`rutas_contactos_recepcion?id=eq.${c.id}`,'DELETE');
+    await cargarContactosFicha(p.punto?.id);
+    toast('Eliminado');
+  }catch(e){ toast('Error','err'); }
+}
+
+async function capturarGPSFicha(){
+  if(!navigator.geolocation){ toast('GPS no disponible','err'); return; }
+  toast('Obteniendo ubicación...');
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      E.coordsGPS={lat:pos.coords.latitude,lng:pos.coords.longitude};
+      const card=document.getElementById('ficha-gps-card');
+      card.className='gps-card ok';
+      card.innerHTML=`<div class="gps-coords">${E.coordsGPS.lat.toFixed(6)}, ${E.coordsGPS.lng.toFixed(6)}</div><div class="gps-label">OK Capturado ahora</div>`;
+      document.getElementById('ficha-badge-mini').textContent='[GPS] Con GPS';
+      toast('Ubicación capturada OK');
+    },
+    ()=>toast('No se pudo obtener GPS','err'),
+    {enableHighAccuracy:true,timeout:10000}
+  );
+}
+
+async function guardarFichaIntegrada(){
+  const p=E.pedidos[E.pedidoActual];
+  if(!p){ return; }
+
+  const flags=[];
+  if(document.getElementById('fc-no-firma').checked)  flags.push('NO_FIRMA');
+  if(document.getElementById('fc-factura').checked)   flags.push('FACTURA');
+  if(document.getElementById('fc-repasar').checked)   flags.push('REPASAR');
+  const notasLibres=document.getElementById('fc-notas').value.trim();
+  const notas=[...flags,notasLibres].filter(Boolean).join('|');
+  const dias=[...document.querySelectorAll('.dia-btn.active')].map(b=>b.dataset.dia);
+
+  const datos={
+    notas_logisticas:notas||null,
+    hora_apertura:document.getElementById('fc-apertura').value||null,
+    hora_cierre:document.getElementById('fc-cierre').value||null,
+    hora_max_llegada:document.getElementById('fc-hora-max').value||null,
+    dias_cerrado:dias,
+    tiempo_descarga_min:parseInt(document.getElementById('fc-tiempo').value)||15,
+    descargar_primero:document.getElementById('fc-primero').checked,
+    estricto_horario:document.getElementById('fc-estricto').checked,
+    geocodificado:!!E.coordsGPS,
+  };
+  if(E.coordsGPS){ datos.latitud=E.coordsGPS.lat; datos.longitud=E.coordsGPS.lng; }
 
   try{
-    // Cargar entregas del repartidor con coordenadas
-    const entregas = await supaFetch(
-      `rutas_entregas_dia?empresa=eq.${EMPRESA}&repartidor=eq.${encodeURIComponent(rep)}&fecha=eq.${fecha}&order=created_at.asc&select=*`
-    );
-
-    if(!entregas?.length){
-      container.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)">Sin entregas registradas para este repartidor en esta fecha</div>';
-      return;
-    }
-
-    // Buscar coordenadas de cada punto de entrega
-    const puntos = [];
-    for(const e of entregas){
-      if(!e.delivery_id) continue;
+    if(p.punto?.id){
+      await supaFetch(`rutas_puntos_entrega?id=eq.${p.punto.id}`,'PATCH',datos);
+      Object.assign(p.punto, datos);
+    } else {
+      // Buscar o crear cliente en rutas_clientes usando el cliente principal
+      let clienteId=null;
       try{
-        const pts = await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${e.delivery_id}&select=latitud,longitud,direccion_texto`);
-        const pt = pts?.[0];
-        if(pt?.latitud && pt?.longitud){
-          puntos.push({
-            lat: parseFloat(pt.latitud),
-            lng: parseFloat(pt.longitud),
-            nombre: e.partner_nombre,
-            albaran: e.odoo_picking_name,
-            hora: new Date(e.created_at).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),
-            fotos: e.foto_urls||[],
-            dir: pt.direccion_texto||'',
+        const clientes=await supaFetch(`rutas_clientes?odoo_partner_id=eq.${p.partnerId}&empresa=eq.${EMPRESA}&select=id`);
+        clienteId=clientes?.[0]?.id||null;
+      }catch(_){}
+
+      if(!clienteId){
+        try{
+          await fetch(SUPABASE_URL+'/rest/v1/rutas_clientes',{
+            method:'POST',
+            headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
+            body:JSON.stringify({odoo_partner_id:p.partnerId,nombre:p.partnerNombre,empresa:EMPRESA,tipo_cliente:'otros',volumen_habitual:'m',activo:true}),
           });
-        }
+          const clientes2=await supaFetch(`rutas_clientes?odoo_partner_id=eq.${p.partnerId}&empresa=eq.${EMPRESA}&select=id`);
+          clienteId=clientes2?.[0]?.id||null;
+        }catch(_){}
+      }
+
+      const bodyNuevo={
+        ...datos,
+        odoo_delivery_id:p.deliveryId,
+        cliente_id:clienteId,
+        empresa:EMPRESA,
+        nombre_punto:p.deliveryNombre||'Principal',
+        direccion_texto:p.punto?.direccion_texto||'',
+      };
+      console.log('Creando punto:', JSON.stringify(bodyNuevo));
+      const r=await fetch(SUPABASE_URL+'/rest/v1/rutas_puntos_entrega',{
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
+        body:JSON.stringify(bodyNuevo),
+      });
+      const txt=await r.text();
+      console.log('Resultado:', r.status, txt);
+      if(!r.ok) throw new Error('Error Supabase: '+txt);
+      // Recargar el punto desde Supabase
+      try{
+        const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${p.partnerId}&select=*`);
+        p.punto=pts?.[0]||{...datos,odoo_delivery_id:p.partnerId};
       }catch(_){}
     }
+    toast('Ficha guardada OK');
+    document.getElementById('ficha-badge-mini').textContent=E.coordsGPS?'[GPS] Con GPS':'[!] Sin GPS';
+    renderPedidos();
+  }catch(e){ toast('Error: '+e.message,'err'); }
+}
 
-    if(!puntos.length){
-      container.innerHTML='<div style="text-align:center;padding:40px;color:var(--text2)">Sin coordenadas GPS registradas para las entregas de este repartidor.<br><small>Los repartidores deben capturar la ubicación en la ficha del cliente.</small></div>';
+// ═══════════════════════════════════════════
+// NAVEGACIÓN
+// ═══════════════════════════════════════════
+function navegarCliente(){
+  const p=E.pedidos[E.pedidoActual];
+  if(p.punto?.latitud&&p.punto?.longitud)
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${p.punto.latitud},${p.punto.longitud}`,'_blank');
+  else if(p.punto?.direccion_texto)
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.punto.direccion_texto)}`,'_blank');
+  else toast('Sin dirección disponible','err');
+}
+
+function evaluarFicha(punto, contactos){
+  if(!punto || !punto.geocodificado) return 'sin-ficha';
+  const n = punto.notas_logisticas||'';
+  const tieneToggle = n.includes('NO_FIRMA')||n.includes('FACTURA')||n.includes('REPASAR')||punto.estricto_horario||punto.descargar_primero;
+  const tieneHorario = !!(punto.hora_max_llegada||punto.hora_apertura||punto.hora_cierre||(punto.dias_cerrado&&punto.dias_cerrado.length>0));
+  const tieneContacto = contactos && contactos.length > 0;
+  if(tieneHorario && tieneContacto && tieneToggle) return 'completa';
+  return 'parcial';
+}
+
+function iconoFicha(estado){
+  if(estado==='sin-ficha') return '🔴';
+  if(estado==='parcial')   return '🟡';
+  return '🟢';
+}
+
+function abrirOdooAlbaran(){
+  const p=E.pedidos[E.pedidoActual];
+  if(!p) return;
+  window.open(`${ODOO_URL}/web#id=${p.id}&model=stock.picking&view_type=form`,'_blank');
+  document.getElementById('odoo-firmado').style.display='block';
+}
+
+// ═══════════════════════════════════════════
+// FOTO
+// ═══════════════════════════════════════════
+function procesarFoto(input){
+  const file=input.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    E.fotos.push({dataUrl:e.target.result,file});
+    renderFotos();
+  };
+  reader.readAsDataURL(file);
+  input.value=''; // reset para permitir misma foto
+}
+
+function renderFotos(){
+  const count=E.fotos.length;
+  document.getElementById('foto-count').textContent=count>0?`(${count})`:'' ;
+  document.getElementById('foto-preview').innerHTML=E.fotos.map((f,i)=>`
+    <div style="position:relative;display:inline-block">
+      <img class="foto-thumb" src="${f.dataUrl}"/>
+      <button onclick="eliminarFoto(${i})" style="position:absolute;top:-6px;right:-6px;background:var(--danger);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:900">✕</button>
+    </div>
+  `).join('');
+}
+
+function eliminarFoto(i){
+  E.fotos.splice(i,1);
+  renderFotos();
+}
+
+// ═══════════════════════════════════════════
+// ENTREGA
+// ═══════════════════════════════════════════
+async function marcarEntregado(){
+  const p=E.pedidos[E.pedidoActual];
+  p.comentario=document.getElementById('parada-comentario').value;
+  E.fotoUrls=[];
+  const btn=document.querySelector('.btn-success');
+  btn.disabled=true; btn.textContent='[GUARDAR] Guardando...';
+  try{
+    for(const foto of E.fotos){
+      const nombre=`${EMPRESA}/${p.name.replace(/[\/\\:*?"<>|]/g,'_')}_foto_${Date.now()}.jpg`;
+      const r=await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombre}`,{
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':foto.file.type||'image/jpeg','x-upsert':'true'},
+        body:foto.file,
+      });
+      if(r.ok) E.fotoUrls.push(`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`);
+    }
+    p.estado='entregada'; p.fotoUrls=E.fotoUrls;
+    // Mostrar campo de tiempo real
+    document.getElementById('tiempo-wrap').style.display='block';
+    // Precargar tiempo estimado si existe en la ficha
+    if(p.punto?.tiempo_descarga_min) document.getElementById('tiempo-real').value=p.punto.tiempo_descarga_min;
+    // Guardar entrega en Supabase — upsert para evitar duplicados
+    try{
+      await fetch(SUPABASE_URL+'/rest/v1/rutas_entregas_dia?on_conflict=odoo_picking_id,repartidor',{
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
+        body:JSON.stringify({
+          empresa:EMPRESA,
+          repartidor:E.usuario.nombre,
+          odoo_picking_id:p.id,
+          odoo_picking_name:p.name,
+          odoo_sale_id: Array.isArray(p.sale_id)?p.sale_id[0]:p.sale_id||null,
+          partner_nombre:p.partnerNombre,
+          delivery_id:p.deliveryId,
+          foto_urls:E.fotoUrls,
+          comentario:p.comentario||null,
+          estado:'entregada',
+          hora_entrega: new Date().toISOString(),
+        }),
+      });
+    }catch(err){ console.warn('No se pudo guardar entrega:', err.message); }
+    // Persistir estado en sessionStorage también
+    try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo, JSON.stringify(E.pedidos)); }catch(_){}
+    toast('OK Entrega registrada');
+    renderPedidos();
+    mostrarBotonesWhatsApp(p);
+  }catch(e){ toast('Error: '+e.message,'err'); }
+  btn.disabled=false; btn.textContent='[OK] Entregado';
+}
+
+async function guardarTiempoReal(){
+  const p=E.pedidos[E.pedidoActual];
+  const tiempo=parseInt(document.getElementById('tiempo-real').value);
+  if(!tiempo||!p.punto?.id) return;
+  try{
+    await supaFetch(`rutas_puntos_entrega?id=eq.${p.punto.id}`,'PATCH',{tiempo_descarga_min:tiempo});
+    p.punto.tiempo_descarga_min=tiempo;
+    toast('Tiempo guardado ✓');
+  }catch(e){ toast('Error: '+e.message,'err'); }
+}
+
+async function marcarFallido(){
+  const p=E.pedidos[E.pedidoActual];
+  p.estado='fallida';
+  p.comentario=document.getElementById('parada-comentario').value;
+  toast('✗ Marcado como no entregado','err');
+  renderPedidos();
+  irA('pedidos');
+}
+
+// ═══════════════════════════════════════════
+// WHATSAPP
+// ═══════════════════════════════════════════
+async function mostrarBotonesWhatsApp(p){
+  const wrap=document.getElementById('btn-whatsapp-wrap');
+  wrap.innerHTML='';
+
+  // Cargar contactos del punto de entrega actual
+  let contactos=[];
+  if(p.punto?.id){
+    try{
+      const c=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${p.punto.id}&order=es_principal.desc,nombre`);
+      contactos=c||[];
+    }catch(_){}
+  }
+
+  if(!contactos.length){
+    wrap.style.display='block';
+    wrap.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center;font-size:13px;color:var(--text2)">
+      Sin contactos de recepción — añádelos en la ficha del cliente
+    </div>`;
+    return;
+  }
+
+  wrap.style.display='block';
+  wrap.innerHTML='<div class="section-label" style="margin-top:0">[TEL] Enviar albarán por WhatsApp</div>'+
+    contactos.map(c=>`
+      <button class="whatsapp-btn" onclick="enviarWhatsAppPedido(E.pedidos[E.pedidoActual],'${c.telefono}','${c.nombre}',E.fotoUrls||[])">
+        [TEL] ${c.nombre}${c.es_principal?' *':''} <span style="font-size:12px;opacity:.8">${c.telefono}</span>
+      </button>
+    `).join('');
+  setTimeout(()=>wrap.scrollIntoView({behavior:'smooth', block:'nearest'}), 100);
+}
+
+async function reenviarWhatsApp(idx){
+  const p=E.pedidos[idx];
+  if(!p.punto?.id){ toast('Sin contactos registrados','err'); return; }
+  try{
+    const contactos=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${p.punto.id}&order=es_principal.desc,nombre`);
+    if(!contactos?.length){ toast('Sin contactos de recepción','err'); return; }
+    // Si solo hay uno, enviar directo
+    if(contactos.length===1){
+      enviarWhatsAppPedido(p, contactos[0].telefono, contactos[0].nombre, p.fotoUrls||[]);
       return;
     }
-
-    // Inicializar mapa
-    await cargarGoogleMaps();
-    container.style.height = '520px';
-    container.style.padding = '0';
-    container.innerHTML = '<div id="mapa-div" style="width:100%;height:500px;border-radius:8px"></div><div id="mapa-resumen" style="padding:12px;font-size:13px;color:#8ab4c4;text-align:center"></div>';
-
-    // Esperar dos frames para que el DOM renderice
-    await new Promise(r => requestAnimationFrame(()=>requestAnimationFrame(r)));
-
-    const centro = { lat: puntos[0].lat, lng: puntos[0].lng };
-    mapaObj = new google.maps.Map(document.getElementById('mapa-div'), {
-      center: centro, zoom: 11,
-      styles: [
-        {elementType:'geometry',stylers:[{color:'#1a2a38'}]},
-        {elementType:'labels.text.fill',stylers:[{color:'#8ab4c4'}]},
-        {elementType:'labels.text.stroke',stylers:[{color:'#0f1923'}]},
-        {featureType:'road',elementType:'geometry',stylers:[{color:'#2a4055'}]},
-        {featureType:'water',elementType:'geometry',stylers:[{color:'#0f1923'}]},
-      ]
-    });
-
-    const infoWindow = new google.maps.InfoWindow();
-
-    // Marcadores numerados
-    puntos.forEach((p, i) => {
-      const marker = new google.maps.Marker({
-        position: { lat: p.lat, lng: p.lng },
-        map: mapaObj,
-        label: { text: String(i+1), color: '#0f2027', fontWeight: 'bold' },
-        title: p.nombre,
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 18,
-          fillColor: i===0 ? '#00c9a7' : '#f59e0b',
-          fillOpacity: 1,
-          strokeColor: '#fff',
-          strokeWeight: 2,
-        }
-      });
-
-      marker.addListener('click', ()=>{
-        const fotoHtml = p.fotos.slice(0,2).map(f=>
-          `<img src="${f}" style="width:60px;height:60px;object-fit:cover;border-radius:4px;margin-right:4px"/>`
-        ).join('');
-        infoWindow.setContent(`
-          <div style="font-family:sans-serif;max-width:220px">
-            <div style="font-weight:800;font-size:14px;margin-bottom:4px">${i+1}. ${p.nombre}</div>
-            <div style="font-size:12px;color:#666;margin-bottom:4px">⏰ ${p.hora}</div>
-            <div style="font-size:11px;color:#888;margin-bottom:6px">${p.dir}</div>
-            ${fotoHtml}
-          </div>
-        `);
-        infoWindow.open(mapaObj, marker);
-      });
-    });
-
-    // Línea de ruta
-    const ruta = new google.maps.Polyline({
-      path: puntos.map(p=>({lat:p.lat,lng:p.lng})),
-      geodesic: true,
-      strokeColor: '#00c9a7',
-      strokeOpacity: 0.8,
-      strokeWeight: 3,
-      map: mapaObj,
-    });
-
-    // Ajustar zoom
-    const bounds = new google.maps.LatLngBounds();
-    puntos.forEach(p => bounds.extend({lat:p.lat,lng:p.lng}));
-    mapaObj.fitBounds(bounds);
-
-    // Info resumen
-    document.getElementById('mapa-resumen').textContent=`${puntos.length} paradas con GPS de ${entregas.length} entregas totales · ${rep} · ${fecha}`;
-
-  }catch(e){
-    container.innerHTML=`<div style="text-align:center;padding:40px;color:var(--danger)">${e.message}</div>`;
-  }
+    // Si hay varios, mostrar selector en un toast visual
+    const menu=document.createElement('div');
+    menu.style.cssText='position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:16px;z-index:100';
+    menu.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent)">[TEL] Selecciona contacto</div>'+
+      contactos.map(c=>`<button onclick="enviarWhatsAppPedido(E.pedidos[${idx}],'${c.telefono}','${c.nombre}',E.pedidos[${idx}].fotoUrls||[]);this.parentNode.remove()" class="whatsapp-btn" style="margin-bottom:8px">[TEL] ${c.nombre}${c.es_principal?' *':''} ${c.telefono}</button>`).join('')+
+      `<button onclick="this.parentNode.remove()" style="width:100%;padding:12px;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);cursor:pointer;font-size:14px">Cancelar</button>`;
+    document.body.appendChild(menu);
+  }catch(e){ toast('Error: '+e.message,'err'); }
 }
 
-document.getElementById('login-pass').addEventListener('keydown', e=>{
-  if(e.key==='Enter') doLogin();
-});
-
-// ── LIMPIEZA DE FOTOS ────────────────────────────────────
-async function limpiarFotosAntiguas(){
-  const dias = 45;
-  const resultado = document.getElementById('limpieza-resultado');
-
-  if(!confirm(`¿Seguro que quieres eliminar todas las fotos con más de ${dias} días?\nEsta acción no se puede deshacer.`)) return;
-
-  resultado.style.display='block';
-  resultado.textContent='Buscando fotos antiguas...';
-
-  try{
-    const fechaLimite = new Date();
-    fechaLimite.setDate(fechaLimite.getDate() - dias);
-    const fechaStr = fechaLimite.toISOString().split('T')[0];
-
-    // Buscar registros antiguos en rutas_entregas_dia
-    const entregas = await supaFetch(`rutas_entregas_dia?fecha=lt.${fechaStr}&select=id,foto_urls`);
-    // Buscar registros antiguos en rutas_fotos_almacen
-    const fotosAlmacen = await supaFetch(`rutas_fotos_almacen?fecha=lt.${fechaStr}&select=id,foto_urls`);
-
-    const todosUrls = [
-      ...(entregas||[]).flatMap(e=>e.foto_urls||[]),
-      ...(fotosAlmacen||[]).flatMap(f=>f.foto_urls||[]),
-    ];
-
-    resultado.textContent=`Encontradas ${todosUrls.length} fotos en ${(entregas?.length||0)+(fotosAlmacen?.length||0)} registros anteriores al ${fechaStr}. Eliminando...`;
-
-    // Extraer nombres de fichero de las URLs y borrar de Storage
-    let borradas=0, errores=0;
-    for(const url of todosUrls){
-      try{
-        // Extraer path del fichero desde la URL pública
-        const path = url.split('/object/public/entregas/')[1];
-        if(!path) continue;
-        const r = await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${path}`,{
-          method:'DELETE',
-          headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`},
-        });
-        if(r.ok) borradas++; else errores++;
-      }catch(_){ errores++; }
-    }
-
-    // Limpiar URLs en los registros de Supabase
-    if(entregas?.length){
-      for(const e of entregas){
-        await fetch(`${SUPABASE_URL}/rest/v1/rutas_entregas_dia?id=eq.${e.id}`,{
-          method:'PATCH',
-          headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
-          body:JSON.stringify({foto_urls:[]}),
-        });
-      }
-    }
-    if(fotosAlmacen?.length){
-      for(const f of fotosAlmacen){
-        await fetch(`${SUPABASE_URL}/rest/v1/rutas_fotos_almacen?id=eq.${f.id}`,{
-          method:'PATCH',
-          headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
-          body:JSON.stringify({foto_urls:[]}),
-        });
-      }
-    }
-
-    resultado.style.color='var(--success)';
-    resultado.textContent=`✓ Limpieza completada: ${borradas} fotos eliminadas${errores>0?`, ${errores} errores`:''}.`;
-
-  }catch(e){
-    resultado.style.color='var(--danger)';
-    resultado.textContent=`Error: ${e.message}`;
-  }
+function enviarWhatsAppPedido(p, tel, nombre, fotoUrls){
+  const telLimpio=tel.replace(/\D/g,'');
+  if(!telLimpio){ toast('Sin teléfono','err'); return; }
+  const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${p.id}`;
+  let msg=`Hola ${nombre}, le confirmamos la entrega de hoy.\n\n`;
+  msg+=`[PKG] Albarán: ${p.name}\n`;
+  msg+=`[EMP] Cliente: ${p.partnerNombre}\n`;
+  msg+=`[OK] Entregado y firmado\n\n`;
+  msg+=`[PDF] Albarán PDF: ${albaranUrl}\n`;
+  if(fotoUrls?.length) fotoUrls.forEach((url,i)=>{ msg+=`[CAM] Foto ${fotoUrls.length>1?i+1+' ':''}: ${url}\n`; });
+  msg+=`\nUn saludo,\nDistribuciones Joaquín Infante`;
+  window.open(`https://wa.me/${telLimpio}?text=${encodeURIComponent(msg)}`,'_blank');
 }
-const PROXY_URL_ADMIN = '/.netlify/functions/odoo-proxy';
-const DIAS_ORDEN_A = ['lunes','martes','miercoles','miércoles','jueves','viernes','sabado','sábado','domingo'];
 
-function getDiaTagA(tagNames){
-  const tags=(tagNames||[]).map(t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
-  for(const d of DIAS_ORDEN_A){
-    if(tags.includes(d.normalize('NFD').replace(/[\u0300-\u036f]/g,''))) return d;
+// ═══════════════════════════════════════════
+// PRESUPUESTOS / ASIGNACIONES
+// ═══════════════════════════════════════════
+const DIAS_ORDEN = ['lunes','martes','miercoles','miércoles','jueves','viernes','sabado','sábado','domingo'];
+const DIAS_LABEL = {
+  'lunes':'Lunes','martes':'Martes','miercoles':'Miércoles','miércoles':'Miércoles',
+  'jueves':'Jueves','viernes':'Viernes','sabado':'Sábado','sábado':'Sábado','domingo':'Domingo'
+};
+
+function getDiaTag(tagNames){
+  const tags = (tagNames||[]).map(t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+  for(const d of DIAS_ORDEN){
+    const dNorm = d.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if(tags.includes(dNorm)) return d;
   }
   return null;
 }
 
 async function cargarPresupuestos(){
-  document.getElementById('pres-body').innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px"><div class="spinner"></div></td></tr>';
+  irA('presupuestos');
+  document.getElementById('pres-lista').innerHTML='<div class="spinner"></div>';
+  document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('fdía-todos')?.classList.add('active');
   try{
-    const r=await fetch(PROXY_URL_ADMIN,{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({empresa:'DJI',action:'get_presupuestos_todos',params:{}}),
-    });
-    const j=await r.json();
-    if(!j.ok) throw new Error(j.error);
-    let presupuestos=j.result.presupuestos;
-
-    const filtroRep=document.getElementById('filtro-rep-pres').value;
-    const filtroDia=document.getElementById('filtro-dia-pres').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-
-    if(filtroRep) presupuestos=presupuestos.filter(p=>{
-      const ruta=(Array.isArray(p.route_id)?p.route_id[1]:'')||'';
-      // Buscar el nombre exacto de la ruta del repartidor
-      const RUTAS_EXACTAS = {
-        'JUAN PEDRO':    'Pedro Juan',
-        'JAVIER':        'Javier',
-        'ALFONSO':       'Alfonso',
-        'JUANLU':        'Juanlu',
-        'JUANJOROBLEDO': 'Robledo Juan Jose',
-        'ZEKY':          'Zeky',
-      };
-      const rutaExacta = RUTAS_EXACTAS[filtroRep];
-      return rutaExacta ? ruta.startsWith(rutaExacta) : ruta.toLowerCase().includes(filtroRep.toLowerCase());
-    });
-
-    if(filtroDia) presupuestos=presupuestos.filter(p=>{
-      const dia=getDiaTagA(p.tag_names);
-      return dia && dia.normalize('NFD').replace(/[\u0300-\u036f]/g,'')===filtroDia;
-    });
-
-    if(!presupuestos.length){
-      document.getElementById('pres-body').innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text2)">Sin presupuestos para esta selección</td></tr>';
-      return;
-    }
-
-    // Ordenar por día
-    const diaOrder={'lunes':1,'martes':2,'miercoles':3,'miércoles':3,'jueves':4,'viernes':5,'sabado':6,'sábado':6,'domingo':7};
-    presupuestos.sort((a,b)=>{
-      const da=getDiaTagA(a.tag_names), db=getDiaTagA(b.tag_names);
-      return (diaOrder[da]||99)-(diaOrder[db]||99);
-    });
-
-    document.getElementById('pres-body').innerHTML=presupuestos.map(p=>{
-      const cliente=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
-      const ruta=Array.isArray(p.route_id)?p.route_id[1]:'-';
-      const rep=ruta.split(':')[0].trim();
-      const dia=getDiaTagA(p.tag_names);
-      const diaLabel=dia?dia.charAt(0).toUpperCase()+dia.slice(1):'—';
-      const otrosTags=(p.tag_names||[]).filter(t=>{
-        const tn=t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-        return !DIAS_ORDEN_A.map(d=>d.normalize('NFD').replace(/[\u0300-\u036f]/g,'')).includes(tn);
-      }).join(', ');
-      const importe=(p.amount_total||0).toLocaleString('es-ES',{style:'currency',currency:'EUR'});
-      return`<tr>
-        <td style="font-weight:700;color:var(--accent)">${p.name}</td>
-        <td>${cliente}</td>
-        <td style="font-size:13px">${rep}</td>
-        <td><span class="badge ${dia?'badge-warn':'badge-gray'}">${diaLabel}</span></td>
-        <td style="font-size:12px;color:var(--text2)">${otrosTags||'—'}</td>
-        <td style="font-weight:700;color:var(--success)">${importe}</td>
-      </tr>`;
-    }).join('');
+    const {presupuestos} = await odooProxy('get_presupuestos', {rutaNombre: E.usuario.rutaOdoo});
+    E_presupuestos = presupuestos;
+    document.getElementById('pres-count').textContent=`${presupuestos.length} presupuestos`;
+    renderPresupuestosFiltrados('');
+    // Cargar fotos de almacén ya subidas hoy
+    try{
+      const hoy=new Date().toISOString().split('T')[0];
+      const fotos=await supaFetch(`rutas_fotos_almacen?empresa=eq.${EMPRESA}&repartidor=eq.${E.usuario.nombre}&fecha=eq.${hoy}&select=odoo_order_id,foto_urls`);
+      if(fotos?.length) fotos.forEach(f=>{
+        const preview=document.getElementById(`fotos_pres_${f.odoo_order_id}`);
+        if(preview && f.foto_urls?.length) preview.innerHTML=f.foto_urls.map(url=>`<img src="${url}" class="foto-thumb"/>`).join('');
+      });
+    }catch(_){}
   }catch(e){
-    document.getElementById('pres-body').innerHTML=`<tr><td colspan="6" style="color:var(--danger);padding:16px">${e.message}</td></tr>`;
+    document.getElementById('pres-lista').innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error</div><div class="empty-sub">${e.message}</div></div>`;
   }
 }
+
+function setFiltroDia(dia, btn){
+  document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderPresupuestosFiltrados(dia);
+}
+
+function renderPresupuestosFiltrados(filtroDia=''){
+  const lista = document.getElementById('pres-lista');
+  let presupuestos = E_presupuestos;
+
+  if(!presupuestos.length){
+    lista.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Sin asignaciones</div></div>';
+    return;
+  }
+
+  // Filtrar por día
+  if(filtroDia === 'sin-dia'){
+    presupuestos = presupuestos.filter(p=>!getDiaTag(p.tag_names));
+  } else if(filtroDia){
+    presupuestos = presupuestos.filter(p=>{
+      const dia=getDiaTag(p.tag_names);
+      return dia && DIAS_LABEL[dia]===filtroDia;
+    });
+  }
+
+  if(!presupuestos.length){
+    lista.innerHTML='<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">Sin pedidos para este día</div></div>';
+    return;
+  }
+
+  // Agrupar por día (solo si no hay filtro)
+  if(!filtroDia){
+    const porDia={}, sinDia=[];
+    presupuestos.forEach(p=>{
+      const dia=getDiaTag(p.tag_names);
+      if(dia){ if(!porDia[dia]) porDia[dia]=[]; porDia[dia].push(p); }
+      else sinDia.push(p);
+    });
+    let html='';
+    const diasUnicos=[...new Set(DIAS_ORDEN.filter(d=>porDia[d]).map(d=>DIAS_LABEL[d]))];
+    diasUnicos.forEach(labelDia=>{
+      const claves=DIAS_ORDEN.filter(d=>DIAS_LABEL[d]===labelDia);
+      const items=claves.flatMap(k=>porDia[k]||[]);
+      const total=items.reduce((a,p)=>a+p.amount_total,0);
+      html+=`<div class="dia-section"><div class="dia-header">📅 ${labelDia}<span class="dia-total">${items.length} pedidos · ${total.toLocaleString('es-ES',{style:'currency',currency:'EUR'})}</span></div>${items.map(p=>renderPresCard(p)).join('')}</div>`;
+    });
+    if(sinDia.length) html+=`<div class="dia-section"><div class="dia-header" style="color:var(--text3)">❓ Sin día<span class="dia-total">${sinDia.length} pedidos</span></div>${sinDia.map(p=>renderPresCard(p)).join('')}</div>`;
+    lista.innerHTML=html;
+  } else {
+    lista.innerHTML=presupuestos.map(p=>renderPresCard(p)).join('');
+  }
+}
+
+function renderPresCard(p){
+  const clienteNombre = Array.isArray(p.partner_id)?p.partner_id[1]:'-';
+  const importe = (p.amount_total||0).toLocaleString('es-ES',{style:'currency',currency:'EUR'});
+  const otrosTags = (p.tag_names||[]).filter(t=>{
+    const tNorm=t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    return !DIAS_ORDEN.map(d=>d.normalize('NFD').replace(/[\u0300-\u036f]/g,'')).includes(tNorm);
+  });
+  const idSafe = `pres_${p.id}`;
+  const esConfirmado = p.state === 'sale' || p.state === 'done';
+  return `<div class="pres-card" id="card_${idSafe}" style="${esConfirmado?'border-color:var(--accent);background:rgba(0,201,167,.04)':''}">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+      <div class="pres-num">${p.name}</div>
+      ${esConfirmado?'<span class="tag-badge" style="background:rgba(0,201,167,.12);border-color:var(--accent);color:var(--accent)">✓ Confirmado</span>':'<span class="tag-badge">Presupuesto</span>'}
+    </div>
+    <div class="pres-cliente">${clienteNombre}</div>
+    <div class="pres-meta" style="margin-bottom:8px">
+      <span class="pres-importe">${importe}</span>
+      ${otrosTags.map(t=>`<span class="tag-badge">${t}</span>`).join('')}
+    </div>
+    <div class="foto-preview" id="fotos_${idSafe}" style="margin-bottom:6px"></div>
+    <input type="file" id="input_${idSafe}" accept="image/*" capture="environment" style="display:none" onchange="subirFotoAlmacen(this,${p.id},'${p.name}','${clienteNombre.replace(/'/g,'')}')"/>
+    <button onclick="document.getElementById('input_${idSafe}').click()" style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--text);font-size:13px;cursor:pointer;width:100%">
+      📦 Añadir foto de almacén
+    </button>
+  </div>`;
+}
+
+// ── FOTOS ALMACÉN ──────────────────────────────────────────
+async function subirFotoAlmacen(input, orderId, orderName, partnerNombre){
+  const file=input.files[0]; if(!file) return;
+  const idSafe=`pres_${orderId}`;
+  const btn=input.nextElementSibling;
+  btn.textContent='Subiendo...'; btn.disabled=true;
+
+  try{
+    const nombre=`${EMPRESA}/almacen/${orderName.replace(/\//g,'_')}_${Date.now()}.jpg`;
+    const r=await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombre}`,{
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':file.type||'image/jpeg','x-upsert':'true'},
+      body:file,
+    });
+    if(!r.ok) throw new Error('Error subiendo foto');
+    const url=`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`;
+
+    // Buscar si ya hay registro para este pedido hoy
+    const hoy=new Date().toISOString().split('T')[0];
+    const existentes=await supaFetch(`rutas_fotos_almacen?odoo_order_id=eq.${orderId}&repartidor=eq.${E.usuario.nombre}&fecha=eq.${hoy}&select=id,foto_urls`);
+
+    if(existentes?.length){
+      // Actualizar añadiendo la nueva foto
+      const nuevasFotos=[...(existentes[0].foto_urls||[]), url];
+      await supaFetch(`rutas_fotos_almacen?id=eq.${existentes[0].id}`,'PATCH',{foto_urls:nuevasFotos});
+    } else {
+      // Crear nuevo registro
+      await supaFetch('rutas_fotos_almacen','POST',{
+        empresa:EMPRESA,
+        repartidor:E.usuario.nombre,
+        odoo_order_id:orderId,
+        odoo_order_name:orderName,
+        partner_nombre:partnerNombre,
+        foto_urls:[url],
+        fecha:hoy,
+      });
+    }
+
+    // Mostrar miniatura
+    const preview=document.getElementById(`fotos_${idSafe}`);
+    const img=document.createElement('img');
+    img.src=url; img.className='foto-thumb';
+    preview.appendChild(img);
+    toast('Foto de almacén guardada');
+
+  }catch(e){ toast('Error: '+e.message,'err'); }
+
+  btn.textContent='📦 Añadir foto de almacén'; btn.disabled=false;
+  input.value='';
+}
+initLogin();
+
 </script>
 </body>
 </html>
