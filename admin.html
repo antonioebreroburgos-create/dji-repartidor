@@ -88,7 +88,16 @@
     .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:32px auto}
     @keyframes spin{to{transform:rotate(360deg)}}
 
-    .albaran-link{color:var(--accent);text-decoration:none;font-size:13px}
+    .dia-btn-admin{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s}
+    .dia-btn-admin.active{background:rgba(245,158,11,.15);border-color:var(--warn);color:var(--warn);font-weight:700}
+    .cliente-fila{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:6px;cursor:pointer;transition:all .15s}
+    .cliente-fila:hover{background:var(--bg3)}
+    .cliente-nombre-admin{font-size:14px;font-weight:700;margin-bottom:4px}
+    .dir-item{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:13px;color:var(--text2);cursor:pointer}
+    .dir-item:hover{color:var(--accent)}
+    .dir-estado{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+    .contacto-admin-item{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:6px 10px;margin-bottom:4px}
+    .spinner-sm{width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto}
     .albaran-link:hover{text-decoration:underline}
   </style>
 </head>
@@ -203,6 +212,94 @@
       </div>
     </div>
 
+    <!-- GESTOR DE CLIENTES -->
+    <div class="section-title">👥 Gestor de clientes y direcciones</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
+      <div class="filtros-bar" style="margin-bottom:12px">
+        <input type="text" id="cliente-buscar" placeholder="🔍 Buscar cliente..." style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;flex:1;outline:none" oninput="filtrarClientes()"/>
+        <select id="cliente-filtro-estado" onchange="filtrarClientes()" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;outline:none">
+          <option value="">Todos los estados</option>
+          <option value="sin-ficha">🔴 Sin ficha</option>
+          <option value="parcial">🟡 Incompleta</option>
+          <option value="completa">🟢 Completa</option>
+        </select>
+        <button class="btn-refresh" onclick="cargarClientes()">Cargar clientes</button>
+      </div>
+      <div id="clientes-stats" style="font-size:13px;color:var(--text2);margin-bottom:10px"></div>
+      <div id="clientes-lista" style="max-height:500px;overflow-y:auto"></div>
+    </div>
+
+    <!-- MODAL FICHA CLIENTE ADMIN -->
+    <div id="modal-ficha" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:998;overflow-y:auto">
+      <div style="max-width:700px;margin:40px auto;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;position:relative">
+        <button onclick="cerrarModalFicha()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text2);font-size:24px;cursor:pointer">✕</button>
+        <div id="modal-ficha-titulo" style="font-size:18px;font-weight:800;margin-bottom:2px"></div>
+        <div id="modal-ficha-sub" style="font-size:13px;color:var(--text2);margin-bottom:20px"></div>
+
+        <!-- GPS -->
+        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📍 Ubicación GPS</div>
+        <div id="admin-gps-info" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:8px;font-size:13px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <input type="number" id="admin-lat" placeholder="Latitud" step="0.000001" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/>
+          <input type="number" id="admin-lng" placeholder="Longitud" step="0.000001" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/>
+          <button onclick="buscarCoordenadasGoogleMaps()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--accent);cursor:pointer;font-size:13px;white-space:nowrap">🗺️ Buscar en Maps</button>
+        </div>
+
+        <!-- HORARIOS -->
+        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">⏰ Horarios</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
+          <div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">Apertura</div><input type="time" id="admin-apertura" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/></div>
+          <div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">Cierre</div><input type="time" id="admin-cierre" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/></div>
+          <div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">Límite entrega</div><input type="time" id="admin-hora-max" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/></div>
+        </div>
+
+        <!-- DÍAS CERRADO -->
+        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📅 Días de cierre</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px">
+          <button class="dia-btn-admin" data-dia="lunes" onclick="toggleDiaAdmin(this)">Lun</button>
+          <button class="dia-btn-admin" data-dia="martes" onclick="toggleDiaAdmin(this)">Mar</button>
+          <button class="dia-btn-admin" data-dia="miercoles" onclick="toggleDiaAdmin(this)">Mié</button>
+          <button class="dia-btn-admin" data-dia="jueves" onclick="toggleDiaAdmin(this)">Jue</button>
+          <button class="dia-btn-admin" data-dia="viernes" onclick="toggleDiaAdmin(this)">Vie</button>
+          <button class="dia-btn-admin" data-dia="sabado" onclick="toggleDiaAdmin(this)">Sáb</button>
+          <button class="dia-btn-admin" data-dia="domingo" onclick="toggleDiaAdmin(this)">Dom</button>
+        </div>
+
+        <!-- CARACTERÍSTICAS -->
+        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">⚙️ Características</div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 14px;margin-bottom:12px">
+          <div class="toggle-row"><div><div class="toggle-label">⚡ Descargar primero</div></div><label class="toggle-switch"><input type="checkbox" id="admin-primero"/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">🕐 Estricto con horarios</div></div><label class="toggle-switch"><input type="checkbox" id="admin-estricto"/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">✍️ No firma en móvil</div></div><label class="toggle-switch"><input type="checkbox" id="admin-no-firma"/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">🧾 Quiere factura siempre</div></div><label class="toggle-switch"><input type="checkbox" id="admin-factura"/><span class="toggle-slider"></span></label></div>
+          <div class="toggle-row"><div><div class="toggle-label">📋 Repasar nota con él</div></div><label class="toggle-switch"><input type="checkbox" id="admin-repasar"/><span class="toggle-slider"></span></label></div>
+        </div>
+
+        <!-- TIEMPO Y NOTAS -->
+        <div style="display:grid;grid-template-columns:1fr 2fr;gap:12px;margin-bottom:12px">
+          <div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:4px">⏱️ Tiempo descarga (min)</div>
+            <input type="number" id="admin-tiempo" min="1" max="120" placeholder="15" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--text2);margin-bottom:4px">📝 Notas</div>
+            <input type="text" id="admin-notas" placeholder="Tocar timbre, preguntar por..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:14px;outline:none"/>
+          </div>
+        </div>
+
+        <!-- CONTACTOS -->
+        <div style="font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">📱 Contactos de recepción</div>
+        <div id="admin-contactos-lista" style="margin-bottom:8px"></div>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <input type="text" id="admin-c-nombre" placeholder="Nombre" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:13px;outline:none"/>
+          <input type="tel" id="admin-c-tel" placeholder="Teléfono (34...)" style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:13px;outline:none"/>
+          <button onclick="añadirContactoAdmin()" style="background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer">+</button>
+        </div>
+
+        <button onclick="guardarFichaAdmin()" style="width:100%;background:var(--accent);color:var(--bg);border:none;border-radius:var(--radius);padding:16px;font-size:16px;font-weight:800;cursor:pointer">💾 Guardar ficha</button>
+      </div>
+    </div>
+
     <!-- MANTENIMIENTO -->
     <div class="section-title">🧹 Mantenimiento</div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
@@ -286,12 +383,225 @@ const EMPRESA      = 'DJI';
 
 const REPARTIDORES = ['JUAN PEDRO','JAVIER','ALFONSO','JUANLU','JUANJOROBLEDO','ZEKY'];
 
-async function supaFetch(path){
-  const r = await fetch(SUPABASE_URL+'/rest/v1/'+path, {
-    headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}
-  });
-  if(!r.ok) throw new Error(await r.text());
-  return r.json();
+// ── GESTOR DE CLIENTES ───────────────────────────────────
+let _clientes = [], _puntos = [], _fichaActual = null, _contactosAdmin = [];
+
+async function cargarClientes(){
+  document.getElementById('clientes-lista').innerHTML='<div class="spinner-sm" style="margin:20px auto"></div>';
+  try{
+    const [clientes, puntos] = await Promise.all([
+      supaFetch('rutas_clientes?empresa=eq.DJI&activo=eq.true&order=nombre&select=id,nombre,odoo_partner_id&limit=5000'),
+      supaFetch('rutas_puntos_entrega?empresa=eq.DJI&select=id,cliente_id,nombre_punto,direccion_texto,latitud,longitud,geocodificado,hora_max_llegada,hora_apertura,hora_cierre,dias_cerrado,tiempo_descarga_min,notas_logisticas,descargar_primero,estricto_horario&limit=6000'),
+    ]);
+    _clientes = clientes||[];
+    _puntos   = puntos||[];
+    filtrarClientes();
+  }catch(e){
+    document.getElementById('clientes-lista').innerHTML=`<div style="color:var(--danger);padding:16px">${e.message}</div>`;
+  }
+}
+
+function evaluarFichaAdmin(punto){
+  if(!punto||!punto.geocodificado) return 'sin-ficha';
+  const n=punto.notas_logisticas||'';
+  const tieneToggle=n.includes('NO_FIRMA')||n.includes('FACTURA')||n.includes('REPASAR')||punto.estricto_horario||punto.descargar_primero;
+  const tieneHorario=!!(punto.hora_max_llegada||punto.hora_apertura||punto.hora_cierre||(punto.dias_cerrado&&punto.dias_cerrado.length>0));
+  if(tieneHorario&&tieneToggle) return 'completa';
+  return 'parcial';
+}
+
+function colorEstado(e){ return e==='sin-ficha'?'var(--danger)':e==='parcial'?'var(--warn)':'var(--success)'; }
+function iconoEstado(e){ return e==='sin-ficha'?'🔴':e==='parcial'?'🟡':'🟢'; }
+
+function filtrarClientes(){
+  const busq = document.getElementById('cliente-buscar').value.toLowerCase();
+  const filtroE = document.getElementById('cliente-filtro-estado').value;
+
+  let lista = _clientes;
+  if(busq) lista = lista.filter(c=>c.nombre.toLowerCase().includes(busq));
+
+  if(filtroE){
+    lista = lista.filter(c=>{
+      const pts = _puntos.filter(p=>p.cliente_id===c.id);
+      if(!pts.length) return filtroE==='sin-ficha';
+      return pts.some(p=>evaluarFichaAdmin(p)===filtroE);
+    });
+  }
+
+  const sinFicha = lista.filter(c=>{ const pts=_puntos.filter(p=>p.cliente_id===c.id); return !pts.length||pts.every(p=>evaluarFichaAdmin(p)==='sin-ficha'); }).length;
+  const parcial  = lista.filter(c=>{ const pts=_puntos.filter(p=>p.cliente_id===c.id); return pts.some(p=>evaluarFichaAdmin(p)==='parcial'); }).length;
+  const completa = lista.filter(c=>{ const pts=_puntos.filter(p=>p.cliente_id===c.id); return pts.every(p=>evaluarFichaAdmin(p)==='completa')&&pts.length>0; }).length;
+
+  document.getElementById('clientes-stats').textContent=`${lista.length} clientes · 🔴 ${sinFicha} sin ficha · 🟡 ${parcial} incompletas · 🟢 ${completa} completas`;
+
+  if(!lista.length){
+    document.getElementById('clientes-lista').innerHTML='<div style="text-align:center;padding:24px;color:var(--text2)">Sin resultados</div>';
+    return;
+  }
+
+  // Mostrar máx 100 para rendimiento
+  const pagina = lista.slice(0,100);
+  document.getElementById('clientes-lista').innerHTML = pagina.map(c=>{
+    const pts = _puntos.filter(p=>p.cliente_id===c.id);
+    const dirs = pts.length
+      ? pts.map(p=>{
+          const ef=evaluarFichaAdmin(p);
+          return `<div class="dir-item" onclick="abrirFichaAdmin('${p.id}','${c.nombre.replace(/'/g,'')}')">
+            <div class="dir-estado" style="background:${colorEstado(ef)}"></div>
+            <span>${iconoEstado(ef)} ${p.nombre_punto||'Principal'} — ${p.direccion_texto||'Sin dirección'}</span>
+          </div>`;
+        }).join('')
+      : `<div class="dir-item" style="color:var(--danger)" onclick="crearPuntoAdmin('${c.id}','${c.nombre.replace(/'/g,'')}')">
+          🔴 Sin direcciones de entrega — click para crear
+        </div>`;
+    return `<div class="cliente-fila">
+      <div class="cliente-nombre-admin">${c.nombre}</div>
+      ${dirs}
+    </div>`;
+  }).join('');
+
+  if(lista.length>100) document.getElementById('clientes-lista').innerHTML+=
+    `<div style="text-align:center;padding:12px;color:var(--text2);font-size:13px">Mostrando 100 de ${lista.length} — usa el buscador para filtrar</div>`;
+}
+
+async function abrirFichaAdmin(puntoId, clienteNombre){
+  const punto = _puntos.find(p=>p.id===puntoId);
+  if(!punto) return;
+  _fichaActual = punto;
+  _contactosAdmin = [];
+
+  document.getElementById('modal-ficha-titulo').textContent = clienteNombre;
+  document.getElementById('modal-ficha-sub').textContent = punto.nombre_punto + (punto.direccion_texto?' — '+punto.direccion_texto:'');
+
+  // GPS
+  const gpsInfo = document.getElementById('admin-gps-info');
+  if(punto.latitud&&punto.longitud){
+    gpsInfo.innerHTML=`<span style="color:var(--success)">✓ GPS guardado: ${parseFloat(punto.latitud).toFixed(6)}, ${parseFloat(punto.longitud).toFixed(6)}</span> — <a href="https://maps.google.com/?q=${punto.latitud},${punto.longitud}" target="_blank" style="color:var(--accent)">Ver en mapa</a>`;
+    document.getElementById('admin-lat').value=punto.latitud;
+    document.getElementById('admin-lng').value=punto.longitud;
+  } else {
+    gpsInfo.innerHTML='<span style="color:var(--danger)">Sin GPS registrado</span>';
+    document.getElementById('admin-lat').value='';
+    document.getElementById('admin-lng').value='';
+  }
+
+  // Horarios
+  document.getElementById('admin-apertura').value=punto.hora_apertura?.slice(0,5)||'';
+  document.getElementById('admin-cierre').value=punto.hora_cierre?.slice(0,5)||'';
+  document.getElementById('admin-hora-max').value=punto.hora_max_llegada?.slice(0,5)||'';
+
+  // Días
+  const dias=punto.dias_cerrado||[];
+  document.querySelectorAll('.dia-btn-admin').forEach(b=>b.classList.toggle('active',dias.includes(b.dataset.dia)));
+
+  // Toggles
+  const n=punto.notas_logisticas||'';
+  document.getElementById('admin-primero').checked=punto.descargar_primero||false;
+  document.getElementById('admin-estricto').checked=punto.estricto_horario||false;
+  document.getElementById('admin-no-firma').checked=n.includes('NO_FIRMA');
+  document.getElementById('admin-factura').checked=n.includes('FACTURA');
+  document.getElementById('admin-repasar').checked=n.includes('REPASAR');
+  document.getElementById('admin-tiempo').value=punto.tiempo_descarga_min||'';
+  const notas=n.replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'').replace(/REPASAR\|?/g,'').trim();
+  document.getElementById('admin-notas').value=notas;
+
+  // Contactos
+  try{
+    const c=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${puntoId}&order=es_principal.desc,nombre`);
+    _contactosAdmin=c||[];
+    renderContactosAdmin();
+  }catch(_){ _contactosAdmin=[]; }
+
+  document.getElementById('modal-ficha').style.display='block';
+  document.getElementById('modal-ficha').scrollTop=0;
+}
+
+function cerrarModalFicha(){ document.getElementById('modal-ficha').style.display='none'; }
+
+function toggleDiaAdmin(btn){ btn.classList.toggle('active'); }
+
+function buscarCoordenadasGoogleMaps(){
+  const p=_fichaActual;
+  if(!p) return;
+  const dir=encodeURIComponent(p.direccion_texto||'');
+  window.open(`https://www.google.com/maps/search/?api=1&query=${dir}`,'_blank');
+}
+
+function renderContactosAdmin(){
+  const lista=document.getElementById('admin-contactos-lista');
+  if(!_contactosAdmin.length){ lista.innerHTML='<div style="font-size:12px;color:var(--text3);margin-bottom:4px">Sin contactos</div>'; return; }
+  lista.innerHTML=_contactosAdmin.map((c,i)=>`
+    <div class="contacto-admin-item">
+      <div style="flex:1"><strong>${c.nombre}</strong>${c.es_principal?' ⭐':''} <span style="color:var(--text2)">${c.telefono}</span></div>
+      <button onclick="eliminarContactoAdmin(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px">✕</button>
+    </div>`).join('');
+}
+
+async function añadirContactoAdmin(){
+  const nombre=document.getElementById('admin-c-nombre').value.trim();
+  const tel=document.getElementById('admin-c-tel').value.trim();
+  if(!nombre||!tel){ alert('Rellena nombre y teléfono'); return; }
+  try{
+    await supaFetch('rutas_contactos_recepcion','POST',{
+      punto_entrega_id:_fichaActual.id, nombre, telefono:tel, es_principal:_contactosAdmin.length===0
+    });
+    document.getElementById('admin-c-nombre').value='';
+    document.getElementById('admin-c-tel').value='';
+    const c=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${_fichaActual.id}&order=es_principal.desc,nombre`);
+    _contactosAdmin=c||[]; renderContactosAdmin();
+  }catch(e){ alert('Error: '+e.message); }
+}
+
+async function eliminarContactoAdmin(i){
+  const c=_contactosAdmin[i];
+  await supaFetch(`rutas_contactos_recepcion?id=eq.${c.id}`,'DELETE');
+  const r=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${_fichaActual.id}&order=es_principal.desc,nombre`);
+  _contactosAdmin=r||[]; renderContactosAdmin();
+}
+
+async function guardarFichaAdmin(){
+  if(!_fichaActual) return;
+  const flags=[];
+  if(document.getElementById('admin-no-firma').checked) flags.push('NO_FIRMA');
+  if(document.getElementById('admin-factura').checked)  flags.push('FACTURA');
+  if(document.getElementById('admin-repasar').checked)  flags.push('REPASAR');
+  const notasLibres=document.getElementById('admin-notas').value.trim();
+  const notas=[...flags,notasLibres].filter(Boolean).join('|');
+  const dias=[...document.querySelectorAll('.dia-btn-admin.active')].map(b=>b.dataset.dia);
+  const lat=parseFloat(document.getElementById('admin-lat').value)||null;
+  const lng=parseFloat(document.getElementById('admin-lng').value)||null;
+
+  const datos={
+    notas_logisticas:notas||null,
+    hora_apertura:document.getElementById('admin-apertura').value||null,
+    hora_cierre:document.getElementById('admin-cierre').value||null,
+    hora_max_llegada:document.getElementById('admin-hora-max').value||null,
+    dias_cerrado:dias,
+    tiempo_descarga_min:parseInt(document.getElementById('admin-tiempo').value)||15,
+    descargar_primero:document.getElementById('admin-primero').checked,
+    estricto_horario:document.getElementById('admin-estricto').checked,
+    latitud:lat, longitud:lng,
+    geocodificado:!!(lat&&lng),
+  };
+
+  try{
+    await supaFetch(`rutas_puntos_entrega?id=eq.${_fichaActual.id}`,'PATCH',datos);
+    // Actualizar en memoria local
+    const idx=_puntos.findIndex(p=>p.id===_fichaActual.id);
+    if(idx>=0) Object.assign(_puntos[idx], datos);
+    cerrarModalFicha();
+    filtrarClientes();
+    alert('✓ Ficha guardada');
+  }catch(e){ alert('Error: '+e.message); }
+}
+
+async function supaFetch(path, method='GET', body=null){
+  const opts={method,headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':method==='POST'?'return=minimal':''}};
+  if(body) opts.body=JSON.stringify(body);
+  const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,opts);
+  if(!r.ok){ const e=await r.text(); throw new Error(e); }
+  const txt=await r.text();
+  return txt?JSON.parse(txt):null;
 }
 
 // LOGIN
