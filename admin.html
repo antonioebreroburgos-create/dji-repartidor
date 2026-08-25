@@ -159,6 +159,36 @@
       <div class="stat-card"><div class="stat-num" id="s-fotos" style="color:var(--accent)">—</div><div class="stat-lbl">Fotos tomadas</div></div>
     </div>
 
+
+    <!-- ESTADÍSTICAS POR REPARTIDOR (RANGO DE FECHAS) -->
+    <div class="section-title">📊 Estadísticas por repartidor</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
+      <div class="filtros-bar" style="margin-bottom:12px">
+        <span class="filtro-label">Desde:</span>
+        <input type="date" id="stats-desde"/>
+        <span class="filtro-label">Hasta:</span>
+        <input type="date" id="stats-hasta"/>
+        <button class="btn-refresh" onclick="cargarEstadisticas()">Ver estadísticas</button>
+      </div>
+      <div id="stats-resultado" style="color:var(--text2);font-size:13px">Selecciona un rango de fechas</div>
+    </div>
+
+    <!-- PEDIDOS SIN FOTOS -->
+    <div class="section-title">📸 Entregas sin fotos</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
+      <div class="filtros-bar" style="margin-bottom:12px">
+        <span class="filtro-label">Fecha:</span>
+        <input type="date" id="sinfotos-fecha"/>
+        <select id="sinfotos-tipo" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;outline:none">
+          <option value="entrega">Sin foto de entrega</option>
+          <option value="almacen">Sin foto de almacén</option>
+          <option value="ambas">Sin ninguna foto</option>
+        </select>
+        <button class="btn-refresh" onclick="cargarSinFotos()">Buscar</button>
+      </div>
+      <div id="sinfotos-resultado" style="color:var(--text2);font-size:13px">Pulsa "Buscar" para ver entregas sin fotos</div>
+    </div>
+
     <!-- RESUMEN POR REPARTIDOR -->
     <div class="section-title">👥 Resumen por repartidor</div>
     <div class="rep-grid" id="rep-grid"><div class="spinner"></div></div>
@@ -638,6 +668,12 @@ function init(){
   document.getElementById('topbar-fecha').textContent =
     new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
   cargarDatos();
+  // Inicializar fechas de estadísticas (últimos 7 días)
+  const hoy2 = new Date().toISOString().split('T')[0];
+  const hace7 = new Date(Date.now()-7*24*60*60*1000).toISOString().split('T')[0];
+  document.getElementById('stats-desde').value = hace7;
+  document.getElementById('stats-hasta').value = hoy2;
+  document.getElementById('sinfotos-fecha').value = hoy2;
 }
 
 async function sincronizarEntregados(fecha){
@@ -1040,6 +1076,151 @@ async function cargarMapa(){
 
   }catch(e){
     container.innerHTML=`<div style="text-align:center;padding:40px;color:var(--danger)">${e.message}</div>`;
+  }
+}
+
+
+// ── ESTADÍSTICAS POR REPARTIDOR ──────────────────────────
+async function cargarEstadisticas(){
+  const desde = document.getElementById('stats-desde').value;
+  const hasta = document.getElementById('stats-hasta').value;
+  if(!desde||!hasta){ alert('Selecciona rango de fechas'); return; }
+
+  const resultado = document.getElementById('stats-resultado');
+  resultado.innerHTML='<div class="spinner"></div>';
+
+  try{
+    const entregas = await supaFetch(
+      `rutas_entregas_dia?empresa=eq.${EMPRESA}&fecha=gte.${desde}&fecha=lte.${hasta}&select=repartidor,foto_urls,odoo_picking_id,fecha`
+    );
+
+    const fotosAlmacen = await supaFetch(
+      `rutas_fotos_almacen?empresa=eq.${EMPRESA}&fecha=gte.${desde}&fecha=lte.${hasta}&select=repartidor,foto_urls`
+    );
+
+    const porRep = {};
+    REPARTIDORES.forEach(r=>{ porRep[r]={entregas:0,fotosEntrega:0,sinFotoEntrega:0,sinFotoAlmacen:0,diasActivos:new Set()}; });
+
+    entregas.forEach(e=>{
+      if(!porRep[e.repartidor]) porRep[e.repartidor]={entregas:0,fotosEntrega:0,sinFotoEntrega:0,sinFotoAlmacen:0,diasActivos:new Set()};
+      porRep[e.repartidor].entregas++;
+      porRep[e.repartidor].fotosEntrega+=(e.foto_urls?.length||0);
+      if(!e.foto_urls?.length) porRep[e.repartidor].sinFotoEntrega++;
+      porRep[e.repartidor].diasActivos.add(e.fecha);
+    });
+
+    // Cruzar con fotos de almacén
+    const fotosAlmacenSet = new Set(fotosAlmacen.map(f=>f.repartidor+'_'+f.odoo_order_id));
+    // Contar entregas sin foto de almacén
+    const saleIds = entregas.map(e=>e.odoo_sale_id).filter(Boolean);
+    // Simplificado: marcar los que no tienen foto de almacén ese día
+    const fotasAlmacenPorRep = {};
+    fotosAlmacen.forEach(f=>{
+      if(!fotasAlmacenPorRep[f.repartidor]) fotasAlmacenPorRep[f.repartidor]=0;
+      fotasAlmacenPorRep[f.repartidor]++;
+    });
+    Object.entries(porRep).forEach(([rep,d])=>{
+      d.fotosAlmacenPedidos = fotasAlmacenPorRep[rep]||0;
+      d.sinFotoAlmacen = Math.max(0, d.entregas - d.fotosAlmacenPedidos);
+    });
+
+    resultado.innerHTML = `
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px">Período: ${desde} → ${hasta}</div>
+      <div class="stats-grid">
+        ${Object.entries(porRep).map(([rep,d])=>`
+          <div class="stat-card" style="text-align:left">
+            <div style="font-size:13px;font-weight:800;margin-bottom:8px;color:var(--accent)">${rep}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <div style="background:var(--bg3);border-radius:6px;padding:6px;text-align:center">
+                <div style="font-size:20px;font-weight:800;color:var(--success)">${d.entregas}</div>
+                <div style="font-size:10px;color:var(--text2)">Entregas</div>
+              </div>
+              <div style="background:var(--bg3);border-radius:6px;padding:6px;text-align:center">
+                <div style="font-size:20px;font-weight:800;color:var(--accent)">${d.diasActivos.size}</div>
+                <div style="font-size:10px;color:var(--text2)">Días activos</div>
+              </div>
+              <div style="background:${d.sinFotoEntrega>0?'rgba(239,68,68,.1)':'rgba(34,197,94,.05)'};border-radius:6px;padding:6px;text-align:center;border:1px solid ${d.sinFotoEntrega>0?'var(--danger)':'transparent'}">
+                <div style="font-size:20px;font-weight:800;color:${d.sinFotoEntrega>0?'var(--danger)':'var(--text3)'}">${d.sinFotoEntrega}</div>
+                <div style="font-size:10px;color:var(--text2)">Sin foto entrega</div>
+              </div>
+              <div style="background:${d.sinFotoAlmacen>0?'rgba(245,158,11,.1)':'rgba(34,197,94,.05)'};border-radius:6px;padding:6px;text-align:center;border:1px solid ${d.sinFotoAlmacen>0?'var(--warn)':'transparent'}">
+                <div style="font-size:20px;font-weight:800;color:${d.sinFotoAlmacen>0?'var(--warn)':'var(--text3)'}">${d.sinFotoAlmacen}</div>
+                <div style="font-size:10px;color:var(--text2)">Sin foto almacén</div>
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }catch(e){
+    resultado.innerHTML=`<span style="color:var(--danger)">${e.message}</span>`;
+  }
+}
+
+// ── PEDIDOS SIN FOTOS ─────────────────────────────────────
+async function cargarSinFotos(){
+  const fecha = document.getElementById('sinfotos-fecha').value;
+  const tipo = document.getElementById('sinfotos-tipo').value;
+  if(!fecha){ alert('Selecciona una fecha'); return; }
+
+  const resultado = document.getElementById('sinfotos-resultado');
+  resultado.innerHTML='<div class="spinner"></div>';
+
+  try{
+    const entregas = await supaFetch(
+      `rutas_entregas_dia?empresa=eq.${EMPRESA}&fecha=eq.${fecha}&select=*&order=repartidor,hora_entrega`
+    );
+
+    let sinFotos = [];
+
+    if(tipo==='entrega'||tipo==='ambas'){
+      sinFotos = entregas.filter(e=>!e.foto_urls?.length);
+    }
+
+    if(tipo==='almacen'||tipo==='ambas'){
+      const fotosAlmacen = await supaFetch(
+        `rutas_fotos_almacen?empresa=eq.${EMPRESA}&fecha=eq.${fecha}&select=odoo_order_id`
+      );
+      const idsConFotoAlmacen = new Set((fotosAlmacen||[]).map(f=>f.odoo_order_id));
+
+      if(tipo==='almacen'){
+        sinFotos = entregas.filter(e=>!idsConFotoAlmacen.has(e.odoo_sale_id));
+      } else {
+        // ambas: sin foto de entrega Y sin foto de almacén
+        sinFotos = entregas.filter(e=>!e.foto_urls?.length && !idsConFotoAlmacen.has(e.odoo_sale_id));
+      }
+    }
+
+    if(!sinFotos.length){
+      resultado.innerHTML='<div style="color:var(--success);padding:16px;text-align:center">✓ Todas las entregas tienen fotos para esta selección</div>';
+      return;
+    }
+
+    resultado.innerHTML=`
+      <div style="font-size:13px;color:var(--warn);margin-bottom:12px;font-weight:700">⚠️ ${sinFotos.length} entregas sin fotos</div>
+      <div class="tabla-wrap">
+        <table>
+          <thead><tr><th>Hora</th><th>Repartidor</th><th>Albarán</th><th>Cliente</th><th>Tipo</th></tr></thead>
+          <tbody>
+            ${sinFotos.map(e=>{
+              const horaRef=e.hora_entrega||e.created_at;
+              const hora=new Date(horaRef).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+              const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${e.odoo_picking_id}`;
+              const tipoLabel=tipo==='entrega'?'Sin foto entrega':tipo==='almacen'?'Sin foto almacén':'Sin ninguna foto';
+              return`<tr>
+                <td style="font-weight:700">${hora}</td>
+                <td>${e.repartidor}</td>
+                <td><a href="${albaranUrl}" target="_blank" style="color:var(--accent)">${e.odoo_picking_name}</a></td>
+                <td>${e.partner_nombre}</td>
+                <td><span class="badge badge-warn">${tipoLabel}</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }catch(e){
+    resultado.innerHTML=`<span style="color:var(--danger)">${e.message}</span>`;
   }
 }
 
