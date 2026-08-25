@@ -42,8 +42,6 @@
     #toast.err{border-color:var(--danger);color:var(--danger)}
     .spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:32px auto}
     @keyframes spin{to{transform:rotate(360deg)}}
-
-    /* LOGIN */
     #screen-login .content{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100dvh - 61px)}
     .login-logo{width:72px;height:72px;background:linear-gradient(135deg,var(--accent),var(--bg3));border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:36px;margin-bottom:12px;box-shadow:0 8px 32px rgba(0,201,167,.25)}
     .login-title{font-size:24px;font-weight:800;margin-bottom:4px}
@@ -51,18 +49,6 @@
     .repartidores-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;margin-bottom:28px}
     .rep-btn{background:var(--bg2);border:2px solid var(--border);border-radius:var(--radius);padding:14px 10px;font-size:13px;font-weight:700;color:var(--text);cursor:pointer;transition:all .15s;text-align:center}
     .rep-btn:active{transform:scale(0.96)}
-    .rep-btn.selected{border-color:var(--accent);color:var(--accent);background:rgba(0,201,167,.08)}
-    .pin-label{font-size:13px;color:var(--text2);margin-bottom:12px;text-align:center;letter-spacing:.5px;text-transform:uppercase}
-    .pin-dots{display:flex;gap:12px;justify-content:center;margin-bottom:24px}
-    .pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);background:transparent;transition:all .2s}
-    .pin-dot.filled{background:var(--accent);border-color:var(--accent)}
-    .pin-teclado{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%}
-    .pin-key{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 10px;font-size:22px;font-weight:700;color:var(--text);cursor:pointer;text-align:center;transition:all .12s;user-select:none}
-    .pin-key:active{background:var(--bg3);transform:scale(0.94)}
-    .pin-key.del{font-size:18px;color:var(--text2)}
-    .pin-key.empty{background:transparent;border-color:transparent;cursor:default}
-
-    /* MENU */
     .usuario-card{background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px;display:flex;align-items:center;gap:14px}
     .usuario-avatar{width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--bg);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0}
     .usuario-nombre{font-size:20px;font-weight:800}
@@ -70,68 +56,53 @@
     .menu-item{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 16px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .15s}
     .menu-item:active{transform:scale(0.98);background:var(--bg3)}
     .menu-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
-    .menu-icon.green{background:rgba(34,197,94,.15)}
-    .menu-icon.blue{background:rgba(0,201,167,.12)}
     .menu-icon.orange{background:rgba(245,158,11,.12)}
     .menu-text h3{font-size:16px;font-weight:700}
     .menu-text p{font-size:13px;color:var(--text2);margin-top:2px}
     .menu-arrow{margin-left:auto;color:var(--text3);font-size:18px}
-    .btn-cerrar-sesion{background:none;border:1px solid var(--border);border-radius:var(--radius);padding:14px;color:var(--text2);font-size:14px;cursor:pointer;width:100%;margin-top:8px;transition:all .15s}
-
-    /* PEDIDOS */
+    .btn-cerrar-sesion{background:none;border:1px solid var(--border);border-radius:var(--radius);padding:14px;color:var(--text2);font-size:14px;cursor:pointer;width:100%;margin-top:8px}
     .pedido-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:10px;cursor:pointer;transition:all .15s}
     .pedido-card:active{transform:scale(0.98)}
-    .pedido-card.entregado{opacity:.6;border-color:var(--success)}
     .pedido-num{font-size:13px;color:var(--accent);font-weight:700;margin-bottom:4px}
     .pedido-cliente{font-size:17px;font-weight:800;margin-bottom:4px}
     .pedido-dir{font-size:13px;color:var(--text2);margin-bottom:8px}
     .pedido-meta{display:flex;gap:8px;flex-wrap:wrap}
     .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700}
-    .badge-blue{background:rgba(0,201,167,.12);color:var(--accent)}
     .badge-warn{background:rgba(245,158,11,.15);color:var(--warn)}
     .badge-ok{background:rgba(34,197,94,.15);color:var(--success)}
     .badge-gray{background:var(--bg2);color:var(--text2)}
-    .badge-red{background:rgba(239,68,68,.15);color:var(--danger)}
+    .badge-blue{background:rgba(0,201,167,.12);color:var(--accent)}
     .stats-bar{display:flex;gap:8px;margin-bottom:16px}
     .stat-box{flex:1;background:var(--card);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;text-align:center}
     .stat-num{font-size:22px;font-weight:800;color:var(--accent)}
     .stat-lbl{font-size:11px;color:var(--text2);margin-top:2px}
-
-    /* PARADA */
     .parada-header{background:linear-gradient(135deg,var(--bg3),var(--bg2));border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:12px}
     .parada-num{font-size:13px;color:var(--accent);font-weight:700;margin-bottom:4px}
     .parada-cliente{font-size:20px;font-weight:800;margin-bottom:4px}
     .parada-dir{font-size:13px;color:var(--text2)}
-    .alerta-item{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--warn)}
-    .btn-navegar{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;width:100%;font-size:15px;font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;transition:all .15s}
-    .btn-navegar:active{transform:scale(0.97)}
+    .alerta-item{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:6px;font-size:13px;font-weight:600;color:var(--warn)}
+    .btn-navegar{background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;width:100%;font-size:15px;font-weight:700;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px}
     .foto-preview{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
-    .foto-thumb{width:72px;height:72px;object-fit:cover;border-radius:var(--radius-sm);border:1px solid var(--border)}
+    .foto-thumb{width:72px;height:72px;object-fit:cover;border-radius:var(--radius-sm);border:2px solid var(--border);cursor:pointer;transition:transform .15s}
+    .foto-thumb:active{transform:scale(0.95)}
     .comentario-input{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;color:var(--text);font-size:15px;width:100%;min-height:70px;resize:none;outline:none;font-family:inherit;margin-bottom:12px}
     .comentario-input:focus{border-color:var(--accent)}
     .acciones-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
     .section-label{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin:14px 0 8px}
-
-    /* FICHA DESPLEGABLE */
-    .ficha-toggle{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;transition:all .15s}
-    .ficha-toggle:active{background:var(--bg3)}
+    .ficha-toggle{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
     .ficha-toggle-title{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
     .ficha-toggle-arrow{font-size:18px;color:var(--text3);transition:transform .2s}
     .ficha-toggle.open .ficha-toggle-arrow{transform:rotate(180deg)}
     .ficha-body{display:none;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px}
     .ficha-body.open{display:block}
-
-    /* INPUTS FICHA */
     .hora-input{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;color:var(--text);font-size:16px;width:100%;outline:none}
     .hora-input:focus{border-color:var(--accent)}
     .tiempo-input{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;color:var(--text);font-size:18px;font-weight:700;width:80px;text-align:center;outline:none}
     .notas-input{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px;color:var(--text);font-size:14px;width:100%;min-height:70px;resize:none;outline:none;font-family:inherit}
     .notas-input:focus{border-color:var(--accent)}
     .dias-wrap{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
-    .dia-btn{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:12px;color:var(--text2);cursor:pointer;transition:all .15s}
+    .dia-btn{background:var(--bg);border:1px solid var(--border);border-radius:20px;padding:5px 11px;font-size:12px;color:var(--text2);cursor:pointer}
     .dia-btn.active{background:rgba(245,158,11,.15);border-color:var(--warn);color:var(--warn);font-weight:700}
-
-    /* TOGGLE SWITCH */
     .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
     .toggle-row:last-child{border-bottom:none}
     .toggle-label{font-size:14px;font-weight:600}
@@ -142,14 +113,10 @@
     .toggle-slider:before{content:'';position:absolute;width:18px;height:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s}
     input:checked+.toggle-slider{background:var(--accent)}
     input:checked+.toggle-slider:before{transform:translateX(20px)}
-
-    /* GPS */
     .gps-card{background:var(--bg);border:2px dashed var(--border);border-radius:var(--radius-sm);padding:14px;text-align:center;margin-bottom:8px}
     .gps-card.ok{border-style:solid;border-color:var(--success);background:rgba(34,197,94,.05)}
     .gps-coords{font-size:13px;font-weight:700;color:var(--success);font-family:monospace}
     .gps-label{font-size:11px;color:var(--text2);margin-top:4px}
-
-    /* CONTACTOS */
     .contacto-item{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
     .contacto-info{flex:1}
     .contacto-nombre{font-size:14px;font-weight:700}
@@ -158,12 +125,7 @@
     .input-row{display:flex;gap:6px;margin-bottom:6px}
     .input-small{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;color:var(--text);font-size:14px;flex:1;outline:none}
     .input-small:focus{border-color:var(--accent)}
-
-    /* WHATSAPP */
-    .whatsapp-btn{background:#25D366;color:#fff;border:none;border-radius:var(--radius);padding:14px;width:100%;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;transition:all .15s}
-    .whatsapp-btn:active{transform:scale(0.97)}
-
-    /* PRESUPUESTOS */
+    .whatsapp-btn{background:#25D366;color:#fff;border:none;border-radius:var(--radius);padding:14px;width:100%;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px}
     .dia-section{margin-bottom:20px}
     .dia-header{font-size:13px;font-weight:800;color:var(--accent);text-transform:uppercase;letter-spacing:1px;padding:8px 0;border-bottom:1px solid var(--border);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
     .dia-total{font-size:12px;color:var(--text2);font-weight:400}
@@ -173,21 +135,22 @@
     .pres-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
     .pres-importe{font-size:13px;font-weight:700;color:var(--success)}
     .tag-badge{background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:2px 8px;font-size:11px;color:var(--text2)}
-    .tag-badge.dia{background:rgba(245,158,11,.12);border-color:var(--warn);color:var(--warn);font-weight:700}
-    .sin-dia{background:rgba(239,68,68,.08);border:1px dashed var(--danger);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:6px;font-size:13px;color:var(--text2)}
     .empty-icon{font-size:48px;margin-bottom:12px}
     .empty-title{font-size:18px;font-weight:700;margin-bottom:6px}
     .empty-sub{font-size:14px;color:var(--text2)}
-
-    /* PESTAÑAS PEDIDOS */
-    .filtro-tab{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:13px;font-weight:700;color:var(--text2);cursor:pointer;transition:all .15s}
+    .filtro-tab{flex:1;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px;font-size:13px;font-weight:700;color:var(--text2);cursor:pointer}
     .filtro-tab.active{background:rgba(0,201,167,.12);border-color:var(--accent);color:var(--accent)}
-
-    /* PEDIDO ENTREGADO */
-    .pedido-entregado-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px;cursor:pointer;transition:all .15s;opacity:.75}
-    .pedido-entregado-card:active{transform:scale(0.98)}
+    .pedido-entregado-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px;cursor:pointer;opacity:.75}
     .albaran-link{display:flex;align-items:center;gap:6px;color:var(--accent);font-size:13px;font-weight:700;margin-top:8px;text-decoration:none}
-    .albaran-link:active{opacity:.7}
+    /* LIGHTBOX */
+    #pwa-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;align-items:center;justify-content:center;flex-direction:column}
+    #pwa-lightbox.show{display:flex}
+    #pwa-lightbox img{max-width:96vw;max-height:82vh;object-fit:contain;border-radius:8px}
+    #pwa-lightbox-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:28px;width:48px;height:48px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1}
+    #pwa-lightbox-caption{color:rgba(255,255,255,.6);font-size:13px;margin-top:10px}
+    .filtros{display:flex;gap:6px;flex-wrap:wrap}
+    .filtro-btn{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer}
+    .filtro-btn.active{background:rgba(0,201,167,.12);border-color:var(--accent);color:var(--accent)}
   </style>
 </head>
 <body>
@@ -254,37 +217,23 @@
     <span class="header-sub" id="parada-progreso"></span>
   </div>
   <div class="content">
-
-    <!-- Cabecera cliente -->
     <div class="parada-header">
       <div class="parada-num" id="parada-num"></div>
       <div class="parada-cliente" id="parada-cliente"></div>
       <div class="parada-dir" id="parada-dir"></div>
     </div>
-
-    <!-- Alertas -->
     <div id="parada-alertas"></div>
-
-    <!-- Navegar -->
     <button class="btn-navegar" onclick="navegarCliente()">🗺️ Navegar con Google Maps</button>
 
-    <!-- FICHA CLIENTE DESPLEGABLE -->
+    <!-- FICHA -->
     <div class="ficha-toggle" id="ficha-toggle" onclick="toggleFicha()">
       <div class="ficha-toggle-title">📋 Ficha del cliente <span id="ficha-badge-mini" style="font-size:11px;font-weight:400;color:var(--text2)"></span></div>
       <span class="ficha-toggle-arrow">▼</span>
     </div>
     <div class="ficha-body" id="ficha-body">
-
-      <!-- GPS -->
       <div class="section-label" style="margin-top:0">📍 Ubicación GPS</div>
-      <div class="gps-card" id="ficha-gps-card">
-        <div style="font-size:12px;color:var(--text3)">Sin ubicación registrada</div>
-      </div>
-      <button class="btn btn-secondary" style="padding:10px;margin-bottom:12px;font-size:14px" onclick="capturarGPSFicha()">
-        📍 Capturar ubicación actual
-      </button>
-
-      <!-- Contactos -->
+      <div class="gps-card" id="ficha-gps-card"><div style="font-size:12px;color:var(--text3)">Sin ubicación registrada</div></div>
+      <button class="btn btn-secondary" style="padding:10px;margin-bottom:12px;font-size:14px" onclick="capturarGPSFicha()">📍 Capturar ubicación actual</button>
       <div class="section-label">📱 Contactos de recepción</div>
       <div id="ficha-contactos"></div>
       <div class="input-row">
@@ -292,25 +241,12 @@
         <input class="input-small" id="fc-tel" placeholder="Teléfono (34...)" type="tel" onclick="event.stopPropagation()"/>
       </div>
       <button class="btn btn-secondary" style="padding:10px;margin-bottom:12px;font-size:13px" onclick="añadirContactoFicha()">+ Añadir contacto</button>
-
-      <!-- Horarios -->
       <div class="section-label">⏰ Horarios</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
-        <div>
-          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Apertura</div>
-          <input class="hora-input" type="time" id="fc-apertura"/>
-        </div>
-        <div>
-          <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Cierre</div>
-          <input class="hora-input" type="time" id="fc-cierre"/>
-        </div>
+        <div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">Apertura</div><input class="hora-input" type="time" id="fc-apertura"/></div>
+        <div><div style="font-size:12px;color:var(--text2);margin-bottom:4px">Cierre</div><input class="hora-input" type="time" id="fc-cierre"/></div>
       </div>
-      <div style="margin-bottom:8px">
-        <div style="font-size:12px;color:var(--text2);margin-bottom:4px">Hora límite de entrega</div>
-        <input class="hora-input" type="time" id="fc-hora-max"/>
-      </div>
-
-      <!-- Días cerrado -->
+      <div style="margin-bottom:8px"><div style="font-size:12px;color:var(--text2);margin-bottom:4px">Hora límite de entrega</div><input class="hora-input" type="time" id="fc-hora-max"/></div>
       <div class="section-label">📅 Días de cierre</div>
       <div class="dias-wrap">
         <button class="dia-btn" data-dia="lunes" onclick="toggleDiaFicha(this)">Lun</button>
@@ -321,43 +257,21 @@
         <button class="dia-btn" data-dia="sabado" onclick="toggleDiaFicha(this)">Sáb</button>
         <button class="dia-btn" data-dia="domingo" onclick="toggleDiaFicha(this)">Dom</button>
       </div>
-
-      <!-- Características toggles -->
       <div class="section-label">⚙️ Características</div>
       <div style="background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);padding:4px 12px;margin-bottom:8px">
-        <div class="toggle-row">
-          <div><div class="toggle-label">⚡ Descargar primero</div><div class="toggle-sub">Prioritario sobre otros en la misma zona</div></div>
-          <label class="toggle-switch"><input type="checkbox" id="fc-primero"/><span class="toggle-slider"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div><div class="toggle-label">🕐 Estricto con horarios</div><div class="toggle-sub">No admite entregas fuera de hora</div></div>
-          <label class="toggle-switch"><input type="checkbox" id="fc-estricto"/><span class="toggle-slider"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div><div class="toggle-label">✍️ No firma en móvil</div><div class="toggle-sub">Rechaza firma digital</div></div>
-          <label class="toggle-switch"><input type="checkbox" id="fc-no-firma"/><span class="toggle-slider"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div><div class="toggle-label">🧾 Quiere factura siempre</div><div class="toggle-sub">Llevar factura impresa</div></div>
-          <label class="toggle-switch"><input type="checkbox" id="fc-factura"/><span class="toggle-slider"></span></label>
-        </div>
-        <div class="toggle-row">
-          <div><div class="toggle-label">📋 Repasar nota con él</div><div class="toggle-sub">Confirmar pedido al entregar</div></div>
-          <label class="toggle-switch"><input type="checkbox" id="fc-repasar"/><span class="toggle-slider"></span></label>
-        </div>
+        <div class="toggle-row"><div><div class="toggle-label">⚡ Descargar primero</div><div class="toggle-sub">Prioritario sobre otros en la misma zona</div></div><label class="toggle-switch"><input type="checkbox" id="fc-primero"/><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><div><div class="toggle-label">🕐 Estricto con horarios</div><div class="toggle-sub">No admite entregas fuera de hora</div></div><label class="toggle-switch"><input type="checkbox" id="fc-estricto"/><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><div><div class="toggle-label">✍️ No firma en móvil</div><div class="toggle-sub">Rechaza firma digital</div></div><label class="toggle-switch"><input type="checkbox" id="fc-no-firma"/><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><div><div class="toggle-label">🧾 Quiere factura siempre</div><div class="toggle-sub">Llevar factura impresa</div></div><label class="toggle-switch"><input type="checkbox" id="fc-factura"/><span class="toggle-slider"></span></label></div>
+        <div class="toggle-row"><div><div class="toggle-label">📋 Repasar nota con él</div><div class="toggle-sub">Confirmar pedido al entregar</div></div><label class="toggle-switch"><input type="checkbox" id="fc-repasar"/><span class="toggle-slider"></span></label></div>
       </div>
-
-      <!-- Tiempo descarga -->
       <div class="section-label">⏱️ Tiempo de descarga</div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
         <input class="tiempo-input" type="number" id="fc-tiempo" placeholder="15" min="1" max="120"/>
         <span style="font-size:13px;color:var(--text2)">minutos estimados</span>
       </div>
-
-      <!-- Notas -->
       <div class="section-label">📝 Notas</div>
       <textarea class="notas-input" id="fc-notas" placeholder="Tocar timbre, preguntar por Juan..."></textarea>
-
       <button class="btn btn-primary" style="margin-top:12px" onclick="guardarFichaIntegrada()">💾 Guardar ficha</button>
     </div>
 
@@ -370,9 +284,7 @@
     </button>
 
     <!-- FIRMA ODOO -->
-    <button class="btn" style="background:var(--morado);color:#fff;margin-bottom:8px" onclick="abrirOdooAlbaran()">
-      ✍️ Firmar y validar en Odoo
-    </button>
+    <button class="btn" style="background:var(--morado);color:#fff;margin-bottom:8px" onclick="abrirOdooAlbaran()">✍️ Firmar y validar en Odoo</button>
     <div id="odoo-firmado" style="display:none;background:rgba(34,197,94,.08);border:1px solid var(--success);border-radius:var(--radius);padding:10px;margin-bottom:12px;font-size:13px;font-weight:700;color:var(--success);text-align:center">
       ✓ Abierto en Odoo — firma y valida, luego vuelve aquí
     </div>
@@ -381,7 +293,7 @@
     <div class="section-label">💬 Comentario</div>
     <textarea class="comentario-input" id="parada-comentario" placeholder="Observaciones de la entrega..."></textarea>
 
-    <!-- ACCIONES — solo si no está entregado -->
+    <!-- ACCIONES -->
     <div id="acciones-wrap">
       <div class="acciones-grid">
         <button class="btn btn-success" onclick="marcarEntregado()">✅ Entregado</button>
@@ -389,10 +301,9 @@
       </div>
     </div>
 
-    <!-- WHATSAPP -->
     <div id="btn-whatsapp-wrap"></div>
 
-    <!-- TIEMPO ESTIMADO — aparece tras entregar -->
+    <!-- TIEMPO REAL -->
     <div id="tiempo-wrap" style="display:none;margin-bottom:12px">
       <div class="section-label" style="margin-top:0">⏱️ Tiempo de descarga real</div>
       <div style="display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:12px">
@@ -401,7 +312,6 @@
         <button onclick="guardarTiempoReal()" style="background:var(--accent);color:var(--bg);border:none;border-radius:var(--radius-sm);padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;margin-left:auto">Guardar</button>
       </div>
     </div>
-
     <div style="height:20px"></div>
   </div>
 </div>
@@ -428,12 +338,16 @@
   </div>
 </div>
 
+<!-- LIGHTBOX -->
+<div id="pwa-lightbox" onclick="closePwaLightbox()">
+  <button id="pwa-lightbox-close" onclick="closePwaLightbox()">✕</button>
+  <img id="pwa-lightbox-img" src="" alt=""/>
+  <div id="pwa-lightbox-caption"></div>
+</div>
+
 <div id="toast"></div>
 
 <script>
-// ═══════════════════════════════════════════
-// CONFIG
-// ═══════════════════════════════════════════
 const SUPABASE_URL = 'https://pkxjsbgizxntmgtixbwt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_7RsdYecYwSQhsI_PAbhczQ_49wMNVID';
 const PROXY_URL    = '/.netlify/functions/odoo-proxy';
@@ -449,57 +363,29 @@ const REPARTIDORES = [
   { nombre:'ZEKY',          rutaOdoo:'Zeky' },
 ];
 
-// ═══════════════════════════════════════════
-// ESTADO
-// ═══════════════════════════════════════════
-let E = {
-  usuario:null, pin:'', repIdx:null,
-  pedidos:[], pedidoActual:null,
-  fotos:[], fotoUrls:[],
-  contactos:[], coordsGPS:null,
-};
-
-// ═══════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════
-// Navegación con hash para interceptar botón atrás en Android
+let E = { usuario:null, repIdx:null, pedidos:[], pedidoActual:null, fotos:[], fotoUrls:[], contactos:[], coordsGPS:null };
+let E_presupuestos = [];
 let _navegandoInternamente = false;
 
 function irA(s){
   document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));
   document.getElementById('screen-'+s).classList.add('active');
   window.scrollTo(0,0);
-  if(!_navegandoInternamente){
-    history.pushState({screen:s}, '', '#'+s);
-  }
+  if(!_navegandoInternamente) history.pushState({screen:s},'','#'+s);
 }
 
-// Interceptar botón atrás
-window.addEventListener('popstate', function(e){
-  _navegandoInternamente = true;
-  const activa = document.querySelector('.screen.active')?.id?.replace('screen-','');
-
-  if(!activa || activa === 'login'){
-    if(!confirm('¿Quieres salir de la aplicación?')){
-      history.pushState({screen:'login'}, '', '#login');
-    }
-    _navegandoInternamente = false;
-    return;
-  }
-
-  if(activa === 'parada')             irA('pedidos');
-  else if(activa === 'pedidos')       irA('menu');
-  else if(activa === 'presupuestos')  irA('menu');
-  else if(activa === 'menu')          irA('login');
+window.addEventListener('popstate',function(){
+  _navegandoInternamente=true;
+  const activa=document.querySelector('.screen.active')?.id?.replace('screen-','');
+  if(!activa||activa==='login'){ if(!confirm('¿Quieres salir?')){ history.pushState({screen:'login'},'','#login'); } _navegandoInternamente=false; return; }
+  if(activa==='parada') irA('pedidos');
+  else if(activa==='pedidos'||activa==='presupuestos') irA('menu');
+  else if(activa==='menu') irA('login');
   else irA('menu');
-
-  // Volver a añadir estado para que el siguiente atrás funcione
-  history.pushState({screen: document.querySelector('.screen.active')?.id?.replace('screen-','')}, '', window.location.href);
-  _navegandoInternamente = false;
+  history.pushState({screen:document.querySelector('.screen.active')?.id?.replace('screen-','')},'',window.location.href);
+  _navegandoInternamente=false;
 });
-
-// Estado inicial
-history.replaceState({screen:'login'}, '', '#login');
+history.replaceState({screen:'login'},'','#login');
 
 let toastT;
 function toast(msg,tipo='ok'){ const t=document.getElementById('toast'); t.textContent=msg; t.className='show '+tipo; clearTimeout(toastT); toastT=setTimeout(()=>t.className='',3000); }
@@ -520,49 +406,40 @@ async function odooProxy(action,params){
   return j.result;
 }
 
-// ═══════════════════════════════════════════
+// LIGHTBOX
+function openPwaLightbox(url,caption=''){
+  document.getElementById('pwa-lightbox-img').src=url;
+  document.getElementById('pwa-lightbox-caption').textContent=caption;
+  document.getElementById('pwa-lightbox').classList.add('show');
+}
+function closePwaLightbox(){
+  document.getElementById('pwa-lightbox').classList.remove('show');
+  document.getElementById('pwa-lightbox-img').src='';
+}
+
 // LOGIN
-// ═══════════════════════════════════════════
 function initLogin(){
   document.getElementById('repartidores-grid').innerHTML=REPARTIDORES.map((r,i)=>
     `<button class="rep-btn" onclick="seleccionarRep(${i})">${r.nombre}</button>`).join('');
 }
-
-function seleccionarRep(i){
-  E.usuario=REPARTIDORES[i];
-  E.repIdx=i;
-  entrarMenu();
-}
+function seleccionarRep(i){ E.usuario=REPARTIDORES[i]; E.repIdx=i; entrarMenu(); }
 function entrarMenu(){
   document.getElementById('menu-nombre').textContent=E.usuario.nombre;
   document.getElementById('menu-avatar').textContent=E.usuario.nombre[0];
   const hoy=new Date().toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long'});
   document.getElementById('menu-fecha').textContent=hoy.charAt(0).toUpperCase()+hoy.slice(1);
-  // Restaurar pedidos del día si existen en sessionStorage
-  try{
-    const saved=sessionStorage.getItem('dji_pedidos_'+E.usuario.rutaOdoo);
-    if(saved){ E.pedidos=JSON.parse(saved); }
-  }catch(_){}
+  try{ const saved=sessionStorage.getItem('dji_pedidos_'+E.usuario.rutaOdoo); if(saved) E.pedidos=JSON.parse(saved); }catch(_){}
   irA('menu');
 }
 function cerrarSesion(){ E.usuario=null; E.repIdx=null; E.pedidos=[]; irA('login'); }
 
-// ═══════════════════════════════════════════
 // PEDIDOS
-// ═══════════════════════════════════════════
 async function cargarPedidosHoy(){
-  // Si ya hay pedidos en memoria, ir directo sin recargar
-  if(E.pedidos.length > 0){
-    irA('pedidos');
-    renderPedidos();
-    return;
-  }
+  if(E.pedidos.length>0){ irA('pedidos'); renderPedidos(); return; }
   irA('pedidos');
   document.getElementById('pedidos-lista').innerHTML='<div class="spinner"></div>';
   try{
-    const rutaNombre=E.usuario.rutaOdoo;
-    // Sin filtro de fecha — todos los pickings assigned del repartidor
-    const {pickings}=await odooProxy('get_pickings_pendientes',{rutaNombre});
+    const {pickings}=await odooProxy('get_pickings_pendientes',{rutaNombre:E.usuario.rutaOdoo});
     E.pedidos=await Promise.all(pickings.map(async p=>{
       const partnerId=Array.isArray(p.partner_id)?p.partner_id[0]:p.partner_id;
       const partnerNombre=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
@@ -571,78 +448,48 @@ async function cargarPedidosHoy(){
       let punto=null;
       try{
         let pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${deliveryId}&select=*`);
-        if(!pts?.length && deliveryId!==partnerId){
-          pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${partnerId}&select=*`);
-        }
+        if(!pts?.length&&deliveryId!==partnerId) pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${partnerId}&select=*`);
         punto=pts?.[0]||null;
       }catch(_){}
       return{...p,partnerNombre,partnerId,deliveryId,deliveryNombre,punto,estado:'pendiente'};
     }));
-
-    // Cruzar con entregados del día en Supabase
     try{
       const hoy=new Date().toISOString().split('T')[0];
       const entregados=await supaFetch(`rutas_entregas_dia?empresa=eq.${EMPRESA}&repartidor=eq.${E.usuario.nombre}&fecha=eq.${hoy}&select=*`);
       if(entregados?.length){
         entregados.forEach(e=>{
-          // Buscar si el picking ya está en la lista
           const p=E.pedidos.find(p=>p.id===e.odoo_picking_id);
-          if(p){
-            // Ya está — actualizar estado
-            p.estado='entregada';
-            p.fotoUrls=e.foto_urls||[];
-            p.comentario=e.comentario;
-          } else {
-            // No está en Odoo (ya validado) — añadirlo como entregado
-            E.pedidos.push({
-              id: e.odoo_picking_id,
-              name: e.odoo_picking_name,
-              partnerNombre: e.partner_nombre,
-              partnerId: e.delivery_id,
-              deliveryId: e.delivery_id,
-              deliveryNombre: null,
-              punto: null,
-              estado: 'entregada',
-              fotoUrls: e.foto_urls||[],
-              comentario: e.comentario,
-              _soloHistorico: true, // no tiene picking en Odoo
-            });
+          if(p){ p.estado='entregada'; p.fotoUrls=e.foto_urls||[]; p.comentario=e.comentario; }
+          else{
+            E.pedidos.push({id:e.odoo_picking_id,name:e.odoo_picking_name,partnerNombre:e.partner_nombre,partnerId:e.delivery_id,deliveryId:e.delivery_id,deliveryNombre:null,punto:null,estado:'entregada',fotoUrls:e.foto_urls||[],comentario:e.comentario,_soloHistorico:true});
           }
         });
-        // Cargar puntos de entrega para los históricos
-        for(const p of E.pedidos.filter(x=>x._soloHistorico && !x.punto)){
-          try{
-            const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${p.deliveryId}&select=*`);
-            p.punto=pts?.[0]||null;
-          }catch(_){}
+        for(const p of E.pedidos.filter(x=>x._soloHistorico&&!x.punto)){
+          try{ const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${p.deliveryId}&select=*`); p.punto=pts?.[0]||null; }catch(_){}
         }
       }
-    }catch(err){ console.warn('Error cargando entregados:', err.message); }
-
-    // Persistir en sessionStorage
-    try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo, JSON.stringify(E.pedidos)); }catch(_){}
+    }catch(err){ console.warn('Error cargando entregados:',err.message); }
+    try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo,JSON.stringify(E.pedidos)); }catch(_){}
     renderPedidos();
   }catch(e){
-    document.getElementById('pedidos-lista').innerHTML=`<div class="empty-state"><div class="empty-icon">[!]</div><div class="empty-title">Error</div><div class="empty-sub">${e.message}</div></div>`;
+    document.getElementById('pedidos-lista').innerHTML=`<div style="text-align:center;padding:32px"><div style="font-size:32px">⚠️</div><div style="font-weight:700;margin-top:8px">Error</div><div style="font-size:13px;color:var(--text2)">${e.message}</div></div>`;
   }
 }
 
-// ═══════════════════════════════════════════
-// PESTAÑAS PEDIDOS
-// ═══════════════════════════════════════════
 let tabActiva='pendientes';
+function setTabPedidos(tab){ tabActiva=tab; document.getElementById('tab-pendientes').classList.toggle('active',tab==='pendientes'); document.getElementById('tab-entregados').classList.toggle('active',tab==='entregados'); renderPedidos(); }
+async function recargarPedidos(){ E.pedidos=[]; await cargarPedidosHoy(); }
 
-function setTabPedidos(tab){
-  tabActiva=tab;
-  document.getElementById('tab-pendientes').classList.toggle('active',tab==='pendientes');
-  document.getElementById('tab-entregados').classList.toggle('active',tab==='entregados');
-  renderPedidos();
+function evaluarFicha(punto,contactos){
+  if(!punto||!punto.geocodificado) return 'sin-ficha';
+  const n=punto.notas_logisticas||'';
+  const tieneToggle=n.includes('NO_FIRMA')||n.includes('FACTURA')||n.includes('REPASAR')||punto.estricto_horario||punto.descargar_primero;
+  const tieneHorario=!!(punto.hora_max_llegada||punto.hora_apertura||punto.hora_cierre||(punto.dias_cerrado&&punto.dias_cerrado.length>0));
+  const tieneContacto=contactos&&contactos.length>0;
+  if(tieneHorario&&tieneContacto&&tieneToggle) return 'completa';
+  return 'parcial';
 }
-
-async function recargarPedidos(){
-  E.pedidos=[];
-  await cargarPedidosHoy();
-}
+function iconoFicha(e){ return e==='sin-ficha'?'🔴':e==='parcial'?'🟡':'🟢'; }
 
 function renderPedidos(){
   const total=E.pedidos.length;
@@ -651,23 +498,16 @@ function renderPedidos(){
   document.getElementById('stat-entregados').textContent=entregados;
   document.getElementById('stat-pendientes').textContent=total-entregados;
   document.getElementById('pedidos-sub').innerHTML=`🔄 <span id="pedidos-count">${entregados}/${total}</span>`;
-
-  const lista=tabActiva==='pendientes'
-    ? E.pedidos.filter(p=>p.estado!=='entregada')
-    : E.pedidos.filter(p=>p.estado==='entregada');
-
+  const lista=tabActiva==='pendientes'?E.pedidos.filter(p=>p.estado!=='entregada'):E.pedidos.filter(p=>p.estado==='entregada');
   if(!lista.length){
-    document.getElementById('pedidos-lista').innerHTML=`<div class="empty-state">
-      <div class="empty-icon">${tabActiva==='pendientes'?'[OK]':'[PKG]'}</div>
-      <div class="empty-title">${tabActiva==='pendientes'?'Sin pendientes':'Sin entregados aún'}</div>
-    </div>`;
+    document.getElementById('pedidos-lista').innerHTML=`<div style="text-align:center;padding:48px"><div style="font-size:48px">${tabActiva==='pendientes'?'🎉':'📦'}</div><div style="font-weight:700;margin-top:12px">${tabActiva==='pendientes'?'Sin pendientes':'Sin entregados aún'}</div></div>`;
     return;
   }
-
   if(tabActiva==='pendientes'){
-    document.getElementById('pedidos-lista').innerHTML=lista.map((p,i)=>{
+    document.getElementById('pedidos-lista').innerHTML=lista.map(p=>{
       const idx=E.pedidos.indexOf(p);
       const alertas=getAlertas(p.punto);
+      const ef=evaluarFicha(p.punto,[]);
       const esPrimero=p.punto?.descargar_primero;
       return`<div class="pedido-card" onclick="abrirParada(${idx})">
         ${esPrimero?'<div style="font-size:11px;color:var(--warn);font-weight:700;margin-bottom:4px">⚡ DESCARGAR PRIMERO</div>':''}
@@ -676,34 +516,27 @@ function renderPedidos(){
         <div class="pedido-dir">${p.punto?.direccion_texto||'Sin dirección'}</div>
         <div class="pedido-meta">
           <span class="badge badge-gray">Pendiente</span>
-          ${alertas.length?`<span class="badge badge-warn">[!] ${alertas.length} alertas</span>`:''}
-          ${(()=>{
-            const ef=evaluarFicha(p.punto,[]);
-            if(ef==='sin-ficha') return '<span class="badge" style="background:rgba(239,68,68,.2);color:var(--danger)">🔴 Sin ficha</span>';
-            if(ef==='parcial')   return '<span class="badge" style="background:rgba(245,158,11,.15);color:var(--warn)">🟡 Incompleta</span>';
-            return '<span class="badge" style="background:rgba(34,197,94,.15);color:var(--success)">🟢 Completa</span>';
-          })()}
+          ${alertas.length?`<span class="badge badge-warn">⚠️ ${alertas.length} alertas</span>`:''}
+          ${ef==='sin-ficha'?'<span class="badge" style="background:rgba(239,68,68,.2);color:var(--danger)">🔴 Sin ficha</span>':ef==='parcial'?'<span class="badge" style="background:rgba(245,158,11,.15);color:var(--warn)">🟡 Incompleta</span>':'<span class="badge" style="background:rgba(34,197,94,.15);color:var(--success)">🟢 Completa</span>'}
         </div>
       </div>`;
     }).join('');
   } else {
-    document.getElementById('pedidos-lista').innerHTML=lista.map((p,i)=>{
+    document.getElementById('pedidos-lista').innerHTML=lista.map(p=>{
       const idx=E.pedidos.indexOf(p);
       const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${p.id}`;
+      const fotos=p.fotoUrls||[];
       return`<div class="pedido-entregado-card" onclick="abrirParada(${idx})">
         <div class="pedido-num">${p.name}</div>
         <div class="pedido-cliente">${p.partnerNombre}</div>
         <div class="pedido-dir">${p.punto?.direccion_texto||'Sin dirección'}</div>
         <div class="pedido-meta" style="margin-bottom:8px">
-          <span class="badge badge-ok">OK Entregado</span>
-          ${p.fotoUrls?.length?`<span class="badge badge-blue">[CAM] ${p.fotoUrls.length} foto${p.fotoUrls.length>1?'s':''}</span>`:''}
+          <span class="badge badge-ok">✓ Entregado</span>
+          ${fotos.length?`<span class="badge badge-blue">📷 ${fotos.length} foto${fotos.length>1?'s':''}</span>`:''}
         </div>
-        <a class="albaran-link" href="${albaranUrl}" target="_blank" onclick="event.stopPropagation()">
-          [PDF] Ver albarán PDF
-        </a>
-        <button class="whatsapp-btn" style="margin-top:8px;padding:10px;font-size:13px" onclick="event.stopPropagation();reenviarWhatsApp(${idx})">
-          [TEL] Reenviar por WhatsApp
-        </button>
+        ${fotos.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">${fotos.map((url,i)=>`<img src="${url}" class="foto-thumb" onclick="event.stopPropagation();openPwaLightbox('${url}','Foto ${i+1} de ${fotos.length}')" style="width:56px;height:56px"/>`).join('')}</div>`:''}
+        <a class="albaran-link" href="${albaranUrl}" target="_blank" onclick="event.stopPropagation()">📄 Ver albarán PDF</a>
+        <button class="whatsapp-btn" style="margin-top:8px;padding:10px;font-size:13px" onclick="event.stopPropagation();reenviarWhatsApp(${idx})">📱 Reenviar por WhatsApp</button>
       </div>`;
     }).join('');
   }
@@ -711,24 +544,19 @@ function renderPedidos(){
 
 function getAlertas(punto){
   if(!punto) return[];
-  const a=[];
-  const n=punto.notas_logisticas||'';
-  if(n.includes('NO_FIRMA'))    a.push('No firma en el móvil');
-  if(n.includes('FACTURA'))     a.push('Llevar factura');
-  if(n.includes('COCINA'))      a.push('Descarga por cocina');
-  if(n.includes('REPASAR'))     a.push('Repasar nota');
-  if(punto.hora_max_llegada)    a.push(`Límite ${punto.hora_max_llegada.slice(0,5)}`);
-  if(punto.estricto_horario)    a.push('Estricto con horarios');
-  if(punto.descargar_primero)   a.push('Descargar primero');
+  const a=[], n=punto.notas_logisticas||'';
+  if(n.includes('NO_FIRMA')) a.push('No firma en el móvil');
+  if(n.includes('FACTURA')) a.push('Llevar factura');
+  if(n.includes('REPASAR')) a.push('Repasar nota');
+  if(punto.hora_max_llegada) a.push(`Límite ${punto.hora_max_llegada.slice(0,5)}`);
+  if(punto.estricto_horario) a.push('Estricto con horarios');
+  if(punto.descargar_primero) a.push('Descargar primero');
   return a;
 }
 
-// ═══════════════════════════════════════════
 // PARADA ACTIVA
-// ═══════════════════════════════════════════
 async function abrirParada(i){
-  E.pedidoActual=i;
-  E.fotos=[]; E.fotoUrls=[];
+  E.pedidoActual=i; E.fotos=[]; E.fotoUrls=[];
   const p=E.pedidos[i];
   document.getElementById('parada-progreso').textContent=`${i+1}/${E.pedidos.length}`;
   document.getElementById('parada-num').textContent=p.name;
@@ -741,113 +569,70 @@ async function abrirParada(i){
   document.getElementById('tiempo-wrap').style.display='none';
   document.getElementById('tiempo-real').value='';
   document.getElementById('odoo-firmado').style.display='none';
-
-  // Alertas
   const alertas=getAlertas(p.punto);
-  document.getElementById('parada-alertas').innerHTML=alertas.map(a=>`<div class="alerta-item">[!] ${a}</div>`).join('');
+  document.getElementById('parada-alertas').innerHTML=alertas.map(a=>`<div class="alerta-item">⚠️ ${a}</div>`).join('');
   if(p.punto?.notas_logisticas){
-    const notas=p.punto.notas_logisticas.replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'').replace(/COCINA\|?/g,'').replace(/REPASAR\|?/g,'').trim();
-    if(notas) document.getElementById('parada-alertas').innerHTML+=`<div class="alerta-item" style="color:var(--text2);border-color:var(--border)">[NOTA] ${notas}</div>`;
+    const notas=p.punto.notas_logisticas.replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'').replace(/REPASAR\|?/g,'').trim();
+    if(notas) document.getElementById('parada-alertas').innerHTML+=`<div class="alerta-item" style="color:var(--text2);border-color:var(--border)">📝 ${notas}</div>`;
   }
-
-  // Cerrar ficha y cargar datos
   cerrarFicha();
   await cargarFichaIntegrada(p);
-
   irA('parada');
-
-  // Si ya está entregado, ocultar acciones y firma
-  const yaEntregado = p.estado === 'entregada';
-  document.getElementById('acciones-wrap').style.display = yaEntregado ? 'none' : 'block';
-  document.querySelector('.btn-navegar').style.display = 'flex';
-  // Ocultar firma y foto si ya entregado
-  const firmaBtn = document.querySelector('button[onclick="abrirOdooAlbaran()"]');
-  if(firmaBtn) firmaBtn.style.display = yaEntregado ? 'none' : 'flex';
-  const fotoBtn = document.querySelector('button[onclick="document.getElementById(\'input-foto\').click()"]');
-  if(fotoBtn) fotoBtn.style.display = yaEntregado ? 'none' : 'flex';
-  document.getElementById('odoo-firmado').style.display = 'none';
-
-  // Si ya entregado, mostrar directamente los botones WhatsApp
-  if(yaEntregado){ mostrarBotonesWhatsApp(p); }
+  const yaEntregado=p.estado==='entregada';
+  document.getElementById('acciones-wrap').style.display=yaEntregado?'none':'block';
+  const firmaBtn=document.querySelector('button[onclick="abrirOdooAlbaran()"]');
+  if(firmaBtn) firmaBtn.style.display=yaEntregado?'none':'flex';
+  const fotoBtn=document.querySelector('button[onclick="document.getElementById(\'input-foto\').click()"]');
+  if(fotoBtn) fotoBtn.style.display=yaEntregado?'none':'flex';
+  document.getElementById('odoo-firmado').style.display='none';
+  if(yaEntregado){
+    mostrarBotonesWhatsApp(p);
+    // Mostrar fotos guardadas con lightbox
+    if(p.fotoUrls?.length){
+      const section=document.querySelector('.section-label:first-of-type');
+      document.getElementById('foto-preview').innerHTML=p.fotoUrls.map((url,i)=>
+        `<img class="foto-thumb" src="${url}" onclick="openPwaLightbox('${url}','Foto ${i+1} de ${p.fotoUrls.length}')" style="opacity:1"/>`
+      ).join('');
+    }
+  }
 }
 
-// ═══════════════════════════════════════════
-// FICHA DESPLEGABLE
-// ═══════════════════════════════════════════
-function toggleFicha(){
-  const toggle=document.getElementById('ficha-toggle');
-  const body=document.getElementById('ficha-body');
-  toggle.classList.toggle('open');
-  body.classList.toggle('open');
-}
-function cerrarFicha(){
-  document.getElementById('ficha-toggle').classList.remove('open');
-  document.getElementById('ficha-body').classList.remove('open');
-}
+// FICHA
+function toggleFicha(){ const t=document.getElementById('ficha-toggle'),b=document.getElementById('ficha-body'); t.classList.toggle('open'); b.classList.toggle('open'); }
+function cerrarFicha(){ document.getElementById('ficha-toggle').classList.remove('open'); document.getElementById('ficha-body').classList.remove('open'); }
 
 async function cargarFichaIntegrada(p){
-  const punto=p.punto;
-  E.coordsGPS=null;
-
-  // Cargar contactos primero para evaluar ficha
+  const punto=p.punto; E.coordsGPS=null;
   await cargarContactosFicha(punto?.id);
-
-  // Evaluar estado de la ficha
-  const estadoFicha = evaluarFicha(punto, E.contactos);
-  const icono = iconoFicha(estadoFicha);
-
-  // Actualizar badge y estilo del toggle
-  const toggle = document.getElementById('ficha-toggle');
-  const estilos = {
-    'sin-ficha': 'background:rgba(239,68,68,.1);border:2px solid var(--danger)',
-    'parcial':   'background:rgba(245,158,11,.08);border:2px solid var(--warn)',
-    'completa':  'background:rgba(34,197,94,.06);border:1px solid var(--success)',
-  };
-  toggle.style.cssText = estilos[estadoFicha] + ';border-radius:var(--radius);padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;transition:all .15s';
-
-  const mensajes = {
-    'sin-ficha': 'Sin GPS ni datos — completar urgente',
-    'parcial':   'Ficha incompleta — faltan datos',
-    'completa':  'Ficha completa',
-  };
-  document.getElementById('ficha-badge-mini').textContent = `${icono} ${mensajes[estadoFicha]}`;
-
-  // GPS
+  const estadoFicha=evaluarFicha(punto,E.contactos);
+  const toggle=document.getElementById('ficha-toggle');
+  const estilos={'sin-ficha':'background:rgba(239,68,68,.1);border:2px solid var(--danger)','parcial':'background:rgba(245,158,11,.08);border:2px solid var(--warn)','completa':'background:rgba(34,197,94,.06);border:1px solid var(--success)'};
+  toggle.style.cssText=estilos[estadoFicha]+';border-radius:var(--radius);padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px';
+  const mensajes={'sin-ficha':'Sin GPS ni datos — completar urgente','parcial':'Ficha incompleta — faltan datos','completa':'Ficha completa'};
+  document.getElementById('ficha-badge-mini').textContent=`${iconoFicha(estadoFicha)} ${mensajes[estadoFicha]}`;
   const gpsCard=document.getElementById('ficha-gps-card');
   if(punto?.latitud&&punto?.longitud){
     E.coordsGPS={lat:punto.latitud,lng:punto.longitud};
     gpsCard.className='gps-card ok';
-    gpsCard.innerHTML=`<div class="gps-coords">${parseFloat(punto.latitud).toFixed(6)}, ${parseFloat(punto.longitud).toFixed(6)}</div><div class="gps-label">OK Ubicación guardada</div>`;
-    document.getElementById('ficha-badge-mini').textContent='[GPS] Con GPS';
+    gpsCard.innerHTML=`<div class="gps-coords">${parseFloat(punto.latitud).toFixed(6)}, ${parseFloat(punto.longitud).toFixed(6)}</div><div class="gps-label">✓ Ubicación guardada</div>`;
   } else {
     gpsCard.className='gps-card';
     gpsCard.innerHTML='<div style="font-size:12px;color:var(--text3)">Sin ubicación registrada</div>';
-    document.getElementById('ficha-badge-mini').textContent='[!] Sin GPS';
   }
-
-  // Horarios
   document.getElementById('fc-apertura').value=punto?.hora_apertura?.slice(0,5)||'';
   document.getElementById('fc-cierre').value=punto?.hora_cierre?.slice(0,5)||'';
   document.getElementById('fc-hora-max').value=punto?.hora_max_llegada?.slice(0,5)||'';
-
-  // Días
   const dias=punto?.dias_cerrado||[];
   document.querySelectorAll('.dia-btn').forEach(b=>b.classList.toggle('active',dias.includes(b.dataset.dia)));
-
-  // Toggles
   const n=punto?.notas_logisticas||'';
   document.getElementById('fc-primero').checked=punto?.descargar_primero||false;
   document.getElementById('fc-estricto').checked=punto?.estricto_horario||false;
   document.getElementById('fc-no-firma').checked=n.includes('NO_FIRMA');
   document.getElementById('fc-factura').checked=n.includes('FACTURA');
   document.getElementById('fc-repasar').checked=n.includes('REPASAR');
-
-  // Tiempo y notas
   document.getElementById('fc-tiempo').value=punto?.tiempo_descarga_min||'';
-  const notas=n.replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'').replace(/COCINA\|?/g,'').replace(/REPASAR\|?/g,'').trim();
+  const notas=n.replace(/NO_FIRMA\|?/g,'').replace(/FACTURA\|?/g,'').replace(/REPASAR\|?/g,'').trim();
   document.getElementById('fc-notas').value=notas;
-
-  // Contactos
   await cargarContactosFicha(punto?.id);
 }
 
@@ -857,304 +642,142 @@ async function cargarContactosFicha(puntoId){
   try{
     const c=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${puntoId}&order=es_principal.desc,nombre`);
     E.contactos=c||[];
-    lista.innerHTML=E.contactos.length
-      ? E.contactos.map((c,i)=>`<div class="contacto-item"><div class="contacto-info"><div class="contacto-nombre">${c.nombre}${c.es_principal?' *':''}</div><div class="contacto-tel">${c.telefono}</div></div><button class="contacto-del" onclick="eliminarContactoFicha(${i})">✕</button></div>`).join('')
-      : '<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Sin contactos</div>';
+    lista.innerHTML=E.contactos.length?E.contactos.map((c,i)=>`<div class="contacto-item"><div class="contacto-info"><div class="contacto-nombre">${c.nombre}${c.es_principal?' ⭐':''}</div><div class="contacto-tel">${c.telefono}</div></div><button class="contacto-del" onclick="eliminarContactoFicha(${i})">✕</button></div>`).join(''):'<div style="font-size:12px;color:var(--text3);margin-bottom:8px">Sin contactos</div>';
   }catch(_){ lista.innerHTML=''; E.contactos=[]; }
 }
 
 function toggleDiaFicha(btn){ btn.classList.toggle('active'); }
 
 async function añadirContactoFicha(){
-  const nombre=document.getElementById('fc-nombre').value.trim();
-  const tel=document.getElementById('fc-tel').value.trim();
+  const nombre=document.getElementById('fc-nombre').value.trim(), tel=document.getElementById('fc-tel').value.trim();
   if(!nombre||!tel){ toast('Rellena nombre y teléfono','err'); return; }
   const p=E.pedidos[E.pedidoActual];
   if(!p.punto?.id){ toast('Guarda la ficha primero','err'); return; }
   try{
     await supaFetch('rutas_contactos_recepcion','POST',{punto_entrega_id:p.punto.id,nombre,telefono:tel,es_principal:E.contactos.length===0});
-    document.getElementById('fc-nombre').value='';
-    document.getElementById('fc-tel').value='';
-    await cargarContactosFicha(p.punto.id);
-    toast('Contacto añadido OK');
+    document.getElementById('fc-nombre').value=''; document.getElementById('fc-tel').value='';
+    await cargarContactosFicha(p.punto.id); toast('Contacto añadido ✓');
   }catch(e){ toast('Error: '+e.message,'err'); }
 }
 
 async function eliminarContactoFicha(i){
-  const c=E.contactos[i];
-  const p=E.pedidos[E.pedidoActual];
-  try{
-    await supaFetch(`rutas_contactos_recepcion?id=eq.${c.id}`,'DELETE');
-    await cargarContactosFicha(p.punto?.id);
-    toast('Eliminado');
-  }catch(e){ toast('Error','err'); }
+  const c=E.contactos[i], p=E.pedidos[E.pedidoActual];
+  try{ await supaFetch(`rutas_contactos_recepcion?id=eq.${c.id}`,'DELETE'); await cargarContactosFicha(p.punto?.id); toast('Eliminado'); }catch(e){ toast('Error','err'); }
 }
 
 async function capturarGPSFicha(){
   if(!navigator.geolocation){ toast('GPS no disponible','err'); return; }
   toast('Obteniendo ubicación...');
   navigator.geolocation.getCurrentPosition(
-    pos=>{
-      E.coordsGPS={lat:pos.coords.latitude,lng:pos.coords.longitude};
-      const card=document.getElementById('ficha-gps-card');
-      card.className='gps-card ok';
-      card.innerHTML=`<div class="gps-coords">${E.coordsGPS.lat.toFixed(6)}, ${E.coordsGPS.lng.toFixed(6)}</div><div class="gps-label">OK Capturado ahora</div>`;
-      document.getElementById('ficha-badge-mini').textContent='[GPS] Con GPS';
-      toast('Ubicación capturada OK');
-    },
+    pos=>{ E.coordsGPS={lat:pos.coords.latitude,lng:pos.coords.longitude}; const card=document.getElementById('ficha-gps-card'); card.className='gps-card ok'; card.innerHTML=`<div class="gps-coords">${E.coordsGPS.lat.toFixed(6)}, ${E.coordsGPS.lng.toFixed(6)}</div><div class="gps-label">✓ Capturado ahora</div>`; toast('Ubicación capturada ✓'); },
     ()=>toast('No se pudo obtener GPS','err'),
     {enableHighAccuracy:true,timeout:10000}
   );
 }
 
 async function guardarFichaIntegrada(){
-  const p=E.pedidos[E.pedidoActual];
-  if(!p){ return; }
-
+  const p=E.pedidos[E.pedidoActual]; if(!p) return;
   const flags=[];
-  if(document.getElementById('fc-no-firma').checked)  flags.push('NO_FIRMA');
-  if(document.getElementById('fc-factura').checked)   flags.push('FACTURA');
-  if(document.getElementById('fc-repasar').checked)   flags.push('REPASAR');
+  if(document.getElementById('fc-no-firma').checked) flags.push('NO_FIRMA');
+  if(document.getElementById('fc-factura').checked) flags.push('FACTURA');
+  if(document.getElementById('fc-repasar').checked) flags.push('REPASAR');
   const notasLibres=document.getElementById('fc-notas').value.trim();
   const notas=[...flags,notasLibres].filter(Boolean).join('|');
   const dias=[...document.querySelectorAll('.dia-btn.active')].map(b=>b.dataset.dia);
-
-  const datos={
-    notas_logisticas:notas||null,
-    hora_apertura:document.getElementById('fc-apertura').value||null,
-    hora_cierre:document.getElementById('fc-cierre').value||null,
-    hora_max_llegada:document.getElementById('fc-hora-max').value||null,
-    dias_cerrado:dias,
-    tiempo_descarga_min:parseInt(document.getElementById('fc-tiempo').value)||15,
-    descargar_primero:document.getElementById('fc-primero').checked,
-    estricto_horario:document.getElementById('fc-estricto').checked,
-    geocodificado:!!E.coordsGPS,
-  };
+  const datos={notas_logisticas:notas||null,hora_apertura:document.getElementById('fc-apertura').value||null,hora_cierre:document.getElementById('fc-cierre').value||null,hora_max_llegada:document.getElementById('fc-hora-max').value||null,dias_cerrado:dias,tiempo_descarga_min:parseInt(document.getElementById('fc-tiempo').value)||15,descargar_primero:document.getElementById('fc-primero').checked,estricto_horario:document.getElementById('fc-estricto').checked,geocodificado:!!E.coordsGPS};
   if(E.coordsGPS){ datos.latitud=E.coordsGPS.lat; datos.longitud=E.coordsGPS.lng; }
-
   try{
-    if(p.punto?.id){
-      await supaFetch(`rutas_puntos_entrega?id=eq.${p.punto.id}`,'PATCH',datos);
-      Object.assign(p.punto, datos);
-    } else {
-      // Buscar o crear cliente en rutas_clientes usando el cliente principal
+    if(p.punto?.id){ await supaFetch(`rutas_puntos_entrega?id=eq.${p.punto.id}`,'PATCH',datos); Object.assign(p.punto,datos); }
+    else{
       let clienteId=null;
-      try{
-        const clientes=await supaFetch(`rutas_clientes?odoo_partner_id=eq.${p.partnerId}&empresa=eq.${EMPRESA}&select=id`);
-        clienteId=clientes?.[0]?.id||null;
-      }catch(_){}
-
-      if(!clienteId){
-        try{
-          await fetch(SUPABASE_URL+'/rest/v1/rutas_clientes',{
-            method:'POST',
-            headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
-            body:JSON.stringify({odoo_partner_id:p.partnerId,nombre:p.partnerNombre,empresa:EMPRESA,tipo_cliente:'otros',volumen_habitual:'m',activo:true}),
-          });
-          const clientes2=await supaFetch(`rutas_clientes?odoo_partner_id=eq.${p.partnerId}&empresa=eq.${EMPRESA}&select=id`);
-          clienteId=clientes2?.[0]?.id||null;
-        }catch(_){}
-      }
-
-      const bodyNuevo={
-        ...datos,
-        odoo_delivery_id:p.deliveryId,
-        cliente_id:clienteId,
-        empresa:EMPRESA,
-        nombre_punto:p.deliveryNombre||'Principal',
-        direccion_texto:p.punto?.direccion_texto||'',
-      };
-      console.log('Creando punto:', JSON.stringify(bodyNuevo));
-      const r=await fetch(SUPABASE_URL+'/rest/v1/rutas_puntos_entrega',{
-        method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},
-        body:JSON.stringify(bodyNuevo),
-      });
-      const txt=await r.text();
-      console.log('Resultado:', r.status, txt);
-      if(!r.ok) throw new Error('Error Supabase: '+txt);
-      // Recargar el punto desde Supabase
-      try{
-        const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${p.partnerId}&select=*`);
-        p.punto=pts?.[0]||{...datos,odoo_delivery_id:p.partnerId};
-      }catch(_){}
+      try{ const c=await supaFetch(`rutas_clientes?odoo_partner_id=eq.${p.partnerId}&empresa=eq.${EMPRESA}&select=id`); clienteId=c?.[0]?.id||null; }catch(_){}
+      if(!clienteId){ try{ await fetch(SUPABASE_URL+'/rest/v1/rutas_clientes',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({odoo_partner_id:p.partnerId,nombre:p.partnerNombre,empresa:EMPRESA,tipo_cliente:'otros',volumen_habitual:'m',activo:true})}); const c2=await supaFetch(`rutas_clientes?odoo_partner_id=eq.${p.partnerId}&empresa=eq.${EMPRESA}&select=id`); clienteId=c2?.[0]?.id||null; }catch(_){} }
+      const r=await fetch(SUPABASE_URL+'/rest/v1/rutas_puntos_entrega',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({...datos,odoo_delivery_id:p.deliveryId,cliente_id:clienteId,empresa:EMPRESA,nombre_punto:p.deliveryNombre||'Principal',direccion_texto:p.punto?.direccion_texto||''})});
+      if(!r.ok) throw new Error('Error Supabase: '+await r.text());
+      try{ const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${p.partnerId}&select=*`); p.punto=pts?.[0]||{...datos,odoo_delivery_id:p.partnerId}; }catch(_){}
     }
-    toast('Ficha guardada OK');
-    document.getElementById('ficha-badge-mini').textContent=E.coordsGPS?'[GPS] Con GPS':'[!] Sin GPS';
-    renderPedidos();
+    toast('Ficha guardada ✓'); renderPedidos();
   }catch(e){ toast('Error: '+e.message,'err'); }
 }
 
-// ═══════════════════════════════════════════
-// NAVEGACIÓN
-// ═══════════════════════════════════════════
 function navegarCliente(){
   const p=E.pedidos[E.pedidoActual];
-  if(p.punto?.latitud&&p.punto?.longitud)
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${p.punto.latitud},${p.punto.longitud}`,'_blank');
-  else if(p.punto?.direccion_texto)
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.punto.direccion_texto)}`,'_blank');
+  if(p.punto?.latitud&&p.punto?.longitud) window.open(`https://www.google.com/maps/dir/?api=1&destination=${p.punto.latitud},${p.punto.longitud}`,'_blank');
+  else if(p.punto?.direccion_texto) window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.punto.direccion_texto)}`,'_blank');
   else toast('Sin dirección disponible','err');
 }
 
-function evaluarFicha(punto, contactos){
-  if(!punto || !punto.geocodificado) return 'sin-ficha';
-  const n = punto.notas_logisticas||'';
-  const tieneToggle = n.includes('NO_FIRMA')||n.includes('FACTURA')||n.includes('REPASAR')||punto.estricto_horario||punto.descargar_primero;
-  const tieneHorario = !!(punto.hora_max_llegada||punto.hora_apertura||punto.hora_cierre||(punto.dias_cerrado&&punto.dias_cerrado.length>0));
-  const tieneContacto = contactos && contactos.length > 0;
-  if(tieneHorario && tieneContacto && tieneToggle) return 'completa';
-  return 'parcial';
-}
-
-function iconoFicha(estado){
-  if(estado==='sin-ficha') return '🔴';
-  if(estado==='parcial')   return '🟡';
-  return '🟢';
-}
-
 function abrirOdooAlbaran(){
-  const p=E.pedidos[E.pedidoActual];
-  if(!p) return;
+  const p=E.pedidos[E.pedidoActual]; if(!p) return;
   window.open(`${ODOO_URL}/web#id=${p.id}&model=stock.picking&view_type=form`,'_blank');
   document.getElementById('odoo-firmado').style.display='block';
 }
 
-// ═══════════════════════════════════════════
-// FOTO
-// ═══════════════════════════════════════════
+// FOTOS
 function procesarFoto(input){
   const file=input.files[0]; if(!file) return;
   const reader=new FileReader();
-  reader.onload=e=>{
-    E.fotos.push({dataUrl:e.target.result,file});
-    renderFotos();
-  };
+  reader.onload=e=>{ E.fotos.push({dataUrl:e.target.result,file}); renderFotos(); };
   reader.readAsDataURL(file);
-  input.value=''; // reset para permitir misma foto
+  input.value='';
 }
 
 function renderFotos(){
   const count=E.fotos.length;
-  document.getElementById('foto-count').textContent=count>0?`(${count})`:'' ;
+  document.getElementById('foto-count').textContent=count>0?`(${count})`:'';
   document.getElementById('foto-preview').innerHTML=E.fotos.map((f,i)=>`
     <div style="position:relative;display:inline-block">
-      <img class="foto-thumb" src="${f.dataUrl}"/>
-      <button onclick="eliminarFoto(${i})" style="position:absolute;top:-6px;right:-6px;background:var(--danger);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:900">✕</button>
+      <img class="foto-thumb" src="${f.dataUrl}" onclick="openPwaLightbox('${f.dataUrl}','Foto ${i+1} de ${E.fotos.length}')"/>
+      <button onclick="event.stopPropagation();eliminarFoto(${i})" style="position:absolute;top:-6px;right:-6px;background:var(--danger);border:none;border-radius:50%;width:20px;height:20px;color:#fff;font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:900">✕</button>
     </div>
   `).join('');
 }
 
-function eliminarFoto(i){
-  E.fotos.splice(i,1);
-  renderFotos();
-}
+function eliminarFoto(i){ E.fotos.splice(i,1); renderFotos(); }
 
-// ═══════════════════════════════════════════
 // ENTREGA
-// ═══════════════════════════════════════════
 async function marcarEntregado(){
-  const p=E.pedidos[E.pedidoActual];
-  p.comentario=document.getElementById('parada-comentario').value;
-  E.fotoUrls=[];
-  const btn=document.querySelector('.btn-success');
-  btn.disabled=true; btn.textContent='[GUARDAR] Guardando...';
+  const p=E.pedidos[E.pedidoActual]; p.comentario=document.getElementById('parada-comentario').value; E.fotoUrls=[];
+  const btn=document.querySelector('.btn-success'); btn.disabled=true; btn.textContent='Guardando...';
   try{
     for(const foto of E.fotos){
       const nombre=`${EMPRESA}/${p.name.replace(/[\/\\:*?"<>|]/g,'_')}_foto_${Date.now()}.jpg`;
-      const r=await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombre}`,{
-        method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':foto.file.type||'image/jpeg','x-upsert':'true'},
-        body:foto.file,
-      });
+      const r=await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombre}`,{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':foto.file.type||'image/jpeg','x-upsert':'true'},body:foto.file});
       if(r.ok) E.fotoUrls.push(`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`);
     }
     p.estado='entregada'; p.fotoUrls=E.fotoUrls;
-    // Mostrar campo de tiempo real
     document.getElementById('tiempo-wrap').style.display='block';
-    // Precargar tiempo estimado si existe en la ficha
     if(p.punto?.tiempo_descarga_min) document.getElementById('tiempo-real').value=p.punto.tiempo_descarga_min;
-    // Guardar entrega en Supabase — upsert para evitar duplicados
     try{
-      await fetch(SUPABASE_URL+'/rest/v1/rutas_entregas_dia?on_conflict=odoo_picking_id,repartidor',{
-        method:'POST',
-        headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
-        body:JSON.stringify({
-          empresa:EMPRESA,
-          repartidor:E.usuario.nombre,
-          odoo_picking_id:p.id,
-          odoo_picking_name:p.name,
-          odoo_sale_id: Array.isArray(p.sale_id)?p.sale_id[0]:p.sale_id||null,
-          partner_nombre:p.partnerNombre,
-          delivery_id:p.deliveryId,
-          foto_urls:E.fotoUrls,
-          comentario:p.comentario||null,
-          estado:'entregada',
-          hora_entrega: new Date().toISOString(),
-        }),
-      });
-    }catch(err){ console.warn('No se pudo guardar entrega:', err.message); }
-    // Persistir estado en sessionStorage también
-    try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo, JSON.stringify(E.pedidos)); }catch(_){}
-    toast('OK Entrega registrada');
-    renderPedidos();
-    mostrarBotonesWhatsApp(p);
+      await fetch(SUPABASE_URL+'/rest/v1/rutas_entregas_dia?on_conflict=odoo_picking_id,repartidor',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({empresa:EMPRESA,repartidor:E.usuario.nombre,odoo_picking_id:p.id,odoo_picking_name:p.name,odoo_sale_id:Array.isArray(p.sale_id)?p.sale_id[0]:p.sale_id||null,partner_nombre:p.partnerNombre,delivery_id:p.deliveryId,foto_urls:E.fotoUrls,comentario:p.comentario||null,estado:'entregada',hora_entrega:new Date().toISOString()})});
+    }catch(err){ console.warn('No se pudo guardar entrega:',err.message); }
+    try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo,JSON.stringify(E.pedidos)); }catch(_){}
+    toast('✓ Entrega registrada'); renderPedidos(); mostrarBotonesWhatsApp(p);
   }catch(e){ toast('Error: '+e.message,'err'); }
-  btn.disabled=false; btn.textContent='[OK] Entregado';
+  btn.disabled=false; btn.textContent='✅ Entregado';
 }
 
 async function guardarTiempoReal(){
-  const p=E.pedidos[E.pedidoActual];
-  const tiempo=parseInt(document.getElementById('tiempo-real').value);
+  const p=E.pedidos[E.pedidoActual], tiempo=parseInt(document.getElementById('tiempo-real').value);
   if(!tiempo||!p.punto?.id) return;
-  try{
-    await supaFetch(`rutas_puntos_entrega?id=eq.${p.punto.id}`,'PATCH',{tiempo_descarga_min:tiempo});
-    p.punto.tiempo_descarga_min=tiempo;
-    toast('Tiempo guardado ✓');
-  }catch(e){ toast('Error: '+e.message,'err'); }
+  try{ await supaFetch(`rutas_puntos_entrega?id=eq.${p.punto.id}`,'PATCH',{tiempo_descarga_min:tiempo}); p.punto.tiempo_descarga_min=tiempo; toast('Tiempo guardado ✓'); }catch(e){ toast('Error: '+e.message,'err'); }
 }
 
 async function marcarFallido(){
-  const p=E.pedidos[E.pedidoActual];
-  p.estado='fallida';
-  p.comentario=document.getElementById('parada-comentario').value;
-  toast('✗ Marcado como no entregado','err');
-  renderPedidos();
-  irA('pedidos');
+  const p=E.pedidos[E.pedidoActual]; p.estado='fallida'; p.comentario=document.getElementById('parada-comentario').value;
+  toast('✗ Marcado como no entregado','err'); renderPedidos(); irA('pedidos');
 }
 
-// ═══════════════════════════════════════════
 // WHATSAPP
-// ═══════════════════════════════════════════
 async function mostrarBotonesWhatsApp(p){
-  const wrap=document.getElementById('btn-whatsapp-wrap');
-  wrap.innerHTML='';
-
-  // Cargar contactos del punto de entrega actual
+  const wrap=document.getElementById('btn-whatsapp-wrap'); wrap.innerHTML='';
   let contactos=[];
-  if(p.punto?.id){
-    try{
-      const c=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${p.punto.id}&order=es_principal.desc,nombre`);
-      contactos=c||[];
-    }catch(_){}
-  }
-
-  if(!contactos.length){
-    wrap.style.display='block';
-    wrap.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center;font-size:13px;color:var(--text2)">
-      Sin contactos de recepción — añádelos en la ficha del cliente
-    </div>`;
-    return;
-  }
-
+  if(p.punto?.id){ try{ const c=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${p.punto.id}&order=es_principal.desc,nombre`); contactos=c||[]; }catch(_){} }
+  if(!contactos.length){ wrap.style.display='block'; wrap.innerHTML=`<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center;font-size:13px;color:var(--text2)">Sin contactos de recepción — añádelos en la ficha</div>`; return; }
   wrap.style.display='block';
-  wrap.innerHTML='<div class="section-label" style="margin-top:0">[TEL] Enviar albarán por WhatsApp</div>'+
-    contactos.map(c=>`
-      <button class="whatsapp-btn" onclick="enviarWhatsAppPedido(E.pedidos[E.pedidoActual],'${c.telefono}','${c.nombre}',E.fotoUrls||[])">
-        [TEL] ${c.nombre}${c.es_principal?' *':''} <span style="font-size:12px;opacity:.8">${c.telefono}</span>
-      </button>
-    `).join('');
-  setTimeout(()=>wrap.scrollIntoView({behavior:'smooth', block:'nearest'}), 100);
+  wrap.innerHTML='<div class="section-label" style="margin-top:0">📱 Enviar albarán por WhatsApp</div>'+
+    contactos.map(c=>`<button class="whatsapp-btn" onclick="enviarWhatsAppPedido(E.pedidos[E.pedidoActual],'${c.telefono}','${c.nombre}',E.fotoUrls||[])">📱 ${c.nombre}${c.es_principal?' ⭐':''} <span style="font-size:12px;opacity:.8">${c.telefono}</span></button>`).join('');
+  setTimeout(()=>wrap.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
 }
 
 async function reenviarWhatsApp(idx){
@@ -1163,50 +786,33 @@ async function reenviarWhatsApp(idx){
   try{
     const contactos=await supaFetch(`rutas_contactos_recepcion?punto_entrega_id=eq.${p.punto.id}&order=es_principal.desc,nombre`);
     if(!contactos?.length){ toast('Sin contactos de recepción','err'); return; }
-    // Si solo hay uno, enviar directo
-    if(contactos.length===1){
-      enviarWhatsAppPedido(p, contactos[0].telefono, contactos[0].nombre, p.fotoUrls||[]);
-      return;
-    }
-    // Si hay varios, mostrar selector en un toast visual
+    if(contactos.length===1){ enviarWhatsAppPedido(p,contactos[0].telefono,contactos[0].nombre,p.fotoUrls||[]); return; }
     const menu=document.createElement('div');
     menu.style.cssText='position:fixed;bottom:0;left:0;right:0;background:var(--bg2);border-top:1px solid var(--border);padding:16px;z-index:100';
-    menu.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent)">[TEL] Selecciona contacto</div>'+
-      contactos.map(c=>`<button onclick="enviarWhatsAppPedido(E.pedidos[${idx}],'${c.telefono}','${c.nombre}',E.pedidos[${idx}].fotoUrls||[]);this.parentNode.remove()" class="whatsapp-btn" style="margin-bottom:8px">[TEL] ${c.nombre}${c.es_principal?' *':''} ${c.telefono}</button>`).join('')+
-      `<button onclick="this.parentNode.remove()" style="width:100%;padding:12px;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);cursor:pointer;font-size:14px">Cancelar</button>`;
+    menu.innerHTML='<div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent)">📱 Selecciona contacto</div>'+
+      contactos.map(c=>`<button onclick="enviarWhatsAppPedido(E.pedidos[${idx}],'${c.telefono}','${c.nombre}',E.pedidos[${idx}].fotoUrls||[]);this.parentNode.remove()" class="whatsapp-btn" style="margin-bottom:8px">📱 ${c.nombre}${c.es_principal?' ⭐':''} ${c.telefono}</button>`).join('')+
+      `<button onclick="this.parentNode.remove()" style="width:100%;padding:12px;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);cursor:pointer">Cancelar</button>`;
     document.body.appendChild(menu);
   }catch(e){ toast('Error: '+e.message,'err'); }
 }
 
-function enviarWhatsAppPedido(p, tel, nombre, fotoUrls){
+function enviarWhatsAppPedido(p,tel,nombre,fotoUrls){
   const telLimpio=tel.replace(/\D/g,'');
   if(!telLimpio){ toast('Sin teléfono','err'); return; }
   const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${p.id}`;
-  let msg=`Hola ${nombre}, le confirmamos la entrega de hoy.\n\n`;
-  msg+=`[PKG] Albarán: ${p.name}\n`;
-  msg+=`[EMP] Cliente: ${p.partnerNombre}\n`;
-  msg+=`[OK] Entregado y firmado\n\n`;
-  msg+=`[PDF] Albarán PDF: ${albaranUrl}\n`;
-  if(fotoUrls?.length) fotoUrls.forEach((url,i)=>{ msg+=`[CAM] Foto ${fotoUrls.length>1?i+1+' ':''}: ${url}\n`; });
+  let msg=`Hola ${nombre}, le confirmamos la entrega de hoy.\n\n📦 Albarán: ${p.name}\n🏢 Cliente: ${p.partnerNombre}\n✅ Entregado y firmado\n\n📄 Albarán PDF: ${albaranUrl}\n`;
+  if(fotoUrls?.length) fotoUrls.forEach((url,i)=>{ msg+=`📷 Foto ${fotoUrls.length>1?i+1+' ':''}: ${url}\n`; });
   msg+=`\nUn saludo,\nDistribuciones Joaquín Infante`;
   window.open(`https://wa.me/${telLimpio}?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
-// ═══════════════════════════════════════════
-// PRESUPUESTOS / ASIGNACIONES
-// ═══════════════════════════════════════════
-const DIAS_ORDEN = ['lunes','martes','miercoles','miércoles','jueves','viernes','sabado','sábado','domingo'];
-const DIAS_LABEL = {
-  'lunes':'Lunes','martes':'Martes','miercoles':'Miércoles','miércoles':'Miércoles',
-  'jueves':'Jueves','viernes':'Viernes','sabado':'Sábado','sábado':'Sábado','domingo':'Domingo'
-};
+// PRESUPUESTOS
+const DIAS_ORDEN=['lunes','martes','miercoles','miércoles','jueves','viernes','sabado','sábado','domingo'];
+const DIAS_LABEL={'lunes':'Lunes','martes':'Martes','miercoles':'Miércoles','miércoles':'Miércoles','jueves':'Jueves','viernes':'Viernes','sabado':'Sábado','sábado':'Sábado','domingo':'Domingo'};
 
 function getDiaTag(tagNames){
-  const tags = (tagNames||[]).map(t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
-  for(const d of DIAS_ORDEN){
-    const dNorm = d.normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    if(tags.includes(dNorm)) return d;
-  }
+  const tags=(tagNames||[]).map(t=>t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''));
+  for(const d of DIAS_ORDEN){ if(tags.includes(d.normalize('NFD').replace(/[\u0300-\u036f]/g,''))) return d; }
   return null;
 }
 
@@ -1216,87 +822,45 @@ async function cargarPresupuestos(){
   document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('fdía-todos')?.classList.add('active');
   try{
-    const {presupuestos} = await odooProxy('get_presupuestos', {rutaNombre: E.usuario.rutaOdoo});
-    E_presupuestos = presupuestos;
+    const {presupuestos}=await odooProxy('get_presupuestos',{rutaNombre:E.usuario.rutaOdoo});
+    E_presupuestos=presupuestos;
     document.getElementById('pres-count').textContent=`${presupuestos.length} presupuestos`;
     renderPresupuestosFiltrados('');
-    // Cargar fotos de almacén ya subidas hoy
     try{
       const hoy=new Date().toISOString().split('T')[0];
       const fotos=await supaFetch(`rutas_fotos_almacen?empresa=eq.${EMPRESA}&repartidor=eq.${E.usuario.nombre}&fecha=eq.${hoy}&select=odoo_order_id,foto_urls`);
-      if(fotos?.length) fotos.forEach(f=>{
-        const preview=document.getElementById(`fotos_pres_${f.odoo_order_id}`);
-        if(preview && f.foto_urls?.length) preview.innerHTML=f.foto_urls.map(url=>`<img src="${url}" class="foto-thumb"/>`).join('');
-      });
+      if(fotos?.length) fotos.forEach(f=>{ const preview=document.getElementById(`fotos_pres_${f.odoo_order_id}`); if(preview&&f.foto_urls?.length) preview.innerHTML=f.foto_urls.map((url,i)=>`<img src="${url}" class="foto-thumb" onclick="openPwaLightbox('${url}','Foto almacén ${i+1}')"/>`).join(''); });
     }catch(_){}
-  }catch(e){
-    document.getElementById('pres-lista').innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-title">Error</div><div class="empty-sub">${e.message}</div></div>`;
-  }
+  }catch(e){ document.getElementById('pres-lista').innerHTML=`<div style="text-align:center;padding:32px"><div style="font-size:32px">⚠️</div><div style="font-weight:700;margin-top:8px">Error</div><div style="font-size:13px;color:var(--text2)">${e.message}</div></div>`; }
 }
 
-function setFiltroDia(dia, btn){
-  document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderPresupuestosFiltrados(dia);
-}
+function setFiltroDia(dia,btn){ document.querySelectorAll('.filtro-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderPresupuestosFiltrados(dia); }
 
 function renderPresupuestosFiltrados(filtroDia=''){
-  const lista = document.getElementById('pres-lista');
-  let presupuestos = E_presupuestos;
-
-  if(!presupuestos.length){
-    lista.innerHTML='<div class="empty-state"><div class="empty-icon">📋</div><div class="empty-title">Sin asignaciones</div></div>';
-    return;
-  }
-
-  // Filtrar por día
-  if(filtroDia === 'sin-dia'){
-    presupuestos = presupuestos.filter(p=>!getDiaTag(p.tag_names));
-  } else if(filtroDia){
-    presupuestos = presupuestos.filter(p=>{
-      const dia=getDiaTag(p.tag_names);
-      return dia && DIAS_LABEL[dia]===filtroDia;
-    });
-  }
-
-  if(!presupuestos.length){
-    lista.innerHTML='<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">Sin pedidos para este día</div></div>';
-    return;
-  }
-
-  // Agrupar por día (solo si no hay filtro)
+  const lista=document.getElementById('pres-lista');
+  let presupuestos=E_presupuestos;
+  if(!presupuestos.length){ lista.innerHTML='<div style="text-align:center;padding:48px"><div style="font-size:48px">📋</div><div style="font-weight:700;margin-top:12px">Sin asignaciones</div></div>'; return; }
+  if(filtroDia==='sin-dia') presupuestos=presupuestos.filter(p=>!getDiaTag(p.tag_names));
+  else if(filtroDia) presupuestos=presupuestos.filter(p=>{ const d=getDiaTag(p.tag_names); return d&&DIAS_LABEL[d]===filtroDia; });
+  if(!presupuestos.length){ lista.innerHTML='<div style="text-align:center;padding:48px"><div style="font-size:48px">📅</div><div style="font-weight:700;margin-top:12px">Sin pedidos para este día</div></div>'; return; }
   if(!filtroDia){
-    const porDia={}, sinDia=[];
-    presupuestos.forEach(p=>{
-      const dia=getDiaTag(p.tag_names);
-      if(dia){ if(!porDia[dia]) porDia[dia]=[]; porDia[dia].push(p); }
-      else sinDia.push(p);
-    });
+    const porDia={},sinDia=[];
+    presupuestos.forEach(p=>{ const d=getDiaTag(p.tag_names); if(d){ if(!porDia[d]) porDia[d]=[]; porDia[d].push(p); } else sinDia.push(p); });
     let html='';
     const diasUnicos=[...new Set(DIAS_ORDEN.filter(d=>porDia[d]).map(d=>DIAS_LABEL[d]))];
-    diasUnicos.forEach(labelDia=>{
-      const claves=DIAS_ORDEN.filter(d=>DIAS_LABEL[d]===labelDia);
-      const items=claves.flatMap(k=>porDia[k]||[]);
-      const total=items.reduce((a,p)=>a+p.amount_total,0);
-      html+=`<div class="dia-section"><div class="dia-header">📅 ${labelDia}<span class="dia-total">${items.length} pedidos · ${total.toLocaleString('es-ES',{style:'currency',currency:'EUR'})}</span></div>${items.map(p=>renderPresCard(p)).join('')}</div>`;
-    });
+    diasUnicos.forEach(labelDia=>{ const claves=DIAS_ORDEN.filter(d=>DIAS_LABEL[d]===labelDia); const items=claves.flatMap(k=>porDia[k]||[]); const total=items.reduce((a,p)=>a+p.amount_total,0); html+=`<div class="dia-section"><div class="dia-header">📅 ${labelDia}<span class="dia-total">${items.length} pedidos · ${total.toLocaleString('es-ES',{style:'currency',currency:'EUR'})}</span></div>${items.map(p=>renderPresCard(p)).join('')}</div>`; });
     if(sinDia.length) html+=`<div class="dia-section"><div class="dia-header" style="color:var(--text3)">❓ Sin día<span class="dia-total">${sinDia.length} pedidos</span></div>${sinDia.map(p=>renderPresCard(p)).join('')}</div>`;
     lista.innerHTML=html;
-  } else {
-    lista.innerHTML=presupuestos.map(p=>renderPresCard(p)).join('');
-  }
+  } else { lista.innerHTML=presupuestos.map(p=>renderPresCard(p)).join(''); }
 }
 
 function renderPresCard(p){
-  const clienteNombre = Array.isArray(p.partner_id)?p.partner_id[1]:'-';
-  const importe = (p.amount_total||0).toLocaleString('es-ES',{style:'currency',currency:'EUR'});
-  const otrosTags = (p.tag_names||[]).filter(t=>{
-    const tNorm=t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
-    return !DIAS_ORDEN.map(d=>d.normalize('NFD').replace(/[\u0300-\u036f]/g,'')).includes(tNorm);
-  });
-  const idSafe = `pres_${p.id}`;
-  const esConfirmado = p.state === 'sale' || p.state === 'done';
-  return `<div class="pres-card" id="card_${idSafe}" style="${esConfirmado?'border-color:var(--accent);background:rgba(0,201,167,.04)':''}">
+  const clienteNombre=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
+  const importe=(p.amount_total||0).toLocaleString('es-ES',{style:'currency',currency:'EUR'});
+  const otrosTags=(p.tag_names||[]).filter(t=>!DIAS_ORDEN.map(d=>d.normalize('NFD').replace(/[\u0300-\u036f]/g,'')).includes(t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')));
+  const idSafe=`pres_${p.id}`;
+  const esConfirmado=p.state==='sale'||p.state==='done';
+  return`<div class="pres-card" id="card_${idSafe}" style="${esConfirmado?'border-color:var(--accent);background:rgba(0,201,167,.04)':''}">
     <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
       <div class="pres-num">${p.name}</div>
       ${esConfirmado?'<span class="tag-badge" style="background:rgba(0,201,167,.12);border-color:var(--accent);color:var(--accent)">✓ Confirmado</span>':'<span class="tag-badge">Presupuesto</span>'}
@@ -1314,58 +878,30 @@ function renderPresCard(p){
   </div>`;
 }
 
-// ── FOTOS ALMACÉN ──────────────────────────────────────────
-async function subirFotoAlmacen(input, orderId, orderName, partnerNombre){
+async function subirFotoAlmacen(input,orderId,orderName,partnerNombre){
   const file=input.files[0]; if(!file) return;
-  const idSafe=`pres_${orderId}`;
-  const btn=input.nextElementSibling;
+  const idSafe=`pres_${orderId}`, btn=input.nextElementSibling;
   btn.textContent='Subiendo...'; btn.disabled=true;
-
   try{
     const nombre=`${EMPRESA}/almacen/${orderName.replace(/\//g,'_')}_${Date.now()}.jpg`;
-    const r=await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombre}`,{
-      method:'POST',
-      headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':file.type||'image/jpeg','x-upsert':'true'},
-      body:file,
-    });
+    const r=await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombre}`,{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':file.type||'image/jpeg','x-upsert':'true'},body:file});
     if(!r.ok) throw new Error('Error subiendo foto');
     const url=`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`;
-
-    // Buscar si ya hay registro para este pedido hoy
     const hoy=new Date().toISOString().split('T')[0];
     const existentes=await supaFetch(`rutas_fotos_almacen?odoo_order_id=eq.${orderId}&repartidor=eq.${E.usuario.nombre}&fecha=eq.${hoy}&select=id,foto_urls`);
-
-    if(existentes?.length){
-      // Actualizar añadiendo la nueva foto
-      const nuevasFotos=[...(existentes[0].foto_urls||[]), url];
-      await supaFetch(`rutas_fotos_almacen?id=eq.${existentes[0].id}`,'PATCH',{foto_urls:nuevasFotos});
-    } else {
-      // Crear nuevo registro
-      await supaFetch('rutas_fotos_almacen','POST',{
-        empresa:EMPRESA,
-        repartidor:E.usuario.nombre,
-        odoo_order_id:orderId,
-        odoo_order_name:orderName,
-        partner_nombre:partnerNombre,
-        foto_urls:[url],
-        fecha:hoy,
-      });
-    }
-
-    // Mostrar miniatura
+    if(existentes?.length){ await supaFetch(`rutas_fotos_almacen?id=eq.${existentes[0].id}`,'PATCH',{foto_urls:[...(existentes[0].foto_urls||[]),url]}); }
+    else{ await supaFetch('rutas_fotos_almacen','POST',{empresa:EMPRESA,repartidor:E.usuario.nombre,odoo_order_id:orderId,odoo_order_name:orderName,partner_nombre:partnerNombre,foto_urls:[url],fecha:hoy}); }
     const preview=document.getElementById(`fotos_${idSafe}`);
-    const img=document.createElement('img');
-    img.src=url; img.className='foto-thumb';
+    const img=document.createElement('img'); img.src=url; img.className='foto-thumb';
+    const fotoCount=preview.querySelectorAll('img').length;
+    img.onclick=()=>openPwaLightbox(url,`Foto almacén ${fotoCount+1}`);
     preview.appendChild(img);
-    toast('Foto de almacén guardada');
-
+    toast('Foto de almacén guardada ✓');
   }catch(e){ toast('Error: '+e.message,'err'); }
-
-  btn.textContent='📦 Añadir foto de almacén'; btn.disabled=false;
-  input.value='';
+  btn.textContent='📦 Añadir foto de almacén'; btn.disabled=false; input.value='';
 }
-initLogin();
 
+initLogin();
 </script>
 </body>
 </html>
