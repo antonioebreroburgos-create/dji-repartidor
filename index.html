@@ -143,11 +143,17 @@
     .pedido-entregado-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px;cursor:pointer;opacity:.75}
     .albaran-link{display:flex;align-items:center;gap:6px;color:var(--accent);font-size:13px;font-weight:700;margin-top:8px;text-decoration:none}
     /* LIGHTBOX */
-    #pwa-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;align-items:center;justify-content:center;flex-direction:column}
+    #pwa-lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;flex-direction:column;align-items:center;justify-content:center}
     #pwa-lightbox.show{display:flex}
-    #pwa-lightbox img{max-width:96vw;max-height:82vh;object-fit:contain;border-radius:8px}
-    #pwa-lightbox-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.2);border:none;color:#fff;font-size:28px;width:48px;height:48px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:1}
-    #pwa-lightbox-caption{color:rgba(255,255,255,.6);font-size:13px;margin-top:10px}
+    #pwa-lightbox-toolbar{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(rgba(0,0,0,.7),transparent);z-index:1}
+    #pwa-lightbox-toolbar button{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:14px;padding:6px 12px;border-radius:20px;cursor:pointer}
+    #pwa-lightbox-viewport{flex:1;width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:grab;position:relative}
+    #pwa-lightbox-viewport.grabbing{cursor:grabbing}
+    #pwa-lightbox-img{max-width:96vw;max-height:82vh;object-fit:contain;user-select:none;transform-origin:center center}
+    #pwa-lightbox-caption{position:absolute;bottom:0;left:0;right:0;padding:10px;color:rgba(255,255,255,.7);font-size:12px;text-align:center;background:linear-gradient(transparent,rgba(0,0,0,.6))}
+    #pwa-lightbox-zoombar{position:absolute;bottom:44px;left:50%;transform:translateX(-50%);display:flex;gap:8px;background:rgba(0,0,0,.5);border-radius:20px;padding:5px 12px;align-items:center}
+    #pwa-lightbox-zoombar button{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:16px;width:30px;height:30px;border-radius:50%;cursor:pointer}
+    #pwa-lb-zoom-level{color:#fff;font-size:12px;min-width:36px;text-align:center}
     .filtros{display:flex;gap:6px;flex-wrap:wrap}
     .filtro-btn{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:700;color:var(--text2);cursor:pointer}
     .filtro-btn.active{background:rgba(0,201,167,.12);border-color:var(--accent);color:var(--accent)}
@@ -339,9 +345,24 @@
 </div>
 
 <!-- LIGHTBOX -->
-<div id="pwa-lightbox" onclick="closePwaLightbox()">
-  <button id="pwa-lightbox-close" onclick="closePwaLightbox()">✕</button>
-  <img id="pwa-lightbox-img" src="" alt=""/>
+<div id="pwa-lightbox">
+  <div id="pwa-lightbox-toolbar">
+    <div style="display:flex;gap:6px">
+      <button onclick="plbZoom(1.5)">🔍+</button>
+      <button onclick="plbZoom(0.667)">🔍−</button>
+      <button onclick="plbReset()">⟲</button>
+    </div>
+    <span id="pwa-lb-titulo" style="color:rgba(255,255,255,.7);font-size:12px"></span>
+    <button onclick="closePwaLightbox()" style="font-size:18px;padding:4px 10px">✕</button>
+  </div>
+  <div id="pwa-lightbox-viewport">
+    <img id="pwa-lightbox-img" src="" alt="" draggable="false"/>
+  </div>
+  <div id="pwa-lightbox-zoombar">
+    <button onclick="plbZoom(1.5)">+</button>
+    <span id="pwa-lb-zoom-level">100%</span>
+    <button onclick="plbZoom(0.667)">−</button>
+  </div>
   <div id="pwa-lightbox-caption"></div>
 </div>
 
@@ -406,16 +427,44 @@ async function odooProxy(action,params){
   return j.result;
 }
 
-// LIGHTBOX
+// LIGHTBOX PWA CON ZOOM
+let _plb={scale:1,tx:0,ty:0,dragging:false,startX:0,startY:0};
 function openPwaLightbox(url,caption=''){
   document.getElementById('pwa-lightbox-img').src=url;
   document.getElementById('pwa-lightbox-caption').textContent=caption;
+  document.getElementById('pwa-lb-titulo').textContent='';
+  _plb.scale=1;_plb.tx=0;_plb.ty=0;_plbApply();
   document.getElementById('pwa-lightbox').classList.add('show');
+  _plbBindEvents();
 }
 function closePwaLightbox(){
   document.getElementById('pwa-lightbox').classList.remove('show');
   document.getElementById('pwa-lightbox-img').src='';
+  _plbUnbind();
 }
+function _plbApply(){
+  const img=document.getElementById('pwa-lightbox-img');
+  img.style.transform=`translate(${_plb.tx}px,${_plb.ty}px) scale(${_plb.scale})`;
+  document.getElementById('pwa-lb-zoom-level').textContent=Math.round(_plb.scale*100)+'%';
+}
+function plbZoom(f){ _plb.scale=Math.max(0.5,Math.min(5,_plb.scale*f)); _plbApply(); }
+function plbReset(){ _plb.scale=1;_plb.tx=0;_plb.ty=0;_plbApply(); }
+function _plbBindEvents(){
+  const vp=document.getElementById('pwa-lightbox-viewport');
+  const img=document.getElementById('pwa-lightbox-img');
+  img.ondblclick=()=>{ if(_plb.scale>1) plbReset(); else { _plb.scale=2.5;_plbApply(); } };
+  vp.onmousedown=e=>{ _plb.dragging=true;_plb.startX=e.clientX-_plb.tx;_plb.startY=e.clientY-_plb.ty;vp.classList.add('grabbing'); };
+  vp.onmousemove=e=>{ if(!_plb.dragging) return;_plb.tx=e.clientX-_plb.startX;_plb.ty=e.clientY-_plb.startY;_plbApply(); };
+  vp.onmouseup=vp.onmouseleave=()=>{ _plb.dragging=false;vp.classList.remove('grabbing'); };
+  vp.onwheel=e=>{ e.preventDefault();_plb.scale=Math.max(0.5,Math.min(5,_plb.scale*(e.deltaY<0?1.15:0.87)));_plbApply(); },{passive:false};
+  let initDist=0,initScale=1;
+  vp.ontouchstart=e=>{ if(e.touches.length===2){ initDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);initScale=_plb.scale; } else{ _plb.dragging=true;_plb.startX=e.touches[0].clientX-_plb.tx;_plb.startY=e.touches[0].clientY-_plb.ty; } };
+  vp.ontouchmove=e=>{ e.preventDefault();if(e.touches.length===2){ const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);_plb.scale=Math.max(0.5,Math.min(5,initScale*(d/initDist)));_plbApply(); } else if(_plb.dragging){ _plb.tx=e.touches[0].clientX-_plb.startX;_plb.ty=e.touches[0].clientY-_plb.startY;_plbApply(); } },{passive:false};
+  vp.ontouchend=()=>{ _plb.dragging=false; };
+  document._plbKey=e=>{ if(e.key==='Escape') closePwaLightbox();else if(e.key==='+') plbZoom(1.2);else if(e.key==='-') plbZoom(0.83); };
+  document.addEventListener('keydown',document._plbKey);
+}
+function _plbUnbind(){ if(document._plbKey){ document.removeEventListener('keydown',document._plbKey);delete document._plbKey; } }
 
 // LOGIN
 function initLogin(){
