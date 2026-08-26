@@ -885,6 +885,15 @@ async function cargarPendientesAdmin(){
   wrap.innerHTML='<div class="spinner"></div>';
 
   try{
+    const fecha = document.getElementById('filtro-fecha').value;
+
+    // Cargar fotos de almacén del día indexadas por odoo_order_id
+    let fotosAlmacenMap = {};
+    try{
+      const fa = await supaFetch(`rutas_fotos_almacen?empresa=eq.${EMPRESA}&fecha=eq.${fecha}&select=odoo_order_id,foto_urls,repartidor`);
+      (fa||[]).forEach(f=>{ fotosAlmacenMap[f.odoo_order_id]=(f.foto_urls||[]); });
+    }catch(_){}
+
     // Consultar todos los repartidores en paralelo
     const resultados = await Promise.all(
       Object.entries(RUTAS_REPARTIDORES).map(async ([nombre, rutaOdoo])=>{
@@ -900,8 +909,10 @@ async function cargarPendientesAdmin(){
       })
     );
 
-    // Renderizar por repartidor
     const totalGlobal = resultados.reduce((a,r)=>a+r.pickings.length,0);
+
+    // Cache global para modal de fotos
+    window._fotosCache = window._fotosCache || {};
 
     wrap.innerHTML = `
       <div class="stats-grid" style="margin-bottom:16px">
@@ -918,16 +929,22 @@ async function cargarPendientesAdmin(){
           <div class="section-title" style="margin-bottom:8px">📦 ${r.nombre} — ${r.pickings.length} pendientes</div>
           <div class="tabla-wrap">
             <table>
-              <thead><tr><th>Albarán</th><th>Cliente</th><th>Fecha programada</th></tr></thead>
+              <thead><tr><th>Albarán</th><th>Cliente</th><th>Fecha programada</th><th>Fotos almacén</th></tr></thead>
               <tbody>
                 ${r.pickings.map(p=>{
                   const cliente=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
                   const fecha=p.scheduled_date?new Date(p.scheduled_date).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
                   const albaranUrl=`${ODOO_URL}/web#id=${p.id}&model=stock.picking&view_type=form`;
+                  const saleId=Array.isArray(p.sale_id)?p.sale_id[0]:p.sale_id;
+                  const fotos=fotosAlmacenMap[saleId]||[];
+                  const fotosHtml=fotos.length
+                    ? fotos.map(url=>`<img src="${url}" onclick="openLightbox('${url}')" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:2px solid var(--warn);cursor:pointer;margin-right:4px"/>`).join('')
+                    : '<span style="color:var(--danger);font-size:12px;font-weight:700">⚠️ Sin foto</span>';
                   return `<tr>
                     <td><a class="albaran-link" href="${albaranUrl}" target="_blank">${p.name}</a></td>
                     <td>${cliente}</td>
                     <td style="font-size:13px;color:var(--text2)">${fecha}</td>
+                    <td><div style="display:flex;align-items:center">${fotosHtml}</div></td>
                   </tr>`;
                 }).join('')}
               </tbody>
