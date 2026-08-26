@@ -519,6 +519,19 @@ async function cargarPedidosHoy(){
       }
     }catch(err){ console.warn('Error cargando entregados:',err.message); }
     try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo,JSON.stringify(E.pedidos)); }catch(_){}
+
+    // Cargar fotos de almacén del día para mostrar en la lista
+    try{
+      const hoy=new Date().toISOString().split('T')[0];
+      const fa=await supaFetch(`rutas_fotos_almacen?empresa=eq.${EMPRESA}&repartidor=eq.${E.usuario.nombre}&fecha=eq.${hoy}&select=odoo_order_id,foto_urls`);
+      if(fa?.length){
+        fa.forEach(f=>{
+          const p=E.pedidos.find(x=>{ const sid=Array.isArray(x.sale_id)?x.sale_id[0]:x.sale_id; return sid===f.odoo_order_id; });
+          if(p) p.fotosAlmacen=f.foto_urls||[];
+        });
+      }
+    }catch(_){}
+
     renderPedidos();
   }catch(e){
     document.getElementById('pedidos-lista').innerHTML=`<div style="text-align:center;padding:32px"><div style="font-size:32px">⚠️</div><div style="font-weight:700;margin-top:8px">Error</div><div style="font-size:13px;color:var(--text2)">${e.message}</div></div>`;
@@ -558,16 +571,21 @@ function renderPedidos(){
       const alertas=getAlertas(p.punto);
       const ef=evaluarFicha(p.punto,[]);
       const esPrimero=p.punto?.descargar_primero;
+      const fotosAlm=p.fotosAlmacen||[];
       return`<div class="pedido-card" onclick="abrirParada(${idx})">
         ${esPrimero?'<div style="font-size:11px;color:var(--warn);font-weight:700;margin-bottom:4px">⚡ DESCARGAR PRIMERO</div>':''}
         <div class="pedido-num">${p.name}</div>
         <div class="pedido-cliente">${p.partnerNombre}</div>
         <div class="pedido-dir">${p.punto?.direccion_texto||'Sin dirección'}</div>
-        <div class="pedido-meta">
+        <div class="pedido-meta" style="margin-bottom:${fotosAlm.length?'8px':'0'}">
           <span class="badge badge-gray">Pendiente</span>
           ${alertas.length?`<span class="badge badge-warn">⚠️ ${alertas.length} alertas</span>`:''}
           ${ef==='sin-ficha'?'<span class="badge" style="background:rgba(239,68,68,.2);color:var(--danger)">🔴 Sin ficha</span>':ef==='parcial'?'<span class="badge" style="background:rgba(245,158,11,.15);color:var(--warn)">🟡 Incompleta</span>':'<span class="badge" style="background:rgba(34,197,94,.15);color:var(--success)">🟢 Completa</span>'}
         </div>
+        ${fotosAlm.length?`<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px" onclick="event.stopPropagation()">
+          ${fotosAlm.map((url,i)=>`<img src="${url}" class="foto-thumb" style="width:52px;height:52px;border-color:var(--warn)" onclick="openPwaLightbox('${url}','Foto almacén ${i+1} de ${fotosAlm.length}')">`).join('')}
+          <span style="font-size:11px;color:var(--warn);align-self:center;font-weight:700">📦 ${fotosAlm.length} foto${fotosAlm.length>1?'s':''}</span>
+        </div>`:''}
       </div>`;
     }).join('');
   } else {
