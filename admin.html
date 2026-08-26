@@ -66,11 +66,23 @@
     .foto-thumb{width:48px;height:48px;object-fit:cover;border-radius:6px;border:1px solid var(--border);cursor:pointer;transition:transform .15s}
     .foto-thumb:hover{transform:scale(1.1)}
 
-    /* LIGHTBOX */
-    #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:999;align-items:center;justify-content:center;cursor:pointer}
+    /* LIGHTBOX CON ZOOM */
+    #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:9999;flex-direction:column;align-items:center;justify-content:center}
     #lightbox.show{display:flex}
-    #lightbox img{max-width:90vw;max-height:90vh;border-radius:8px;object-fit:contain}
-    #lightbox-close{position:absolute;top:20px;right:20px;color:#fff;font-size:32px;cursor:pointer;background:none;border:none}
+    #lightbox-toolbar{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(rgba(0,0,0,.6),transparent);z-index:1}
+    #lightbox-toolbar button{background:rgba(255,255,255,.15);border:none;color:#fff;font-size:14px;padding:6px 12px;border-radius:20px;cursor:pointer;font-weight:600}
+    #lightbox-toolbar button:hover{background:rgba(255,255,255,.25)}
+    #lightbox-caption{position:absolute;bottom:0;left:0;right:0;padding:12px 16px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:rgba(255,255,255,.8);font-size:13px;text-align:center}
+    #lightbox-viewport{flex:1;width:100%;overflow:hidden;display:flex;align-items:center;justify-content:center;cursor:grab;position:relative}
+    #lightbox-viewport.grabbing{cursor:grabbing}
+    #lightbox-img{max-width:95vw;max-height:85vh;object-fit:contain;user-select:none;transition:transform 0s;transform-origin:center center}
+    #lightbox-nav-prev,#lightbox-nav-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);border:none;color:#fff;font-size:24px;width:44px;height:44px;border-radius:50%;cursor:pointer;z-index:1;display:flex;align-items:center;justify-content:center}
+    #lightbox-nav-prev{left:12px}
+    #lightbox-nav-next{right:12px}
+    #lightbox-nav-prev:hover,#lightbox-nav-next:hover{background:rgba(255,255,255,.3)}
+    #lightbox-zoom-bar{position:absolute;bottom:48px;left:50%;transform:translateX(-50%);display:flex;gap:8px;background:rgba(0,0,0,.5);border-radius:20px;padding:6px 12px}
+    #lightbox-zoom-bar button{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:16px;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center}
+    #lightbox-zoom-level{color:#fff;font-size:13px;display:flex;align-items:center;min-width:40px;text-align:center;justify-content:center}
 
     /* REPARTIDORES */
     .rep-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:24px}
@@ -398,10 +410,29 @@
   </div>
 </div>
 
-<!-- LIGHTBOX -->
-<div id="lightbox" onclick="closeLightbox()">
-  <button id="lightbox-close" onclick="closeLightbox()">✕</button>
-  <img id="lightbox-img" src="" alt=""/>
+<!-- LIGHTBOX CON ZOOM -->
+<div id="lightbox">
+  <div id="lightbox-toolbar">
+    <div style="display:flex;gap:8px">
+      <button onclick="lbZoom(1.5)">🔍+</button>
+      <button onclick="lbZoom(0.667)">🔍−</button>
+      <button onclick="lbReset()">⟲ Reset</button>
+      <button onclick="lbDescargar()">⬇ Descargar</button>
+    </div>
+    <span id="lightbox-titulo" style="color:rgba(255,255,255,.7);font-size:13px"></span>
+    <button onclick="closeLightbox()" style="font-size:18px;padding:4px 10px">✕</button>
+  </div>
+  <div id="lightbox-viewport">
+    <button id="lightbox-nav-prev" onclick="lbNavegar(-1)">‹</button>
+    <img id="lightbox-img" src="" alt="" draggable="false"/>
+    <button id="lightbox-nav-next" onclick="lbNavegar(1)">›</button>
+  </div>
+  <div id="lightbox-zoom-bar">
+    <button onclick="lbZoom(1.5)">+</button>
+    <span id="lightbox-zoom-level">100%</span>
+    <button onclick="lbZoom(0.667)">−</button>
+  </div>
+  <div id="lightbox-caption"></div>
 </div>
 
 <script>
@@ -850,24 +881,100 @@ function verFotosPedido(albaran, cliente, repartidor, hora, fotosEntrega, fotosA
   const divEntrega=document.getElementById('modal-fotos-entrega');
 
   divAlmacen.innerHTML = fotosAlmacen.length
-    ? fotosAlmacen.map(url=>`<img src="${url}" onclick="openLightbox('${url}')" style="width:160px;height:160px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid var(--warn)" title="Foto almacén"/>`).join('')
+    ? fotosAlmacen.map((url,i)=>`<img src="${url}" onclick="openLightbox('${url}',${JSON.stringify(fotosAlmacen)},'Foto almacén ${i+1} de ${fotosAlmacen.length}')" style="width:160px;height:160px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid var(--warn)" title="Foto almacén"/>`).join('')
     : '<span style="color:var(--text3);font-size:13px">Sin fotos de almacén</span>';
 
   divEntrega.innerHTML = fotosEntrega.length
-    ? fotosEntrega.map(url=>`<img src="${url}" onclick="openLightbox('${url}')" style="width:160px;height:160px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid var(--accent)" title="Foto entrega"/>`).join('')
+    ? fotosEntrega.map((url,i)=>`<img src="${url}" onclick="openLightbox('${url}',${JSON.stringify(fotosEntrega)},'Foto entrega ${i+1} de ${fotosEntrega.length}')" style="width:160px;height:160px;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid var(--accent)" title="Foto entrega"/>`).join('')
     : '<span style="color:var(--text3);font-size:13px">Sin fotos de entrega</span>';
 
   document.getElementById('modal-fotos').style.display='block';
   document.getElementById('modal-fotos').scrollTop=0;
 }
 
-function openLightbox(url){
-  document.getElementById('lightbox-img').src=url;
+// ── LIGHTBOX CON ZOOM ────────────────────────────────────
+let _lb = { urls:[], idx:0, scale:1, tx:0, ty:0, dragging:false, startX:0, startY:0, lastTx:0, lastTy:0 };
+
+function openLightbox(url, allUrls=null, caption=''){
+  _lb.urls = allUrls || [url];
+  _lb.idx  = _lb.urls.indexOf(url);
+  if(_lb.idx<0) _lb.idx=0;
+  _lbLoad();
+  document.getElementById('lightbox-caption').textContent=caption;
   document.getElementById('lightbox').classList.add('show');
+  _lbBindEvents();
 }
+
+function _lbLoad(){
+  const img=document.getElementById('lightbox-img');
+  img.src=_lb.urls[_lb.idx];
+  _lb.scale=1; _lb.tx=0; _lb.ty=0;
+  _lbApply();
+  document.getElementById('lightbox-titulo').textContent=_lb.urls.length>1?`${_lb.idx+1} / ${_lb.urls.length}`:'';
+  document.getElementById('lightbox-nav-prev').style.display=_lb.urls.length>1?'flex':'none';
+  document.getElementById('lightbox-nav-next').style.display=_lb.urls.length>1?'flex':'none';
+}
+
+function _lbApply(){
+  const img=document.getElementById('lightbox-img');
+  img.style.transform=`translate(${_lb.tx}px,${_lb.ty}px) scale(${_lb.scale})`;
+  document.getElementById('lightbox-zoom-level').textContent=Math.round(_lb.scale*100)+'%';
+}
+
+function lbZoom(factor){
+  _lb.scale=Math.max(0.5,Math.min(5,_lb.scale*factor));
+  _lbApply();
+}
+
+function lbReset(){ _lb.scale=1; _lb.tx=0; _lb.ty=0; _lbApply(); }
+
+function lbNavegar(dir){
+  _lb.idx=(_lb.idx+dir+_lb.urls.length)%_lb.urls.length;
+  _lbLoad();
+}
+
+function lbDescargar(){
+  const a=document.createElement('a');
+  a.href=_lb.urls[_lb.idx];
+  a.download='foto_'+Date.now()+'.jpg';
+  a.target='_blank'; a.click();
+}
+
 function closeLightbox(){
   document.getElementById('lightbox').classList.remove('show');
   document.getElementById('lightbox-img').src='';
+  _lbUnbindEvents();
+}
+
+function _lbBindEvents(){
+  const vp=document.getElementById('lightbox-viewport');
+  const img=document.getElementById('lightbox-img');
+
+  // Doble clic para zoom
+  img.ondblclick=e=>{ if(_lb.scale>1) lbReset(); else { _lb.scale=2.5; _lbApply(); } };
+
+  // Arrastre con ratón
+  vp.onmousedown=e=>{ if(e.button!==0) return; _lb.dragging=true; _lb.startX=e.clientX-_lb.tx; _lb.startY=e.clientY-_lb.ty; vp.classList.add('grabbing'); e.preventDefault(); };
+  vp.onmousemove=e=>{ if(!_lb.dragging) return; _lb.tx=e.clientX-_lb.startX; _lb.ty=e.clientY-_lb.startY; _lbApply(); };
+  vp.onmouseup=()=>{ _lb.dragging=false; vp.classList.remove('grabbing'); };
+  vp.onmouseleave=()=>{ _lb.dragging=false; vp.classList.remove('grabbing'); };
+
+  // Scroll para zoom
+  vp.onwheel=e=>{ e.preventDefault(); const f=e.deltaY<0?1.15:0.87; _lb.scale=Math.max(0.5,Math.min(5,_lb.scale*f)); _lbApply(); },{passive:false};
+
+  // Teclado
+  document._lbKeydown=e=>{ if(e.key==='Escape') closeLightbox(); else if(e.key==='ArrowRight') lbNavegar(1); else if(e.key==='ArrowLeft') lbNavegar(-1); else if(e.key==='+') lbZoom(1.2); else if(e.key==='-') lbZoom(0.83); };
+  document.addEventListener('keydown',document._lbKeydown);
+
+  // Pinch en móvil
+  let initDist=0, initScale=1;
+  vp.ontouchstart=e=>{ if(e.touches.length===2){ initDist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); initScale=_lb.scale; } else if(e.touches.length===1){ _lb.dragging=true; _lb.startX=e.touches[0].clientX-_lb.tx; _lb.startY=e.touches[0].clientY-_lb.ty; } };
+  vp.ontouchmove=e=>{ e.preventDefault(); if(e.touches.length===2){ const dist=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY); _lb.scale=Math.max(0.5,Math.min(5,initScale*(dist/initDist))); _lbApply(); } else if(e.touches.length===1&&_lb.dragging){ _lb.tx=e.touches[0].clientX-_lb.startX; _lb.ty=e.touches[0].clientY-_lb.startY; _lbApply(); } },{passive:false};
+  vp.ontouchend=()=>{ _lb.dragging=false; };
+}
+
+function _lbUnbindEvents(){
+  if(document._lbKeydown){ document.removeEventListener('keydown',document._lbKeydown); delete document._lbKeydown; }
 }
 
 // ── PEDIDOS PENDIENTES ADMIN ──────────────────────────────
