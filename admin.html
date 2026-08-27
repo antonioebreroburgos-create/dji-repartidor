@@ -342,6 +342,35 @@
       </div>
     </div>
 
+    <!-- INCIDENCIAS -->
+    <div class="section-title">⚠️ Registro de incidencias</div>
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
+      <div class="filtros-bar" style="margin-bottom:12px">
+        <span class="filtro-label">Desde:</span>
+        <input type="date" id="inc-desde"/>
+        <span class="filtro-label">Hasta:</span>
+        <input type="date" id="inc-hasta"/>
+        <select id="inc-filtro-tipo" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;outline:none">
+          <option value="">Todos los tipos</option>
+          <option value="falta_producto">Producto olvidado</option>
+          <option value="producto_erroneo">Producto equivocado</option>
+          <option value="cantidad_erronea">Cantidad incorrecta</option>
+          <option value="error_comercial">Error comercial</option>
+          <option value="devolucion">Devolución</option>
+          <option value="otro">Otro</option>
+        </select>
+        <select id="inc-filtro-rep" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;outline:none">
+          <option value="">Todos los responsables</option>
+          <option>JUAN PEDRO</option><option>JAVIER</option><option>ALFONSO</option>
+          <option>JUANLU</option><option>JUANJOROBLEDO</option><option>ZEKY</option>
+          <option value="comercial">Comercial</option><option value="almacen">Almacén</option>
+        </select>
+        <button class="btn-refresh" onclick="cargarIncidencias()">Buscar</button>
+      </div>
+      <div id="inc-stats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
+      <div id="inc-tabla"></div>
+    </div>
+
     <!-- MANTENIMIENTO -->
     <div class="section-title">🧹 Mantenimiento</div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
@@ -384,6 +413,45 @@
       </table>
     </div>
 
+  </div>
+</div>
+
+<!-- MODAL INCIDENCIA -->
+<div id="modal-incidencia" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;overflow-y:auto">
+  <div style="max-width:560px;margin:60px auto;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:24px;position:relative">
+    <button onclick="cerrarModalIncidencia()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text2);font-size:24px;cursor:pointer">✕</button>
+    <div style="font-size:16px;font-weight:800;color:var(--danger);margin-bottom:4px">⚠️ Registrar incidencia</div>
+    <div id="modal-inc-sub" style="font-size:13px;color:var(--text2);margin-bottom:20px"></div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:600">Tipo de error *</div>
+      <select id="inc-tipo" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none">
+        <option value="">Selecciona el tipo de error...</option>
+        <option value="falta_producto">Producto olvidado — no se cargó en el camión</option>
+        <option value="producto_erroneo">Producto equivocado — se entregó otro</option>
+        <option value="cantidad_erronea">Cantidad incorrecta — más o menos unidades</option>
+        <option value="error_comercial">Error del comercial — pedido mal introducido</option>
+        <option value="devolucion">Devolución — cliente rechazó parte o todo</option>
+        <option value="otro">Otro tipo de incidencia</option>
+      </select>
+    </div>
+    <div style="margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:600">Descripción</div>
+      <textarea id="inc-descripcion" placeholder="Describe el error con detalle..." style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none;min-height:80px;resize:vertical;font-family:inherit"></textarea>
+    </div>
+    <div style="margin-bottom:20px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:6px;font-weight:600">Responsable</div>
+      <select id="inc-repartidor" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;color:var(--text);font-size:14px;outline:none">
+        <option value="">Sin asignar / No aplica</option>
+        <option>JUAN PEDRO</option><option>JAVIER</option><option>ALFONSO</option>
+        <option>JUANLU</option><option>JUANJOROBLEDO</option><option>ZEKY</option>
+        <option value="comercial">Comercial</option>
+        <option value="almacen">Almacén</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button onclick="cerrarModalIncidencia()" style="flex:1;padding:12px;background:none;border:1px solid var(--border);border-radius:var(--radius);color:var(--text2);cursor:pointer">Cancelar</button>
+      <button onclick="guardarIncidencia()" style="flex:2;padding:12px;background:var(--danger);border:none;border-radius:var(--radius);color:#fff;cursor:pointer;font-size:15px;font-weight:700">⚠️ Guardar incidencia</button>
+    </div>
   </div>
 </div>
 
@@ -443,6 +511,136 @@ const ADMIN_PASS   = 'dji2026admin';
 const EMPRESA      = 'DJI';
 
 const REPARTIDORES = ['JUAN PEDRO','JAVIER','ALFONSO','JUANLU','JUANJOROBLEDO','ZEKY'];
+
+// ── INCIDENCIAS ───────────────────────────────────────────
+const TIPOS_ERROR = {
+  falta_producto:  'Producto olvidado',
+  producto_erroneo:'Producto equivocado',
+  cantidad_erronea:'Cantidad incorrecta',
+  error_comercial: 'Error comercial',
+  devolucion:      'Devolución',
+  otro:            'Otro',
+};
+
+let _incActual = null;
+
+function abrirModalIncidencia(idx){
+  const d = window._fotosCache?.[idx];
+  if(!d) return;
+  _incActual = { idx, ...d };
+  document.getElementById('modal-inc-sub').textContent = `${d.albaran} — ${d.cliente} · ${d.repartidor} · ${d.hora}`;
+  document.getElementById('inc-tipo').value = '';
+  document.getElementById('inc-descripcion').value = '';
+  document.getElementById('inc-repartidor').value = d.repartidor||'';
+  document.getElementById('modal-incidencia').style.display = 'block';
+}
+
+function cerrarModalIncidencia(){
+  document.getElementById('modal-incidencia').style.display = 'none';
+  _incActual = null;
+}
+
+async function guardarIncidencia(){
+  if(!_incActual) return;
+  const tipo = document.getElementById('inc-tipo').value;
+  if(!tipo){ alert('Selecciona el tipo de error'); return; }
+  const desc = document.getElementById('inc-descripcion').value.trim();
+  const resp = document.getElementById('inc-repartidor').value;
+  const fecha = document.getElementById('filtro-fecha').value;
+
+  try{
+    await supaFetch('rutas_incidencias','POST',{
+      empresa: EMPRESA,
+      odoo_picking_id: _incActual.pickingId,
+      odoo_picking_name: _incActual.albaran,
+      partner_nombre: _incActual.cliente,
+      repartidor: resp||null,
+      fecha: fecha,
+      tipo_error: tipo,
+      descripcion: desc||null,
+      creado_por: 'admin',
+    });
+
+    // Marcar el botón visualmente
+    const btn = document.getElementById(`inc-btn-${_incActual.idx}`);
+    if(btn){ btn.textContent='⚠️ Con incidencia'; btn.style.color='var(--warn)'; btn.style.fontWeight='700'; }
+
+    cerrarModalIncidencia();
+    alert('✓ Incidencia registrada');
+  }catch(e){ alert('Error: '+e.message); }
+}
+
+async function cargarIncidencias(){
+  const desde = document.getElementById('inc-desde').value;
+  const hasta = document.getElementById('inc-hasta').value;
+  const tipo  = document.getElementById('inc-filtro-tipo').value;
+  const rep   = document.getElementById('inc-filtro-rep').value;
+
+  if(!desde||!hasta){ alert('Selecciona rango de fechas'); return; }
+
+  document.getElementById('inc-tabla').innerHTML='<div class="spinner"></div>';
+
+  try{
+    let q=`rutas_incidencias?empresa=eq.${EMPRESA}&fecha=gte.${desde}&fecha=lte.${hasta}&order=created_at.desc&select=*`;
+    if(tipo) q+=`&tipo_error=eq.${tipo}`;
+    if(rep)  q+=`&repartidor=eq.${encodeURIComponent(rep)}`;
+
+    const incs = await supaFetch(q);
+
+    // Stats por tipo
+    const porTipo={};
+    const porRep={};
+    (incs||[]).forEach(i=>{
+      porTipo[i.tipo_error]=(porTipo[i.tipo_error]||0)+1;
+      if(i.repartidor) porRep[i.repartidor]=(porRep[i.repartidor]||0)+1;
+    });
+
+    document.getElementById('inc-stats').innerHTML=`
+      <div style="width:100%;margin-bottom:8px;font-size:13px;color:var(--text2);font-weight:700">Total: ${incs?.length||0} incidencias · Período: ${desde} → ${hasta}</div>
+      ${Object.entries(porTipo).map(([t,n])=>`<span style="background:rgba(239,68,68,.12);border:1px solid var(--danger);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--danger);font-weight:700">${TIPOS_ERROR[t]||t}: ${n}</span>`).join('')}
+      ${Object.entries(porRep).map(([r,n])=>`<span style="background:rgba(245,158,11,.12);border:1px solid var(--warn);border-radius:20px;padding:4px 12px;font-size:12px;color:var(--warn);font-weight:700">${r}: ${n}</span>`).join('')}
+    `;
+
+    if(!incs?.length){
+      document.getElementById('inc-tabla').innerHTML='<div style="text-align:center;padding:24px;color:var(--success)">✓ Sin incidencias registradas en este período</div>';
+      return;
+    }
+
+    document.getElementById('inc-tabla').innerHTML=`
+      <div class="tabla-wrap">
+        <table>
+          <thead><tr><th>Fecha</th><th>Albarán</th><th>Cliente</th><th>Tipo de error</th><th>Responsable</th><th>Descripción</th><th></th></tr></thead>
+          <tbody>
+            ${incs.map(i=>{
+              const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${i.odoo_picking_id}`;
+              const tipoLabel=TIPOS_ERROR[i.tipo_error]||i.tipo_error;
+              const colorTipo={'falta_producto':'var(--danger)','producto_erroneo':'var(--danger)','cantidad_erronea':'var(--warn)','error_comercial':'#a78bfa','devolucion':'var(--warn)','otro':'var(--text2)'}[i.tipo_error]||'var(--text2)';
+              return`<tr>
+                <td style="white-space:nowrap;font-size:12px">${new Date(i.created_at).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</td>
+                <td><a class="albaran-link" href="${albaranUrl}" target="_blank">${i.odoo_picking_name}</a></td>
+                <td style="max-width:180px;font-size:13px">${i.partner_nombre}</td>
+                <td><span style="color:${colorTipo};font-weight:700;font-size:12px">${tipoLabel}</span></td>
+                <td style="font-size:13px">${i.repartidor||'—'}</td>
+                <td style="max-width:200px;font-size:12px;color:var(--text2)">${i.descripcion||'—'}</td>
+                <td><button onclick="eliminarIncidencia('${i.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px">✕</button></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }catch(e){
+    document.getElementById('inc-tabla').innerHTML=`<span style="color:var(--danger)">${e.message}</span>`;
+  }
+}
+
+async function eliminarIncidencia(id){
+  if(!confirm('¿Eliminar esta incidencia?')) return;
+  try{
+    await supaFetch(`rutas_incidencias?id=eq.${id}`,'DELETE');
+    cargarIncidencias();
+  }catch(e){ alert('Error: '+e.message); }
+}
 
 // ── GESTOR DE CLIENTES ───────────────────────────────────
 let _clientes = [], _puntos = [], _fichaActual = null, _contactosAdmin = [];
@@ -704,6 +902,8 @@ function init(){
   const hace7 = new Date(Date.now()-7*24*60*60*1000).toISOString().split('T')[0];
   document.getElementById('stats-desde').value = hace7;
   document.getElementById('stats-hasta').value = hoy2;
+  document.getElementById('inc-desde').value = hace7;
+  document.getElementById('inc-hasta').value = hoy2;
   document.getElementById('sinfotos-fecha').value = hoy2;
 }
 
@@ -844,6 +1044,7 @@ async function renderTabla(entregas){
       cliente: e.partner_nombre,
       repartidor: e.repartidor,
       hora,
+      pickingId: e.odoo_picking_id,
       fotosEntrega: fotasEntregaArr,
       fotosAlmacen: fotasAlmacenArr,
       albaranUrl,
@@ -860,7 +1061,8 @@ async function renderTabla(entregas){
       <td style="max-width:200px;color:var(--text2);font-size:13px">${e.comentario||'—'}</td>
       <td>
         <a class="albaran-link" href="${albaranUrl}" target="_blank">📄 PDF</a><br>
-        <button onclick="verFotosPedidoIdx(${idx})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;padding:2px 0">🖼️ Ver fotos</button>
+        <button onclick="verFotosPedidoIdx(${idx})" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:12px;padding:2px 0">🖼️ Ver fotos</button><br>
+        <button onclick="abrirModalIncidencia(${idx})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:12px;padding:2px 0" id="inc-btn-${idx}">⚠️ Incidencia</button>
       </td>
     </tr>`;
   }).join('');
