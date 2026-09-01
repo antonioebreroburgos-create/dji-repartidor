@@ -441,11 +441,11 @@
 
 <!-- MODAL MAPA ASIGNACIONES -->
 <div id="modal-mapa-asig" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1001;flex-direction:column">
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--border)">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--bg2);border-bottom:1px solid var(--border);flex-shrink:0">
     <div id="modal-mapa-titulo" style="font-size:15px;font-weight:700;color:var(--accent)"></div>
     <button onclick="cerrarMapaAsig()" style="background:none;border:none;color:var(--text2);font-size:24px;cursor:pointer">✕</button>
   </div>
-  <div id="modal-mapa-div" style="flex:1;width:100%"></div>
+  <div id="modal-mapa-div" style="flex:1;width:100%;height:calc(100vh - 53px)"></div>
 </div>
 
 <!-- MODAL INCIDENCIA -->
@@ -703,7 +703,7 @@ async function cargarAsignaciones(){
           <div onclick="toggleAsig('rep_${repId}')" style="padding:14px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none">
             <div style="font-size:15px;font-weight:800;color:var(--accent)">🚚 ${rep}</div>
             <div style="display:flex;align-items:center;gap:12px">
-              <button onclick="event.stopPropagation();abrirMapaAsig('${rep}',null)" style="background:rgba(0,201,167,.15);color:var(--accent);border:1px solid var(--accent);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;cursor:pointer">🗺️ Mapa</button>
+              <button onclick="event.stopPropagation();abrirMapaAsig('${rep}',document.getElementById('asig-filtro-dia').value||null)" style="background:rgba(0,201,167,.15);color:var(--accent);border:1px solid var(--accent);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;cursor:pointer">🗺️ Mapa</button>
               <span style="background:rgba(0,201,167,.15);color:var(--accent);border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700">${totalRep} pedidos</span>
               <span id="arr_rep_${repId}" style="color:var(--text3);font-size:18px">▼</span>
             </div>
@@ -790,7 +790,7 @@ let _estructuraAsig = {};
 function abrirMapaAsig(rep, dia){
   const modal = document.getElementById('modal-mapa-asig');
   modal.style.display = 'flex';
-  document.getElementById('modal-mapa-titulo').textContent = dia ? `🚚 ${rep} · 📅 ${dia}` : `🚚 ${rep} · Todos los días`;
+  document.getElementById('modal-mapa-titulo').textContent = dia && dia!=='sin-dia' ? `🚚 ${rep} · 📅 ${dia}` : dia==='sin-dia' ? `🚚 ${rep} · ❓ Sin día asignado` : `🚚 ${rep} · Todos los días`;
 
   const coloresDia = {'Lunes':'#ef4444','Martes':'#f59e0b','Miércoles':'#22c55e','Jueves':'#3b82f6','Viernes':'#a855f7','Sábado':'#ec4899','Domingo':'#14b8a6','Sin día':'#6b7280'};
   const puntos = [];
@@ -813,6 +813,7 @@ function abrirMapaAsig(rep, dia){
 
   cargarGoogleMaps().then(()=>{
     div.innerHTML=''; div.style.position='relative';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
     const mapa = new google.maps.Map(div,{
       center:{lat:puntos[0].lat,lng:puntos[0].lng},zoom:10,
       styles:[{elementType:'geometry',stylers:[{color:'#1a2a38'}]},{elementType:'labels.text.fill',stylers:[{color:'#8ab4c4'}]},{featureType:'road',elementType:'geometry',stylers:[{color:'#2a4055'}]},{featureType:'water',elementType:'geometry',stylers:[{color:'#0f1923'}]}]
@@ -836,6 +837,8 @@ function abrirMapaAsig(rep, dia){
       });
     });
     mapa.fitBounds(bounds);
+    google.maps.event.trigger(mapa,'resize');
+    }));
   });
 }
 
