@@ -807,9 +807,265 @@ function toggleAsig(id){
   if(arr) arr.textContent=visible?'▼':'▲';
 }
 
-// ── GENERADOR DE RUTAS ───────────────────────────────────
+// ── GENERADOR DE RUTAS CON GOOGLE ROUTE OPTIMIZATION API ─
 const ALMACEN = { lat: 37.2614, lng: -6.9447, nombre: 'Almacén DJI (Huelva)' };
-const VELOCIDAD_KMH = 80;
+const GMAPS_KEY_ROUTES = 'AIzaSyBwKRw_m6EnKAvI8p5MEZLMvXyspJ14ENU';
+
+function minToHHMM(min){
+  const h=Math.floor(min/60), m=Math.round(min%60);
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+function HHMMtoMin(hhmm){ if(!hhmm) return null; const [h,m]=hhmm.split(':').map(Number); return h*60+m; }
+function distKm(a,b){ const R=6371,dLat=(b.lat-a.lat)*Math.PI/180,dLng=(b.lng-a.lng)*Math.PI/180,x=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLng/2)**2; return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)); }
+function diaSemanaStr(d){ const map={'lunes':'lunes','martes':'martes','miércoles':'miercoles','miercoles':'miercoles','jueves':'jueves','viernes':'viernes','sábado':'sabado','sabado':'sabado','domingo':'domingo'}; return map[d.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')]||d.toLowerCase(); }
+
+// Convertir hora local a ISO8601 UTC (aproximado para España peninsular UTC+2 en verano)
+function horaLocalAISO(hhmm, fechaBase){
+  const [h,m]=hhmm.split(':').map(Number);
+  const d=new Date(fechaBase);
+  d.setHours(h,m,0,0);
+  return d.toISOString();
+}
+
+async function generarRuta(){
+  const rep=document.getElementById('ruta-rep').value;
+  const dia=document.getElementById('ruta-dia').value;
+  const salidaStr=document.getElementById('ruta-salida').value||'10:00';
+  const resultado=document.getElementById('ruta-resultado');
+
+  if(!rep||!dia){ alert('Selecciona repartidor y día'); return; }
+
+  resultado.innerHTML='<div class="spinner"></div>';
+
+  try{
+    // 1. Cargar pedidos
+    const r=await fetch(PROXY_URL_ADMIN,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa:'DJI',action:'get_presupuestos_todos',params:{}})});
+    const j=await r.json();
+    if(!j.ok) throw new Error(j.error);
+
+    const rutaOdoo=RUTAS_REPARTIDORES[rep];
+    const pedidosDia=j.result.presupuestos.filter(p=>{
+      const ruta=(Array.isArray(p.route_id)?p.route_id[1]:'')||'';
+      return ruta.startsWith(rutaOdoo)&&getDiaTagAdmin(p.tag_names)===dia;
+    });
+
+    if(!pedidosDia.length){ resultado.innerHTML=`<div style="color:var(--warn);padding:16px">No hay pedidos asignados a ${rep} para el ${dia}</div>`; return; }
+
+    resultado.innerHTML=`<div style="color:var(--text2);padding:8px">📍 Cargando coordenadas de ${pedidosDia.length} pedidos...</div>`;
+
+    // 2. Cargar coordenadas y fichas
+    const partnerIds=[...new Set(pedidosDia.map(p=>Array.isArray(p.partner_id)?p.partner_id[0]:null).filter(Boolean))];
+    const gpsMap={},fichaMap={};
+    for(let i=0;i<partnerIds.length;i+=200){
+      const lote=partnerIds.slice(i,i+200);
+      try{
+        const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=in.(${lote.join(',')})&select=odoo_delivery_id,latitud,longitud,hora_apertura,hora_cierre,hora_max_llegada,tiempo_descarga_min,descargar_primero,estricto_horario,dias_cerrado,direccion_texto`);
+        (pts||[]).forEach(pt=>{
+          if(pt.latitud&&pt.longitud) gpsMap[pt.odoo_delivery_id]={lat:parseFloat(pt.latitud),lng:parseFloat(pt.longitud)};
+          fichaMap[pt.odoo_delivery_id]=pt;
+        });
+      }catch(_){}
+    }
+
+    // 3. Construir paradas
+    const diaNorm=diaSemanaStr(dia);
+    const todasParadas=pedidosDia.map(p=>{
+      const pid=Array.isArray(p.partner_id)?p.partner_id[0]:null;
+      const cliente=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
+      const gps=pid&&gpsMap[pid];
+      const ficha=pid&&fichaMap[pid];
+      return{
+        id:p.id,nombre:p.name,cliente,pid,
+        lat:gps?.lat||null,lng:gps?.lng||null,
+        horaApertura:ficha?.hora_apertura,horaCierre:ficha?.hora_cierre,horaMax:ficha?.hora_max_llegada,
+        tiempoDescarga:ficha?.tiempo_descarga_min||15,
+        descargarPrimero:ficha?.descargar_primero||false,
+        diasCerrado:ficha?.dias_cerrado||[],
+        direccion:ficha?.direccion_texto||'Sin dirección',
+        importe:p.amount_total||0,tieneGPS:!!(gps?.lat),
+        esConf:p.state==='sale'||p.state==='done',
+        cerradoEsteDia:(ficha?.dias_cerrado||[]).some(d=>d.toLowerCase()===diaNorm),
+      };
+    });
+
+    const conGPS=todasParadas.filter(p=>p.tieneGPS&&!p.cerradoEsteDia);
+    const sinGPS=todasParadas.filter(p=>!p.tieneGPS);
+    const cerrados=todasParadas.filter(p=>p.cerradoEsteDia);
+
+    if(!conGPS.length){ resultado.innerHTML=`<div style="color:var(--warn);padding:16px">Ningún pedido tiene GPS registrado</div>`; return; }
+
+    resultado.innerHTML=`<div style="color:var(--text2);padding:8px">⚡ Enviando a Google Route Optimization (${conGPS.length} paradas)...</div>`;
+
+    // 4. Construir request para Route Optimization API
+    // Fecha base: próximo día de la semana correspondiente
+    const diasMap={lunes:1,martes:2,miercoles:3,miércoles:3,jueves:4,viernes:5,sabado:6,sábado:6,domingo:0};
+    const hoy=new Date();
+    const targetDow=diasMap[diaNorm]??1;
+    const diffDays=(targetDow-hoy.getDay()+7)%7||7;
+    const fechaRuta=new Date(hoy.getTime()+diffDays*86400000);
+    fechaRuta.setHours(0,0,0,0);
+
+    const [hSal,mSal]=salidaStr.split(':').map(Number);
+    const salidaDate=new Date(fechaRuta); salidaDate.setHours(hSal,mSal,0,0);
+    const finJornada=new Date(fechaRuta); finJornada.setHours(22,0,0,0);
+
+    // Shipments (cada parada es un envío)
+    const shipments=conGPS.map((p,i)=>{
+      const sh={
+        deliveries:[{
+          arrivalLocation:{latitude:p.lat,longitude:p.lng},
+          duration:`${(p.tiempoDescarga||15)*60}s`,
+        }],
+        label:`${i}:${p.nombre}`,
+        penaltyCost: p.descargarPrimero ? 100000 : 1000, // penalización alta si no se entrega
+      };
+
+      // Ventana horaria
+      const startTW=p.horaApertura?new Date(fechaRuta):null;
+      const endTW=p.horaMax||p.horaCierre?(new Date(fechaRuta)):null;
+      if(p.horaApertura){ const[h,m]=p.horaApertura.split(':').map(Number); startTW.setHours(h,m,0,0); }
+      if(p.horaMax||p.horaCierre){ const lim=p.horaMax||p.horaCierre; const[h,m]=lim.split(':').map(Number); endTW.setHours(h,m,0,0); }
+
+      if(startTW||endTW){
+        sh.deliveries[0].timeWindows=[{
+          startTime: startTW?startTW.toISOString():salidaDate.toISOString(),
+          endTime: endTW?endTW.toISOString():finJornada.toISOString(),
+        }];
+      }
+
+      return sh;
+    });
+
+    // Vehicle (el repartidor)
+    const vehicle={
+      startLocation:{latitude:ALMACEN.lat,longitude:ALMACEN.lng},
+      endLocation:{latitude:ALMACEN.lat,longitude:ALMACEN.lng},
+      startTimeWindows:[{startTime:salidaDate.toISOString(),endTime:salidaDate.toISOString()}],
+      travelDurationMultiple:1.0,
+      costPerHour:10,
+      costPerKilometer:0.3,
+    };
+
+    const payload={
+      model:{
+        shipments,
+        vehicles:[vehicle],
+        globalStartTime:salidaDate.toISOString(),
+        globalEndTime:finJornada.toISOString(),
+      }
+    };
+
+    // 5. Llamar a la API
+    const apiResp=await fetch(`https://routeoptimization.googleapis.com/v1/projects/dji-rutas:optimizeTours?key=${GMAPS_KEY_ROUTES}`,{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)
+    });
+
+    if(!apiResp.ok){
+      const err=await apiResp.json();
+      throw new Error('Google API: '+(err.error?.message||JSON.stringify(err)));
+    }
+
+    const apiData=await apiResp.json();
+    const route=apiData.routes?.[0];
+
+    if(!route||!route.visits?.length){
+      throw new Error('Google no devolvió ninguna ruta. Comprueba que todos los puntos tienen coordenadas válidas.');
+    }
+
+    // 6. Reconstruir ruta ordenada desde la respuesta
+    const alertas=[];
+    const rutaOrdenada=route.visits.map((visit,i)=>{
+      const labelParts=visit.shipmentLabel?.split(':')||[];
+      const idx=parseInt(labelParts[0]);
+      const p={...conGPS[idx]};
+      // Hora de llegada desde Google
+      const llegadaISO=visit.startTime;
+      const llegadaDate=new Date(llegadaISO);
+      p._llegadaDate=llegadaDate;
+      p._llegada=(llegadaDate.getHours()*60+llegadaDate.getMinutes());
+      // Detectar si llegó tarde
+      const limHHMM=p.horaMax||p.horaCierre;
+      if(limHHMM){
+        const limMin=HHMMtoMin(limHHMM);
+        if(p._llegada>limMin) p._alerta=`⚠️ Llegada ${minToHHMM(p._llegada)} — ${Math.round(p._llegada-limMin)} min tarde`;
+      }
+      if(p._alerta) alertas.push({parada:p.nombre,cliente:p.cliente,msg:p._alerta});
+      return p;
+    });
+
+    // Tiempo total desde Google
+    const durTotalSeg=route.metrics?.totalDuration?parseInt(route.metrics.totalDuration):0;
+    const distTotalM=route.metrics?.totalDistanceMeters||0;
+    const salidaMin=HHMMtoMin(salidaStr);
+    const horaRegreso=(salidaDate.getTime()/1000/60+durTotalSeg/60)%(24*60);
+    const horaRegresoMin=salidaMin+durTotalSeg/60;
+
+    // 7. Renderizar
+    resultado.innerHTML=`
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:16px">
+        <div class="stat-card"><div class="stat-num" style="font-size:18px;color:var(--accent)">${rutaOrdenada.length}</div><div class="stat-lbl">Paradas</div></div>
+        <div class="stat-card"><div class="stat-num" style="font-size:18px;color:var(--text2)">${salidaStr}</div><div class="stat-lbl">Salida</div></div>
+        <div class="stat-card"><div class="stat-num" style="font-size:18px;color:var(--success)">${minToHHMM(horaRegresoMin)}</div><div class="stat-lbl">Regreso estimado</div></div>
+        <div class="stat-card"><div class="stat-num" style="font-size:18px;color:var(--accent)">${Math.round(distTotalM/1000)} km</div><div class="stat-lbl">Distancia total</div></div>
+        <div class="stat-card"><div class="stat-num" style="font-size:18px;color:${alertas.length?'var(--danger)':'var(--success)'}">${alertas.length}</div><div class="stat-lbl">Alertas</div></div>
+        ${sinGPS.length?`<div class="stat-card"><div class="stat-num" style="font-size:18px;color:var(--warn)">${sinGPS.length}</div><div class="stat-lbl">Sin GPS</div></div>`:''}
+      </div>
+
+      ${alertas.length?`<div style="background:rgba(239,68,68,.1);border:1px solid var(--danger);border-radius:8px;padding:12px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--danger);margin-bottom:6px">⚠️ ALERTAS HORARIAS</div>
+        ${alertas.map(a=>`<div style="font-size:12px;color:var(--danger);margin-bottom:2px">${a.cliente}: ${a.msg}</div>`).join('')}
+      </div>`:''}
+
+      <div style="font-size:12px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Ruta óptima Google — ${rutaOrdenada.length} paradas</div>
+      <div style="background:var(--bg3);border-radius:var(--radius);overflow:hidden;margin-bottom:12px">
+        <div style="padding:10px 14px;background:var(--bg2);border-bottom:1px solid var(--border);display:grid;grid-template-columns:40px 70px 1fr 90px 80px;gap:8px;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase">
+          <div>#</div><div>Llegada</div><div>Cliente</div><div>Descarga</div><div>Estado</div>
+        </div>
+        ${rutaOrdenada.map((p,i)=>{
+          const limStr=p.horaMax||p.horaCierre||'—';
+          const colorFila=p._alerta?'rgba(239,68,68,.06)':p.descargarPrimero?'rgba(245,158,11,.06)':'';
+          return`<div style="padding:10px 14px;border-bottom:1px solid rgba(42,80,102,.4);display:grid;grid-template-columns:40px 70px 1fr 90px 80px;gap:8px;align-items:center;background:${colorFila}">
+            <div style="font-size:14px;font-weight:800;color:${p.descargarPrimero?'var(--warn)':'var(--text3)'}">${i+1}${p.descargarPrimero?' ⚡':''}</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:${p._alerta?'var(--danger)':'var(--text)'}">${minToHHMM(p._llegada)}</div>
+              ${limStr!=='—'?`<div style="font-size:10px;color:var(--text3)">lím: ${limStr}</div>`:''}
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.cliente}</div>
+              <div style="font-size:11px;color:var(--text3)">${p.nombre} · ${p.direccion.split(',').slice(-1)[0].trim()}</div>
+              ${p._alerta?`<div style="font-size:10px;color:var(--danger)">${p._alerta}</div>`:''}
+            </div>
+            <div style="font-size:12px;color:var(--text2)">${p.tiempoDescarga} min</div>
+            <div><span style="font-size:11px;font-weight:700;color:${p.esConf?'var(--success)':'var(--warn)'}">${p.esConf?'✓ Conf.':'Presup.'}</span></div>
+          </div>`;
+        }).join('')}
+        <div style="padding:10px 14px;background:var(--bg2);border-top:1px solid var(--border);font-size:12px;color:var(--text2)">
+          🏁 Regreso almacén — <strong style="color:var(--success)">${minToHHMM(horaRegresoMin)}</strong> · <strong>${Math.round(distTotalM/1000)} km</strong> totales
+        </div>
+      </div>
+
+      ${sinGPS.length?`<div style="background:rgba(245,158,11,.06);border:1px solid var(--warn);border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:700;color:var(--warn);margin-bottom:6px">📍 Sin GPS — no incluidos (${sinGPS.length})</div>
+        ${sinGPS.map(p=>`<div style="font-size:12px;color:var(--text2);margin-bottom:2px">${p.nombre} · ${p.cliente}</div>`).join('')}
+      </div>`:''}
+
+      ${cerrados.length?`<div style="background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px;margin-bottom:8px">
+        <div style="font-size:12px;font-weight:700;color:var(--danger);margin-bottom:6px">🔒 Cerrados el ${dia} (${cerrados.length})</div>
+        ${cerrados.map(p=>`<div style="font-size:12px;color:var(--text2)">${p.nombre} · ${p.cliente}</div>`).join('')}
+      </div>`:''}
+
+      <div style="margin-top:12px">
+        <button onclick="verMapaRuta()" style="background:var(--accent);color:var(--bg);border:none;border-radius:8px;padding:10px 16px;font-size:13px;font-weight:700;cursor:pointer">🗺️ Ver en mapa</button>
+      </div>
+    `;
+
+    window._rutaGenerada={rep,dia,paradas:rutaOrdenada,sinGPS,cerrados};
+
+  }catch(e){
+    resultado.innerHTML=`<div style="color:var(--danger);padding:12px">❌ ${e.message}</div>`;
+    console.error(e);
+  }
+}
 const TIEMPO_CARGA_MIN = 15; // tiempo en almacén antes de salir
 
 function minToHHMM(min){
