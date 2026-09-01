@@ -213,12 +213,20 @@ exports.handler = async (event) => {
       result = { presupuestos: todos };
 
     } else if (action === 'get_presupuestos_todos') {
-      // Todos los presupuestos con ruta asignada (para admin)
+      // Presupuestos (draft/sent) con ruta asignada
       const presupuestos = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
         [[['route_id','!=',false],['state','in',['draft','sent']]]],
-        { fields:['id','name','partner_id','route_id','so_tag_ids','amount_total','date_order'], limit:500 }
+        { fields:['id','name','partner_id','route_id','so_tag_ids','amount_total','date_order','state'], limit:500 }
       );
-      const allTagIds2 = [...new Set(presupuestos.flatMap(p => p.so_tag_ids||[]))];
+
+      // Confirmados con picking assigned (no entregados aún)
+      const confirmados = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
+        [[['route_id','!=',false],['state','in',['sale','done']],['picking_ids.state','=','assigned']]],
+        { fields:['id','name','partner_id','route_id','so_tag_ids','amount_total','date_order','state'], limit:500 }
+      );
+
+      const todos = [...presupuestos, ...confirmados];
+      const allTagIds2 = [...new Set(todos.flatMap(p => p.so_tag_ids||[]))];
       let tagMap2 = {};
       if(allTagIds2.length > 0){
         try{
@@ -227,8 +235,8 @@ exports.handler = async (event) => {
           tags.forEach(t=>{ tagMap2[t.id]=t.name; });
         }catch(_){}
       }
-      presupuestos.forEach(p=>{ p.tag_names = (p.so_tag_ids||[]).map(id=>tagMap2[id]||'').filter(Boolean); });
-      result = { presupuestos };
+      todos.forEach(p=>{ p.tag_names = (p.so_tag_ids||[]).map(id=>tagMap2[id]||'').filter(Boolean); });
+      result = { presupuestos: todos };
 
     } else if (action === 'get_pickings_done_hoy') {
       const { fecha } = params;
@@ -255,6 +263,8 @@ exports.handler = async (event) => {
         p.route_name = routeMap[saleId]||'';
       });
       result = { pickings };
+
+    } else if (action === 'search_read') {
       const { model, domain, fields, limit } = params;
       result = await odooCallKw(cfg, cookie, model, 'search_read', [domain||[]], { fields, limit: limit||100 });
 
