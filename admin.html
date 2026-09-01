@@ -930,56 +930,64 @@ async function generarRuta(){
     const rutaOrdenada = [];
     const alertas = [];
 
+    const MAX_ESPERA_MIN = 20; // máximo tiempo de espera en un punto
+
     function intentarInsertar(lista){
       const pendientes = [...lista];
       while(pendientes.length){
-        let mejorIdx = -1, mejorTiempoLlegada = Infinity, mejorDist = Infinity;
+        let mejorIdx = -1, mejorLlegada = Infinity, mejorDist = Infinity;
 
         pendientes.forEach((p,i)=>{
           const viaje = tiempoViaje(posActual, p);
           const llegada = horaActual + viaje;
-
-          // Verificar ventana horaria
           const limMax = p.horaMax || p.horaCierre;
-          if(limMax && llegada > limMax){
-            return; // no llego a tiempo
-          }
-          if(p.horaApertura && llegada < p.horaApertura){
-            // Puedo esperar si no es estricto
-            if(!p.estricto || (p.horaApertura - llegada) < 30){
-              const dist = distKm(posActual, p);
-              if(dist < mejorDist){ mejorDist=dist; mejorIdx=i; mejorTiempoLlegada=Math.max(llegada, p.horaApertura); }
-            }
-            return;
-          }
+
+          // No llega antes del límite
+          if(limMax && llegada > limMax) return;
+
+          // Necesita esperar demasiado — buscar otro primero
+          const espera = p.horaApertura ? Math.max(0, p.horaApertura - llegada) : 0;
+          if(espera > MAX_ESPERA_MIN) return;
+
           const dist = distKm(posActual, p);
-          if(dist < mejorDist){ mejorDist=dist; mejorIdx=i; mejorTiempoLlegada=llegada; }
+          if(dist < mejorDist){ mejorDist=dist; mejorIdx=i; mejorLlegada=llegada; }
         });
 
         if(mejorIdx === -1){
-          // No hay ninguno alcanzable — intentar el más cercano con alerta
-          let minDist=Infinity, minIdx=-1;
-          pendientes.forEach((p,i)=>{ const d=distKm(posActual,p); if(d<minDist){minDist=d;minIdx=i;} });
+          // Ninguno alcanzable sin esperar demasiado
+          // Intentar el que menos espera requiere (aunque supere MAX_ESPERA)
+          let minPenalizacion = Infinity, minIdx = -1;
+          pendientes.forEach((p,i)=>{
+            const viaje = tiempoViaje(posActual, p);
+            const llegada = horaActual + viaje;
+            const limMax = p.horaMax || p.horaCierre;
+            // Si ya no llega nunca, penalizar mucho
+            const retraso = (limMax && llegada > limMax) ? (llegada - limMax)*10 : 0;
+            const espera = p.horaApertura ? Math.max(0, p.horaApertura - llegada) : 0;
+            const penalizacion = retraso + espera + distKm(posActual,p);
+            if(penalizacion < minPenalizacion){ minPenalizacion=penalizacion; minIdx=i; }
+          });
           if(minIdx===-1) break;
           const p=pendientes[minIdx];
           const viaje=tiempoViaje(posActual,p);
           const llegada=horaActual+viaje;
+          const espera=p.horaApertura?Math.max(0,p.horaApertura-llegada):0;
           const limMax=p.horaMax||p.horaCierre;
-          p._llegada=llegada;
-          p._retraso=limMax?Math.round(llegada-limMax):null;
-          p._alerta=limMax?`⚠️ Llegada ${minToHHMM(llegada)} — ${Math.round(llegada-limMax)} min tarde`:null;
+          p._llegada=llegada+espera;
+          p._espera=espera>2?Math.round(espera):0;
+          p._alerta=limMax&&llegada>limMax?`⚠️ Llegada ${minToHHMM(llegada)} — ${Math.round(llegada-limMax)} min tarde`:null;
           rutaOrdenada.push(p);
           if(p._alerta) alertas.push({parada:p.nombre,cliente:p.cliente,msg:p._alerta});
-          horaActual=llegada+p.tiempoDescarga;
+          horaActual=p._llegada+p.tiempoDescarga;
           posActual=p;
           pendientes.splice(minIdx,1);
         } else {
           const p=pendientes[mejorIdx];
-          const espera=Math.max(0,(p.horaApertura||0)-horaActual-tiempoViaje(posActual,p));
-          p._llegada=mejorTiempoLlegada;
-          p._espera=espera>5?Math.round(espera):0;
+          const espera=p.horaApertura?Math.max(0,p.horaApertura-mejorLlegada):0;
+          p._llegada=mejorLlegada+espera;
+          p._espera=espera>2?Math.round(espera):0;
           rutaOrdenada.push(p);
-          horaActual=mejorTiempoLlegada+p.tiempoDescarga+(p._espera||0);
+          horaActual=p._llegada+p.tiempoDescarga;
           posActual=p;
           pendientes.splice(mejorIdx,1);
         }
