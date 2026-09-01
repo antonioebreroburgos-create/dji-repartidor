@@ -537,6 +537,7 @@ const REPARTIDORES = ['JUAN PEDRO','JAVIER','ALFONSO','JUANLU','JUANJOROBLEDO','
 
 // ── ASIGNACIONES POR REPARTIDOR Y DÍA ───────────────────
 const DIAS_ORDEN_ADMIN = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+const RADIO_CLUSTER_KM = 15;
 
 function normalizarDia(tag){
   const t = tag.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
@@ -552,10 +553,38 @@ function getDiaTagAdmin(tagNames){
   return null;
 }
 
-function getCiudad(nombreCliente){
-  // Extraer ciudad del nombre del cliente o usar 'Sin ciudad'
-  // Intentar extraer de la dirección si está disponible
-  return null; // se llenará desde los puntos de entrega
+function distanciaKm(lat1, lng1, lat2, lng2){
+  const R=6371, dLat=(lat2-lat1)*Math.PI/180, dLng=(lng2-lng1)*Math.PI/180;
+  const a=Math.sin(dLat/2)**2+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+function clusterPorGPS(pedidosConCoords, radioKm=RADIO_CLUSTER_KM){
+  const asignados = new Set();
+  const clusters = [];
+
+  pedidosConCoords.forEach((p, i)=>{
+    if(asignados.has(i)||!p._lat) return;
+    const cluster = { pedidos:[p], lat:p._lat, lng:p._lng, nombre:p._zona||'Zona' };
+    asignados.add(i);
+    pedidosConCoords.forEach((q, j)=>{
+      if(asignados.has(j)||!q._lat||i===j) return;
+      if(distanciaKm(p._lat, p._lng, q._lat, q._lng) <= radioKm){
+        cluster.pedidos.push(q);
+        asignados.add(j);
+      }
+    });
+    // Calcular centro del cluster
+    cluster.lat = cluster.pedidos.reduce((a,x)=>a+x._lat,0)/cluster.pedidos.length;
+    cluster.lng = cluster.pedidos.reduce((a,x)=>a+x._lng,0)/cluster.pedidos.length;
+    // Nombre = zona más frecuente en el cluster
+    const zonas = cluster.pedidos.map(x=>x._zona).filter(Boolean);
+    const zonaMasFrecuente = zonas.sort((a,b)=>zonas.filter(z=>z===b).length-zonas.filter(z=>z===a).length)[0];
+    cluster.nombre = zonaMasFrecuente || 'Zona sin nombre';
+    clusters.push(cluster);
+  });
+
+  return clusters;
 }
 
 async function cargarAsignaciones(){
@@ -565,100 +594,97 @@ async function cargarAsignaciones(){
   const stats = document.getElementById('asig-stats');
 
   resultado.innerHTML='<div class="spinner"></div>';
-  stats.textContent='';
+  stats.textContent='Cargando...';
 
   try{
-    // Cargar todos los presupuestos de todos los repartidores (o del filtrado)
+    // Cargar presupuestos
     const repsACargar = filtroRep
       ? [[filtroRep, RUTAS_REPARTIDORES[filtroRep]]]
       : Object.entries(RUTAS_REPARTIDORES);
 
     const todosPedidos = [];
-    await Promise.all(repsACargar.map(async ([nombre, rutaOdoo])=>{
-      try{
-        const r = await fetch(PROXY_URL_ADMIN,{
-          method:'POST', headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({empresa:'DJI', action:'get_presupuestos_todos', params:{}}),
-        });
-        const j = await r.json();
-        if(!j.ok) return;
+    const r = await fetch(PROXY_URL_ADMIN,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({empresa:'DJI', action:'get_presupuestos_todos', params:{}}),
+    });
+    const j = await r.json();
+    if(j.ok){
+      repsACargar.forEach(([nombre, rutaOdoo])=>{
         j.result.presupuestos
-          .filter(p=>{
-            const ruta=(Array.isArray(p.route_id)?p.route_id[1]:'')||'';
-            return ruta.startsWith(rutaOdoo);
-          })
+          .filter(p=>{ const ruta=(Array.isArray(p.route_id)?p.route_id[1]:'')||''; return ruta.startsWith(rutaOdoo); })
           .forEach(p=>{ todosPedidos.push({...p, _repartidor:nombre}); });
-      }catch(_){}
-    }));
+      });
+    }
 
-    // Filtrar por día si procede
+    // Filtrar por día
     let pedidosFiltrados = todosPedidos;
-    if(filtroDia === 'sin-dia'){
-      pedidosFiltrados = todosPedidos.filter(p=>!getDiaTagAdmin(p.tag_names));
-    } else if(filtroDia){
-      pedidosFiltrados = todosPedidos.filter(p=>getDiaTagAdmin(p.tag_names)===filtroDia);
+    if(filtroDia === 'sin-dia') pedidosFiltrados = todosPedidos.filter(p=>!getDiaTagAdmin(p.tag_names));
+    else if(filtroDia) pedidosFiltrados = todosPedidos.filter(p=>getDiaTagAdmin(p.tag_names)===filtroDia);
+
+    stats.textContent=`${pedidosFiltrados.length} pedidos · buscando coordenadas GPS...`;
+
+    // Cargar coordenadas GPS para cada pedido
+    const partnerIds = [...new Set(pedidosFiltrados.map(p=>Array.isArray(p.partner_id)?p.partner_id[0]:null).filter(Boolean))];
+    const gpsMap = {}, zonaMap = {};
+    if(partnerIds.length){
+      for(let i=0;i<partnerIds.length;i+=200){
+        const lote=partnerIds.slice(i,i+200);
+        try{
+          const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=in.(${lote.join(',')})&select=odoo_delivery_id,latitud,longitud,direccion_texto`);
+          (pts||[]).forEach(pt=>{
+            if(pt.latitud&&pt.longitud){
+              gpsMap[pt.odoo_delivery_id]={lat:parseFloat(pt.latitud),lng:parseFloat(pt.longitud)};
+              // Extraer zona de la dirección (última parte)
+              const dir=pt.direccion_texto||'';
+              const partes=dir.split(',').map(x=>x.trim()).filter(Boolean);
+              zonaMap[pt.odoo_delivery_id]=partes[partes.length-1]||'';
+            }
+          });
+        }catch(_){}
+      }
     }
 
-    stats.textContent=`${pedidosFiltrados.length} pedidos · ${[...new Set(pedidosFiltrados.map(p=>p._repartidor))].length} repartidores`;
-
-    if(!pedidosFiltrados.length){
-      resultado.innerHTML='<div style="text-align:center;padding:24px;color:var(--text2)">Sin asignaciones para esta selección</div>';
-      return;
-    }
-
-    // Agrupar: repartidor → día → ciudad → pedidos
-    const estructura = {};
+    // Enriquecer pedidos con GPS
     pedidosFiltrados.forEach(p=>{
-      const rep = p._repartidor;
-      const dia = getDiaTagAdmin(p.tag_names)||'Sin día';
-      const cliente = Array.isArray(p.partner_id)?p.partner_id[1]:'-';
-      // Intentar extraer ciudad del nombre del cliente (entre paréntesis o después de coma)
-      let ciudad = 'Sin ciudad';
-      // Buscar en rutas_puntos_entrega si tiene ciudad — por ahora usamos 'Sin ciudad'
-      if(!estructura[rep]) estructura[rep]={};
-      if(!estructura[rep][dia]) estructura[rep][dia]={};
-      if(!estructura[rep][dia][ciudad]) estructura[rep][dia][ciudad]=[];
-      estructura[rep][dia][ciudad].push(p);
+      const pid=Array.isArray(p.partner_id)?p.partner_id[0]:null;
+      const gps=pid&&gpsMap[pid];
+      p._lat=gps?.lat||null;
+      p._lng=gps?.lng||null;
+      p._zona=pid&&zonaMap[pid]||null;
     });
 
-    // Cargar ciudades desde Supabase para los pedidos que tienen punto de entrega
-    const partnerIds = [...new Set(pedidosFiltrados.map(p=>Array.isArray(p.partner_id)?p.partner_id[0]:null).filter(Boolean))];
-    let ciudadMap = {};
-    if(partnerIds.length){
-      try{
-        // Buscar por lotes de 100
-        for(let i=0;i<partnerIds.length;i+=100){
-          const lote=partnerIds.slice(i,i+100);
-          const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=in.(${lote.join(',')})&select=odoo_delivery_id,direccion_texto`);
-          (pts||[]).forEach(pt=>{
-            // Extraer ciudad de la dirección (último fragmento antes del CP)
-            const dir=pt.direccion_texto||'';
-            const match=dir.match(/,\s*([^,]+)\s*$/);
-            if(match) ciudadMap[pt.odoo_delivery_id]=match[1].trim();
-          });
-        }
-      }catch(_){}
-    }
+    stats.textContent=`${pedidosFiltrados.length} pedidos · ${pedidosFiltrados.filter(p=>p._lat).length} con GPS`;
 
-    // Reagrupar con ciudades reales
-    const estructura2 = {};
-    pedidosFiltrados.forEach(p=>{
-      const rep = p._repartidor;
-      const dia = getDiaTagAdmin(p.tag_names)||'Sin día';
-      const partnerId = Array.isArray(p.partner_id)?p.partner_id[0]:null;
-      const ciudad = (partnerId&&ciudadMap[partnerId])||'Sin ciudad';
-      if(!estructura2[rep]) estructura2[rep]={};
-      if(!estructura2[rep][dia]) estructura2[rep][dia]={};
-      if(!estructura2[rep][dia][ciudad]) estructura2[rep][dia][ciudad]=[];
-      estructura2[rep][dia][ciudad].push(p);
+    // Agrupar por repartidor → día → cluster GPS
+    const repsOrden = filtroRep ? [filtroRep] : Object.keys(RUTAS_REPARTIDORES);
+    const estructura = {};
+    repsOrden.forEach(rep=>{
+      const pedRep = pedidosFiltrados.filter(p=>p._repartidor===rep);
+      if(!pedRep.length) return;
+      estructura[rep]={};
+
+      const diasConPedidos = DIAS_ORDEN_ADMIN.filter(d=>pedRep.some(p=>getDiaTagAdmin(p.tag_names)===d));
+      const tieneSinDia = pedRep.some(p=>!getDiaTagAdmin(p.tag_names));
+      const dias = filtroDia && filtroDia!=='sin-dia' ? [filtroDia]
+        : [...diasConPedidos, ...(tieneSinDia?['Sin día']:[])];
+
+      dias.forEach(dia=>{
+        const pedDia = dia==='Sin día'
+          ? pedRep.filter(p=>!getDiaTagAdmin(p.tag_names))
+          : pedRep.filter(p=>getDiaTagAdmin(p.tag_names)===dia);
+
+        const conGPS = pedDia.filter(p=>p._lat);
+        const sinGPS = pedDia.filter(p=>!p._lat);
+        const clusters = clusterPorGPS(conGPS);
+        if(sinGPS.length) clusters.push({nombre:'Sin GPS registrado', pedidos:sinGPS, lat:null, lng:null, _sinGPS:true});
+        estructura[rep][dia]=clusters;
+      });
     });
 
     // Renderizar
-    const repsOrden = filtroRep ? [filtroRep] : Object.keys(RUTAS_REPARTIDORES);
     let html = '';
-
-    repsOrden.filter(r=>estructura2[r]).forEach(rep=>{
-      const totalRep = Object.values(estructura2[rep]).flatMap(d=>Object.values(d)).flat().length;
+    repsOrden.filter(r=>estructura[r]).forEach(rep=>{
+      const totalRep = Object.values(estructura[rep]).flatMap(d=>d).flatMap(c=>c.pedidos).length;
       const repId = rep.replace(/\s/g,'_');
       html+=`
         <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden">
@@ -670,76 +696,69 @@ async function cargarAsignaciones(){
             </div>
           </div>
           <div id="rep_${repId}" style="display:none;border-top:1px solid var(--border)">
-            ${renderDiasAsig(estructura2[rep], repId, filtroDia)}
+            ${Object.entries(estructura[rep]).map(([dia, clusters])=>{
+              const totalDia = clusters.flatMap(c=>c.pedidos).length;
+              const diaId = `${repId}_${dia.replace(/\s/g,'_')}`;
+              const colorDia = dia==='Sin día'?'var(--text3)':'var(--warn)';
+              return`<div style="border-bottom:1px solid var(--border)">
+                <div onclick="toggleAsig('dia_${diaId}')" style="padding:10px 16px 10px 24px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.15);user-select:none">
+                  <div style="font-size:13px;font-weight:700;color:${colorDia}">📅 ${dia}</div>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="font-size:12px;color:var(--text2)">${totalDia} pedidos · ${clusters.length} zona${clusters.length!==1?'s':''}</span>
+                    <span id="arr_dia_${diaId}" style="color:var(--text3);font-size:14px">▼</span>
+                  </div>
+                </div>
+                <div id="dia_${diaId}" style="display:none">
+                  ${clusters.map((cluster,ci)=>{
+                    const ciudadId=`${diaId}_z${ci}`;
+                    const total=cluster.pedidos.reduce((a,p)=>a+p.amount_total,0);
+                    const iconoZona=cluster._sinGPS?'❓':'📍';
+                    const mapsUrl=cluster.lat?`https://www.google.com/maps?q=${cluster.lat},${cluster.lng}`:'';
+                    return`<div style="border-bottom:1px solid rgba(42,80,102,.4)">
+                      <div onclick="toggleAsig('ciu_${ciudadId}')" style="padding:8px 16px 8px 40px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none">
+                        <div style="font-size:12px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:6px">
+                          ${iconoZona} ${cluster.nombre}
+                          ${mapsUrl?`<a href="${mapsUrl}" target="_blank" onclick="event.stopPropagation()" style="color:var(--accent);font-size:11px">🗺️</a>`:''}
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px">
+                          <span style="font-size:12px;color:var(--text3)">${cluster.pedidos.length} pedido${cluster.pedidos.length!==1?'s':''} · ${total.toLocaleString('es-ES',{style:'currency',currency:'EUR'})}</span>
+                          <span id="arr_ciu_${ciudadId}" style="color:var(--text3);font-size:12px">▼</span>
+                        </div>
+                      </div>
+                      <div id="ciu_${ciudadId}" style="display:none;padding:0 16px 8px 56px">
+                        ${cluster.pedidos.map(p=>{
+                          const cliente=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
+                          const importe=(p.amount_total||0).toLocaleString('es-ES',{style:'currency',currency:'EUR'});
+                          const otrosTags=(p.tag_names||[]).filter(t=>!normalizarDia(t));
+                          const odooUrl=`${ODOO_URL}/web#id=${p.id}&model=sale.order&view_type=form`;
+                          const esConf=p.state==='sale'||p.state==='done';
+                          return`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:12px">
+                            <div style="flex:1;min-width:0">
+                              <div style="font-size:11px;color:var(--accent);font-weight:700">${p.name} <span style="color:${esConf?'var(--success)':'var(--text3)'}">${esConf?'✓ Confirmado':'Presupuesto'}</span></div>
+                              <div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${cliente}</div>
+                              ${p._zona?`<div style="font-size:11px;color:var(--text3)">${p._zona}</div>`:''}
+                              ${otrosTags.length?`<div style="font-size:11px;color:var(--text2)">${otrosTags.join(' · ')}</div>`:''}
+                            </div>
+                            <div style="font-size:13px;font-weight:700;color:var(--success);white-space:nowrap">${importe}</div>
+                            <a href="${odooUrl}" target="_blank" style="color:var(--accent);font-size:12px;white-space:nowrap;text-decoration:none">Ver →</a>
+                          </div>`;
+                        }).join('')}
+                      </div>
+                    </div>`;
+                  }).join('')}
+                </div>
+              </div>`;
+            }).join('')}
           </div>
         </div>`;
     });
 
-    resultado.innerHTML = html || '<div style="text-align:center;padding:24px;color:var(--text2)">Sin datos</div>';
+    resultado.innerHTML = html || '<div style="text-align:center;padding:24px;color:var(--text2)">Sin asignaciones</div>';
 
   }catch(e){
     resultado.innerHTML=`<span style="color:var(--danger)">${e.message}</span>`;
+    console.error(e);
   }
-}
-
-function renderDiasAsig(diasObj, repId, filtroDia){
-  const diasOrden = filtroDia && filtroDia!=='sin-dia'
-    ? [filtroDia]
-    : [...DIAS_ORDEN_ADMIN.filter(d=>diasObj[d]), ...(diasObj['Sin día']?['Sin día']:[])];
-
-  return diasOrden.map(dia=>{
-    const ciudades = diasObj[dia]||{};
-    const totalDia = Object.values(ciudades).flat().length;
-    const diaId = `${repId}_${dia.replace(/\s/g,'_')}`;
-    const colorDia = dia==='Sin día'?'var(--text3)':'var(--warn)';
-    return`
-      <div style="border-bottom:1px solid var(--border)">
-        <div onclick="toggleAsig('dia_${diaId}')" style="padding:10px 16px 10px 24px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.15);user-select:none">
-          <div style="font-size:13px;font-weight:700;color:${colorDia}">📅 ${dia}</div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-size:12px;color:var(--text2)">${totalDia} pedidos · ${Object.keys(ciudades).length} ciudades</span>
-            <span id="arr_dia_${diaId}" style="color:var(--text3);font-size:14px">▼</span>
-          </div>
-        </div>
-        <div id="dia_${diaId}" style="display:none">
-          ${renderCiudadesAsig(ciudades, diaId)}
-        </div>
-      </div>`;
-  }).join('');
-}
-
-function renderCiudadesAsig(ciudades, diaId){
-  return Object.entries(ciudades).sort((a,b)=>a[0].localeCompare(b[0])).map(([ciudad, pedidos])=>{
-    const ciudadId = `${diaId}_${ciudad.replace(/[^a-z0-9]/gi,'_')}`;
-    const total = pedidos.reduce((a,p)=>a+p.amount_total,0);
-    return`
-      <div style="border-bottom:1px solid rgba(42,80,102,.5)">
-        <div onclick="toggleAsig('ciu_${ciudadId}')" style="padding:8px 16px 8px 40px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;user-select:none">
-          <div style="font-size:12px;font-weight:700;color:var(--text2)">📍 ${ciudad}</div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-size:12px;color:var(--text3)">${pedidos.length} pedido${pedidos.length>1?'s':''} · ${total.toLocaleString('es-ES',{style:'currency',currency:'EUR'})}</span>
-            <span id="arr_ciu_${ciudadId}" style="color:var(--text3);font-size:12px">▼</span>
-          </div>
-        </div>
-        <div id="ciu_${ciudadId}" style="display:none;padding:0 16px 8px 56px">
-          ${pedidos.map(p=>{
-            const cliente=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
-            const importe=(p.amount_total||0).toLocaleString('es-ES',{style:'currency',currency:'EUR'});
-            const otrosTags=(p.tag_names||[]).filter(t=>!normalizarDia(t));
-            const odooUrl=`${ODOO_URL}/web#id=${p.id}&model=sale.order&view_type=form`;
-            return`<div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:12px">
-              <div style="flex:1">
-                <div style="font-size:12px;color:var(--accent);font-weight:700">${p.name} ${p.state==='sale'||p.state==='done'?'<span style="color:var(--success)">✓ Confirmado</span>':'<span style="color:var(--text3)">Presupuesto</span>'}</div>
-                <div style="font-size:13px;font-weight:600">${cliente}</div>
-                ${otrosTags.length?`<div style="font-size:11px;color:var(--text2);margin-top:2px">${otrosTags.join(' · ')}</div>`:''}
-              </div>
-              <div style="font-size:13px;font-weight:700;color:var(--success);white-space:nowrap">${importe}</div>
-              <a href="${odooUrl}" target="_blank" style="color:var(--accent);font-size:12px;white-space:nowrap">Ver →</a>
-            </div>`;
-          }).join('')}
-        </div>
-      </div>`;
-  }).join('');
 }
 
 function toggleAsig(id){
