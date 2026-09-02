@@ -97,6 +97,18 @@
 
     /* EMPTY */
     .empty{text-align:center;padding:48px;color:var(--text2)}
+    
+    /* SIDEBAR */
+    .layout-wrap{display:flex;min-height:calc(100vh - 52px)}
+    .sidebar{width:200px;background:var(--bg2);border-right:1px solid var(--border);padding:12px 0;position:sticky;top:52px;height:calc(100vh - 52px);overflow-y:auto;flex-shrink:0}
+    .sidebar-section{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:10px 14px 3px}
+    .sidebar-item{display:flex;align-items:center;gap:8px;padding:8px 14px;font-size:13px;font-weight:600;color:var(--text2);cursor:pointer;border-left:3px solid transparent;transition:all .15s}
+    .sidebar-item:hover{color:var(--text);background:rgba(255,255,255,.03)}
+    .sidebar-item.active{color:var(--accent);background:rgba(0,201,167,.06);border-left-color:var(--accent)}
+    .main-content{flex:1;padding:24px;overflow-x:hidden}
+    .admin-section{display:none}
+    .admin-section.active{display:block}
+
     .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:32px auto}
     @keyframes spin{to{transform:rotate(360deg)}}
 
@@ -138,7 +150,24 @@
     </div>
   </div>
 
-  <div class="main">
+  <div class="layout-wrap">
+  <nav class="sidebar">
+    <div class="sidebar-section">Hoy</div>
+    <div class="sidebar-item active" onclick="navSeccion(this,'entregas')">📦 Entregas</div>
+    <div class="sidebar-item" onclick="navSeccion(this,'pendientes')">⏳ Pendientes</div>
+    <div class="sidebar-section">Planificación</div>
+    <div class="sidebar-item" onclick="navSeccion(this,'rutas')">⚡ Generador rutas</div>
+    <div class="sidebar-item" onclick="navSeccion(this,'asignaciones')">📅 Asignaciones</div>
+    <div class="sidebar-section">Análisis</div>
+    <div class="sidebar-item" onclick="navSeccion(this,'estadisticas')">📊 Estadísticas</div>
+    <div class="sidebar-item" onclick="navSeccion(this,'sinfotos')">📸 Sin fotos</div>
+    <div class="sidebar-item" onclick="navSeccion(this,'incidencias')">⚠️ Incidencias</div>
+    <div class="sidebar-item" onclick="navSeccion(this,'presupuestos')">📋 Presupuestos</div>
+    <div class="sidebar-section">Gestión</div>
+    <div class="sidebar-item" onclick="navSeccion(this,'clientes')">👥 Clientes</div>
+    <div class="sidebar-item" onclick="navSeccion(this,'mantenimiento')">🧹 Mantenimiento</div>
+  </nav>
+  <div class="main" id="main-sec-entregas">
 
     <!-- FILTROS -->
     <div class="filtros-bar">
@@ -172,7 +201,8 @@
     </div>
 
 
-    <!-- ESTADÍSTICAS POR REPARTIDOR (RANGO DE FECHAS) -->
+    <div id="sec-estadisticas" class="admin-section">
+    <!-- ESTADÍSTICAS -->
     <div class="section-title">📊 Estadísticas por repartidor</div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
       <div class="filtros-bar" style="margin-bottom:12px">
@@ -201,6 +231,7 @@
       <div id="sinfotos-resultado" style="color:var(--text2);font-size:13px">Pulsa "Buscar" para ver entregas sin fotos</div>
     </div>
 
+    </div><div id="sec-entregas" class="admin-section active">
     <!-- RESUMEN POR REPARTIDOR -->
     <div class="section-title">👥 Resumen por repartidor</div>
     <div class="rep-grid" id="rep-grid"><div class="spinner"></div></div>
@@ -254,6 +285,16 @@
       </div>
     </div>
 
+    </div>
+    <div id="sec-pendientes" class="admin-section">
+      <div class="section-title">⏳ Pedidos pendientes</div>
+      <div class="filtros-bar" style="margin-bottom:12px"><button class="btn-refresh" onclick="cargarPendientesAdmin()">Cargar pendientes de hoy</button></div>
+      <div id="pendientes-wrap"><div style="color:var(--text2);font-size:13px">Pulsa "Cargar pendientes"</div></div>
+    </div>
+    <div id="sec-sinfotos" class="admin-section">
+      <div class="section-title">📸 Entregas sin fotos</div>
+    </div>
+    </div><div id="sec-clientes" class="admin-section">
     <!-- GESTOR DE CLIENTES -->
     <div class="section-title">👥 Gestor de clientes y direcciones</div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
@@ -342,6 +383,7 @@
       </div>
     </div>
 
+    </div><div id="sec-rutas" class="admin-section">
     <!-- GENERADOR DE RUTAS -->
     <div class="section-title">⚡ Generador de rutas</div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
@@ -365,7 +407,8 @@
       <div id="ruta-resultado" style="color:var(--text2);font-size:13px">Selecciona repartidor y día para generar la ruta óptima</div>
     </div>
 
-    <!-- ASIGNACIONES POR REPARTIDOR Y DÍA -->
+    </div><div id="sec-asignaciones" class="admin-section">
+    <!-- ASIGNACIONES -->
     <div class="section-title">📅 Asignaciones por repartidor y día</div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
       <div class="filtros-bar" style="margin-bottom:12px">
@@ -388,6 +431,7 @@
       <div id="asig-resultado">Pulsa "Buscar" para cargar asignaciones</div>
     </div>
 
+    </div><div id="sec-incidencias" class="admin-section">
     <!-- INCIDENCIAS -->
     <div class="section-title">⚠️ Registro de incidencias</div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
@@ -417,6 +461,7 @@
       <div id="inc-tabla"></div>
     </div>
 
+    </div><div id="sec-mantenimiento" class="admin-section">
     <!-- MANTENIMIENTO -->
     <div class="section-title">🧹 Mantenimiento</div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
@@ -428,6 +473,7 @@
       <div id="limpieza-resultado" style="width:100%;font-size:13px;color:var(--text2);display:none"></div>
     </div>
 
+    </div><div id="sec-presupuestos" class="admin-section">
     <!-- PRESUPUESTOS -->
     <div class="section-title">📋 Presupuestos asignados (sin confirmar)</div>
     <div class="filtros-bar" style="margin-bottom:12px">
@@ -1080,6 +1126,58 @@ function abrirMapaAsig(rep, dia){
   });
 }
 
+
+function verMapaRuta(){
+  const datos = window._rutaGenerada;
+  if(!datos||!datos.paradas.length){ alert('Genera una ruta primero'); return; }
+  const modal = document.getElementById('modal-mapa-asig');
+  modal.style.display = 'flex';
+  document.getElementById('modal-mapa-titulo').textContent = `⚡ Ruta · 🚚 ${datos.rep} · 📅 ${datos.dia}`;
+  cargarGoogleMaps().then(()=>{
+    const div = document.getElementById('modal-mapa-div');
+    div.innerHTML = ''; div.style.position = 'relative';
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const mapa = new google.maps.Map(div,{
+        center:{lat:datos.paradas[0].lat,lng:datos.paradas[0].lng},zoom:10,
+        styles:[{elementType:'geometry',stylers:[{color:'#1a2a38'}]},{elementType:'labels.text.fill',stylers:[{color:'#8ab4c4'}]},{featureType:'road',elementType:'geometry',stylers:[{color:'#2a4055'}]},{featureType:'water',elementType:'geometry',stylers:[{color:'#0f1923'}]}]
+      });
+      const infoWindow = new google.maps.InfoWindow();
+      const bounds = new google.maps.LatLngBounds();
+      // Marcador almacén
+      new google.maps.Marker({position:ALMACEN,map:mapa,title:'Almacén DJI',icon:{path:google.maps.SymbolPath.CIRCLE,scale:14,fillColor:'#00c9a7',fillOpacity:1,strokeColor:'#fff',strokeWeight:2}});
+      bounds.extend(ALMACEN);
+      // Ruta real de Google Directions si existe
+      if(window._directionsResult){
+        new google.maps.DirectionsRenderer({map:mapa,directions:window._directionsResult,suppressMarkers:true,polylineOptions:{strokeColor:'#00c9a7',strokeOpacity:.8,strokeWeight:3}});
+      } else {
+        const path = [ALMACEN, ...datos.paradas.map(p=>({lat:p.lat,lng:p.lng})), ALMACEN];
+        new google.maps.Polyline({path,geodesic:true,strokeColor:'#00c9a7',strokeOpacity:.7,strokeWeight:2,map:mapa});
+      }
+      // Marcadores numerados
+      datos.paradas.forEach((p,i)=>{
+        const color = p._alerta?'#ef4444':p.descargarPrimero?'#f59e0b':'#00c9a7';
+        const marker = new google.maps.Marker({
+          position:{lat:p.lat,lng:p.lng},map:mapa,
+          label:{text:String(i+1),color:'#0f2027',fontWeight:'bold',fontSize:'11px'},
+          icon:{path:google.maps.SymbolPath.CIRCLE,scale:16,fillColor:color,fillOpacity:.95,strokeColor:'#fff',strokeWeight:2}
+        });
+        bounds.extend({lat:p.lat,lng:p.lng});
+        marker.addListener('click',()=>{
+          infoWindow.setContent(`<div style="font-family:sans-serif;padding:4px;max-width:220px">
+            <div style="font-weight:800">${i+1}. ${p.cliente}</div>
+            <div style="font-size:12px;color:#666">${p.nombre}</div>
+            <div style="font-size:12px;margin-top:4px">🕐 ${minToHHMM(p._llegada)}</div>
+            ${p._alerta?`<div style="font-size:11px;color:#ef4444">${p._alerta}</div>`:''}
+          </div>`);
+          infoWindow.open(mapa, marker);
+        });
+      });
+      mapa.fitBounds(bounds);
+      google.maps.event.trigger(mapa,'resize');
+    }));
+  });
+}
+
 function cerrarMapaAsig(){
   document.getElementById('modal-mapa-asig').style.display='none';
   document.getElementById('modal-mapa-div').innerHTML='';
@@ -1452,6 +1550,18 @@ async function supaFetch(path, method='GET', body=null){
 }
 
 // LOGIN
+
+function navSeccion(el, secId){
+  document.querySelectorAll('.admin-section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(s=>s.classList.remove('active'));
+  const sec = document.getElementById('sec-'+secId);
+  if(sec) sec.classList.add('active');
+  el.classList.add('active');
+  // Mover pendientes-wrap a sec-pendientes si no está allí
+  if(secId==='pendientes' && document.getElementById('pendientes-wrap') && !document.getElementById('sec-pendientes').contains(document.getElementById('pendientes-wrap'))){
+    document.getElementById('sec-pendientes').appendChild(document.getElementById('pendientes-wrap'));
+  }
+}
 function doLogin(){
   const pass = document.getElementById('login-pass').value;
   if(pass === ADMIN_PASS){
@@ -1775,20 +1885,19 @@ async function cargarPendientesAdmin(){
       (fa||[]).forEach(f=>{ fotosAlmacenMap[f.odoo_order_id]=(f.foto_urls||[]); });
     }catch(_){}
 
-    // Consultar todos los repartidores en paralelo
-    const resultados = await Promise.all(
-      Object.entries(RUTAS_REPARTIDORES).map(async ([nombre, rutaOdoo])=>{
-        try{
-          const r = await fetch(PROXY_URL_ADMIN,{
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({empresa:'DJI', action:'get_pickings_pendientes', params:{rutaNombre:rutaOdoo}}),
-          });
-          const j = await r.json();
-          return { nombre, pickings: j.ok ? j.result.pickings : [] };
-        }catch(_){ return { nombre, pickings:[] }; }
-      })
-    );
+    // Serializar peticiones a Odoo (una por vez) para evitar error de login múltiple
+    const resultados = [];
+    for(const [nombre, rutaOdoo] of Object.entries(RUTAS_REPARTIDORES)){
+      try{
+        const r = await fetch(PROXY_URL_ADMIN,{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({empresa:'DJI', action:'get_pickings_pendientes', params:{rutaNombre:rutaOdoo}}),
+        });
+        const j = await r.json();
+        resultados.push({ nombre, pickings: j.ok ? j.result.pickings : [] });
+      }catch(_){ resultados.push({ nombre, pickings:[] }); }
+    }
 
     const totalGlobal = resultados.reduce((a,r)=>a+r.pickings.length,0);
 
