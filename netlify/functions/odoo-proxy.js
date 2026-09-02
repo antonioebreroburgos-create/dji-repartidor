@@ -1,4 +1,4 @@
-// netlify/functions/odoo-proxy.js — v3 con firma + validación + contactos
+// netlify/functions/odoo-proxy.js — v4 con caché de sesión
 
 const https = require('https');
 
@@ -17,6 +17,20 @@ const ODOOS = {
     rejectUnauthorized: false,
   },
 };
+
+// Caché de sesiones — evita login múltiple en peticiones concurrentes
+const _sessionCache = {};
+const SESSION_TTL_MS = 25 * 60 * 1000; // 25 minutos
+
+async function getSession(cfg, empresa) {
+  const cached = _sessionCache[empresa];
+  if (cached && Date.now() - cached.ts < SESSION_TTL_MS) {
+    return cached;
+  }
+  const { cookie, uid } = await odooLogin(cfg);
+  _sessionCache[empresa] = { cookie, uid, ts: Date.now() };
+  return _sessionCache[empresa];
+}
 
 function odooRequest(cfg, path, payload) {
   return new Promise((resolve, reject) => {
@@ -70,7 +84,7 @@ exports.handler = async (event) => {
     const cfg = ODOOS[empresa];
     if (!cfg) throw new Error('Empresa no válida: ' + empresa);
 
-    const { cookie, uid } = await odooLogin(cfg);
+    const { cookie, uid } = await getSession(cfg, empresa);
     let result;
 
     if (action === 'get_pickings_hoy' || action === 'get_pickings_pendientes') {
