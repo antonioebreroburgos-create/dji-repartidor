@@ -955,17 +955,95 @@ async function subirFotoAlmacen(input,orderId,orderName,partnerNombre){
     if(!r.ok) throw new Error('Error subiendo foto');
     const url=`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`;
     const hoy=new Date().toISOString().split('T')[0];
+    let todasFotos=[url];
     const existentes=await supaFetch(`rutas_fotos_almacen?odoo_order_id=eq.${orderId}&repartidor=eq.${E.usuario.nombre}&fecha=eq.${hoy}&select=id,foto_urls`);
-    if(existentes?.length){ await supaFetch(`rutas_fotos_almacen?id=eq.${existentes[0].id}`,'PATCH',{foto_urls:[...(existentes[0].foto_urls||[]),url]}); }
-    else{ await supaFetch('rutas_fotos_almacen','POST',{empresa:EMPRESA,repartidor:E.usuario.nombre,odoo_order_id:orderId,odoo_order_name:orderName,partner_nombre:partnerNombre,foto_urls:[url],fecha:hoy}); }
+    if(existentes?.length){
+      todasFotos=[...(existentes[0].foto_urls||[]),url];
+      await supaFetch(`rutas_fotos_almacen?id=eq.${existentes[0].id}`,'PATCH',{foto_urls:todasFotos});
+    } else {
+      await supaFetch('rutas_fotos_almacen','POST',{empresa:EMPRESA,repartidor:E.usuario.nombre,odoo_order_id:orderId,odoo_order_name:orderName,partner_nombre:partnerNombre,foto_urls:[url],fecha:hoy});
+    }
     const preview=document.getElementById(`fotos_${idSafe}`);
     const img=document.createElement('img'); img.src=url; img.className='foto-thumb';
     const fotoCount=preview.querySelectorAll('img').length;
     img.onclick=()=>openPwaLightbox(url,`Foto almacén ${fotoCount+1}`);
     preview.appendChild(img);
-    toast('Foto de almacén guardada ✓');
+    toast('Foto guardada ✓ — verificando carga...');
+
+    // Verificación automática con IA — debounce 4 segundos
+    // Si el repartidor sube varias fotos seguidas, solo verifica la última vez
+    clearTimeout(window._verificarTimer?.[orderId]);
+    if(!window._verificarTimer) window._verificarTimer={};
+    window._verificarTimer[orderId]=setTimeout(()=>verificarCargaIA(orderId,orderName,partnerNombre,todasFotos),4000);
+
   }catch(e){ toast('Error: '+e.message,'err'); }
   btn.textContent='📦 Añadir foto de almacén'; btn.disabled=false; input.value='';
+}
+
+// ── VERIFICACIÓN AUTOMÁTICA CON CLAUDE VISION ─────────────
+async function verificarCargaIA(orderId, orderName, partnerNombre, fotoUrls){
+  try{
+    // Obtener líneas del pedido desde Odoo
+    const r=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({empresa:EMPRESA,action:'search_read',params:{
+        model:'sale.order.line',
+        domain:[['order_id','=',orderId]],
+        fields:['product_id','product_uom_qty'],
+        limit:50
+      }})
+    });
+    const j=await r.json();
+    if(!j.ok||!j.result?.length) return;
+
+    const lineasPedido=j.result.map(l=>({nombre:l.product_id[1],cantidad:l.product_uom_qty}));
+
+    // Llamar al proxy con las fotos y las líneas — la API key está segura en Netlify
+    const resp=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({empresa:EMPRESA,action:'verificar_carga_ia',params:{
+        orderId,orderName,partnerNombre,fotoUrls,lineasPedido
+      }})
+    });
+    const resultado=await resp.json();
+    if(!resultado.ok) return; // error del proxy, silencioso
+    const r2=resultado.result;
+
+    // Si hay alertas → incidencia automática
+    if(!r2.ok && r2.alertas?.length){
+      const fecha=new Date().toISOString().split('T')[0];
+      for(const alerta of r2.alertas){
+        await supaFetch('rutas_incidencias','POST',{
+          empresa:EMPRESA,
+          odoo_picking_id:orderId,
+          odoo_picking_name:orderName,
+          partner_nombre:partnerNombre,
+          repartidor:E.usuario.nombre,
+          fecha,
+          tipo_error:'falta_producto',
+          descripcion:`[IA · ${r2.confianza}] ${alerta}`,
+          creado_por:'ia_verificacion',
+        });
+      }
+      toast(`⚠️ IA detectó ${r2.alertas.length} alerta(s) — avisa al responsable`,'err');
+      const card=document.getElementById(`card_pres_${orderId}`);
+      if(card){
+        let div=card.querySelector('.ia-resultado');
+        if(!div){ div=document.createElement('div'); div.className='ia-resultado'; div.style.cssText='border-radius:6px;padding:8px 10px;margin-top:6px;font-size:12px'; card.appendChild(div); }
+        div.style.cssText+='background:rgba(239,68,68,.12);border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:8px 10px;margin-top:6px;font-size:12px';
+        div.innerHTML=`⚠️ <strong>IA [${r2.confianza}]:</strong> ${r2.alertas.map(a=>`<br>• ${a}`).join('')}`;
+      }
+    } else if(r2.ok){
+      toast(`✅ Carga verificada por IA (${r2.confianza})`);
+      const card=document.getElementById(`card_pres_${orderId}`);
+      if(card){
+        let div=card.querySelector('.ia-resultado');
+        if(!div){ div=document.createElement('div'); div.className='ia-resultado'; card.appendChild(div); }
+        div.style.cssText='background:rgba(34,197,94,.1);border:1px solid var(--success);border-radius:6px;padding:8px 10px;margin-top:6px;font-size:12px;color:var(--success)';
+        div.innerHTML=`✅ <strong>IA [${r2.confianza}]:</strong> ${r2.resumen}`;
+      }
+    }
+  }catch(e){
+    console.warn('Verificación IA:',e.message);
+  }
 }
 
 initLogin();
