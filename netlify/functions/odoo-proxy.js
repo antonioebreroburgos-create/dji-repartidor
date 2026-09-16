@@ -282,6 +282,78 @@ exports.handler = async (event) => {
       const { model, domain, fields, limit } = params;
       result = await odooCallKw(cfg, cookie, model, 'search_read', [domain||[]], { fields, limit: limit||100 });
 
+    } else if (action === 'verificar_carga_ia') {
+      // Verificación de carga con Claude Vision — la API key queda segura en el servidor
+      const { orderId, orderName, partnerNombre, fotoUrls, lineasPedido } = params;
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (!apiKey) throw new Error('ANTHROPIC_API_KEY no configurada en Netlify');
+
+      // Construir mensaje para Claude Vision
+      const imageContents = fotoUrls.slice(0, 5).map(url => ({
+        type: 'image',
+        source: { type: 'url', url }
+      }));
+
+      const lineasTexto = lineasPedido.map(l => `- ${l.nombre} (${l.cantidad} uds)`).join('\n');
+
+      const anthropicResp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          messages: [{
+            role: 'user',
+            content: [
+              ...imageContents,
+              {
+                type: 'text',
+                text: `Eres un sistema de verificación de cargas para una empresa de distribución alimentaria española.
+
+PEDIDO: ${orderName} — Cliente: ${partnerNombre}
+
+LÍNEAS DEL PEDIDO:
+${lineasTexto}
+
+Analiza las ${fotoUrls.length} foto(s) de almacén e indica:
+1. Qué productos identificas claramente por sus etiquetas o envases
+2. Si detectas alguna discrepancia con el pedido (producto incorrecto, cantidad que no cuadra, producto que parece faltar)
+3. Nivel de confianza de tu análisis: ALTO, MEDIO o BAJO
+
+Responde SOLO en este formato JSON exacto, sin texto adicional:
+{
+  "ok": true,
+  "productos_identificados": ["producto1", "producto2"],
+  "alertas": [],
+  "confianza": "ALTO",
+  "resumen": "texto breve del resultado"
+}
+
+Si hay alertas, pon ok=false y describe cada alerta. Si todo está correcto, ok=true y alertas=[].`
+              }
+            ]
+          }]
+        })
+      });
+
+      if (!anthropicResp.ok) {
+        const err = await anthropicResp.json();
+        throw new Error('Anthropic API: ' + (err.error?.message || anthropicResp.status));
+      }
+
+      const anthropicData = await anthropicResp.json();
+      const texto = anthropicData.content?.[0]?.text || '';
+
+      try {
+        result = JSON.parse(texto);
+      } catch(_) {
+        result = { ok: true, productos_identificados: [], alertas: [], confianza: 'BAJO', resumen: 'No se pudo parsear respuesta IA' };
+      }
+
     } else {
       throw new Error('Acción no reconocida: ' + action);
     }
