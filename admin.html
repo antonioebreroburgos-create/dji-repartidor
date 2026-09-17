@@ -1313,8 +1313,8 @@ async function cargarIncidencias(){
                 <td><span style="color:${colorTipo};font-weight:700;font-size:12px">${tipoLabel}</span></td>
                 <td style="font-size:13px">${i.repartidor||'—'}</td>
                 <td style="max-width:220px;font-size:12px;color:var(--text2)">${i.descripcion||'—'}</td>
-                <td id="${fotosKey}" style="min-width:80px">
-                  <button onclick="cargarFotosIncidencia('${fotosKey}',${i.odoo_picking_id},'${i.fecha}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--accent);cursor:pointer;font-size:11px">📷 Ver</button>
+                <td>
+                  ${esIA?`<button onclick="event.stopPropagation();window.open('${verUrl}','_blank')" style="background:rgba(124,58,237,.15);border:1px solid var(--morado);border-radius:6px;padding:3px 8px;color:var(--morado);cursor:pointer;font-size:11px;font-weight:700">🔍 Ver</button>`:'—'}
                 </td>
                 <td><button onclick="eliminarIncidencia('${i.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px">✕</button></td>
               </tr>`;
