@@ -312,17 +312,23 @@ exports.handler = async (event) => {
               ...imageContents,
               {
                 type: 'text',
-                text: `Eres un sistema de verificación de cargas para una empresa de distribución alimentaria española.
+                text: `Eres un sistema de verificación de cargas para una empresa de distribución alimentaria española. Tu función es detectar ÚNICAMENTE errores graves que un repartidor deba corregir antes de salir.
 
 PEDIDO: ${orderName} — Cliente: ${partnerNombre}
 
 LÍNEAS DEL PEDIDO:
 ${lineasTexto}
 
-Analiza las ${fotoUrls.length} foto(s) de almacén e indica:
-1. Qué productos identificas claramente por sus etiquetas o envases
-2. Si detectas alguna discrepancia con el pedido (producto incorrecto, cantidad que no cuadra, producto que parece faltar)
-3. Nivel de confianza de tu análisis: ALTO, MEDIO o BAJO
+INSTRUCCIONES ESTRICTAS:
+- Solo reporta alerta si un producto del pedido CLARAMENTE NO APARECE en ninguna foto
+- Solo reporta alerta si ves un producto en la foto que CLARAMENTE NO ESTÁ en el pedido
+- Solo reporta alerta si la cantidad es MUY diferente (ej: piden 6 cajas y solo ves 2)
+- NO reportes diferencias de gramaje menores (13g vs 13.5g, 1kg vs 1.1kg, etc.)
+- NO reportes si no puedes leer bien una etiqueta — ignora lo que no se vea claro
+- NO reportes variantes del mismo producto (mismo producto distinto formato)
+- NO reportes dudas — si no estás seguro al 90%, no es alerta
+- Si todas las líneas del pedido parecen estar presentes, responde ok=true sin alertas
+- Sé conservador: es mejor no reportar una duda que generar un falso positivo
 
 Responde SOLO en este formato JSON exacto, sin texto adicional:
 {
@@ -330,10 +336,8 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
   "productos_identificados": ["producto1", "producto2"],
   "alertas": [],
   "confianza": "ALTO",
-  "resumen": "texto breve del resultado"
-}
-
-Si hay alertas, pon ok=false y describe cada alerta. Si todo está correcto, ok=true y alertas=[].`
+  "resumen": "Todos los productos del pedido identificados correctamente"
+}`
               }
             ]
           }]
