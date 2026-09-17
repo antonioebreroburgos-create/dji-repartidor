@@ -434,7 +434,7 @@
     </div><div id="sec-incidencias" class="admin-section">
     <!-- INCIDENCIAS -->
     <div class="section-title">⚠️ Registro de incidencias</div>
-    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px">
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px">
       <div class="filtros-bar" style="margin-bottom:12px">
         <span class="filtro-label">Desde:</span>
         <input type="date" id="inc-desde"/>
@@ -459,6 +459,37 @@
       </div>
       <div id="inc-stats" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"></div>
       <div id="inc-tabla"></div>
+    </div>
+
+    <!-- BORRADO MASIVO -->
+    <div style="background:var(--card);border:1px solid rgba(239,68,68,.3);border-radius:var(--radius);padding:16px;margin-bottom:24px">
+      <div style="font-size:14px;font-weight:700;color:var(--danger);margin-bottom:12px">🗑️ Borrado masivo de incidencias</div>
+      <div class="filtros-bar" style="margin-bottom:12px">
+        <span class="filtro-label">Desde:</span>
+        <input type="date" id="del-desde"/>
+        <span class="filtro-label">Hasta:</span>
+        <input type="date" id="del-hasta"/>
+        <select id="del-tipo" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;outline:none">
+          <option value="">Todos los tipos</option>
+          <option value="ia_verificacion">Solo IA automáticas</option>
+          <option value="falta_producto">Producto olvidado</option>
+          <option value="producto_erroneo">Producto equivocado</option>
+          <option value="cantidad_erronea">Cantidad incorrecta</option>
+          <option value="error_comercial">Error comercial</option>
+          <option value="devolucion">Devolución</option>
+          <option value="otro">Otro</option>
+        </select>
+        <select id="del-rep" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-size:14px;outline:none">
+          <option value="">Todos los responsables</option>
+          <option>JUAN PEDRO</option><option>JAVIER</option><option>ALFONSO</option>
+          <option>JUANLU</option><option>JUANJOROBLEDO</option><option>ZEKY</option>
+          <option value="comercial">Comercial</option><option value="almacen">Almacén</option>
+          <option value="ia_verificacion">Solo IA</option>
+        </select>
+        <button onclick="previsualizarBorrado()" style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 14px;color:var(--text);cursor:pointer;font-size:13px;font-weight:700">👁️ Previsualizar</button>
+        <button onclick="ejecutarBorrado()" style="background:var(--danger);border:none;border-radius:8px;padding:8px 14px;color:#fff;cursor:pointer;font-size:13px;font-weight:700">🗑️ Borrar selección</button>
+      </div>
+      <div id="del-resultado" style="font-size:13px;color:var(--text2)"></div>
     </div>
 
     </div><div id="sec-mantenimiento" class="admin-section">
@@ -1343,6 +1374,59 @@ async function cargarFotosIncidencia(elId, orderId, fecha){
   }catch(e){ cel.innerHTML='<span style="font-size:11px;color:var(--danger)">Error</span>'; }
 }
 
+async function previsualizarBorrado(){
+  const q = buildDelQuery(true);
+  if(!q){ alert('Selecciona al menos un filtro de fecha'); return; }
+  const resultado = document.getElementById('del-resultado');
+  resultado.textContent = 'Buscando...';
+  try{
+    const incs = await supaFetch(q+'&select=id,odoo_picking_name,partner_nombre,repartidor,creado_por,fecha');
+    if(!incs?.length){ resultado.textContent = 'Sin incidencias para esta selección.'; return; }
+    resultado.innerHTML = `<div style="color:var(--warn);font-weight:700;margin-bottom:8px">⚠️ Se borrarán ${incs.length} incidencias:</div>`
+      + incs.slice(0,10).map(i=>`<div style="font-size:12px;color:var(--text2);margin-bottom:2px">· ${i.fecha} · ${i.odoo_picking_name} · ${i.partner_nombre} ${i.creado_por==='ia_verificacion'?'<span style="color:#a78bfa">[IA]</span>':''}</div>`).join('')
+      + (incs.length>10?`<div style="font-size:12px;color:var(--text3);margin-top:4px">...y ${incs.length-10} más</div>`:'');
+  }catch(e){ resultado.textContent = 'Error: '+e.message; }
+}
+
+async function ejecutarBorrado(){
+  const q = buildDelQuery(true);
+  if(!q){ alert('Selecciona al menos un filtro de fecha'); return; }
+  const resultado = document.getElementById('del-resultado');
+  try{
+    const incs = await supaFetch(q+'&select=id');
+    if(!incs?.length){ resultado.textContent = 'Sin incidencias para borrar.'; return; }
+    if(!confirm(`¿Seguro que quieres borrar ${incs.length} incidencias? Esta acción no se puede deshacer.`)) return;
+    resultado.textContent = `Borrando ${incs.length} incidencias...`;
+    // Borrar en lotes de 50
+    let borradas=0;
+    for(let i=0;i<incs.length;i+=50){
+      const lote=incs.slice(i,i+50).map(x=>x.id);
+      await supaFetch(`rutas_incidencias?id=in.(${lote.join(',')})&empresa=eq.${EMPRESA}`,'DELETE');
+      borradas+=lote.length;
+      resultado.textContent = `Borrando... ${borradas}/${incs.length}`;
+    }
+    resultado.style.color='var(--success)';
+    resultado.textContent = `✓ ${borradas} incidencias eliminadas`;
+    // Recargar tabla si está visible
+    cargarIncidencias();
+  }catch(e){ resultado.style.color='var(--danger)'; resultado.textContent='Error: '+e.message; }
+}
+
+function buildDelQuery(conEmpresa=true){
+  const desde = document.getElementById('del-desde').value;
+  const hasta  = document.getElementById('del-hasta').value;
+  const tipo   = document.getElementById('del-tipo').value;
+  const rep    = document.getElementById('del-rep').value;
+  if(!desde||!hasta) return null;
+  let q=`rutas_incidencias?fecha=gte.${desde}&fecha=lte.${hasta}`;
+  if(conEmpresa) q+=`&empresa=eq.${EMPRESA}`;
+  if(tipo==='ia_verificacion') q+=`&creado_por=eq.ia_verificacion`;
+  else if(tipo) q+=`&tipo_error=eq.${tipo}`;
+  if(rep==='ia_verificacion') q+=`&creado_por=eq.ia_verificacion`;
+  else if(rep) q+=`&repartidor=eq.${encodeURIComponent(rep)}`;
+  return q;
+}
+
 async function eliminarIncidencia(id){
   if(!confirm('¿Eliminar esta incidencia?')) return;
   try{
@@ -1627,6 +1711,8 @@ function init(){
   document.getElementById('inc-hasta').value = hoy2;
   document.getElementById('sinfotos-fecha').value = hoy2;
   document.getElementById('ia-fecha-verificar').value = hoy2;
+  document.getElementById('del-desde').value = hoy2;
+  document.getElementById('del-hasta').value = hoy2;
 }
 
 async function sincronizarEntregados(fecha){
