@@ -2412,10 +2412,10 @@ async function verificarFotosDelDia(){
         // Si hay alertas → crear incidencias
         if(!analisis.ok && analisis.alertas?.length){
           for(const alerta of analisis.alertas){
-            // Evitar duplicados — comprobar si ya existe esta incidencia IA
+            const alertaStr = typeof alerta === 'string' ? alerta : (alerta.descripcion || alerta.mensaje || JSON.stringify(alerta));
+            // Evitar duplicados
             const existentes=await supaFetch(`rutas_incidencias?empresa=eq.${EMPRESA}&odoo_picking_name=eq.${encodeURIComponent(f.odoo_order_name)}&creado_por=eq.ia_verificacion&fecha=eq.${fecha}&select=id`);
-            if(existentes?.length) continue; // ya procesado
-
+            if(existentes?.length) continue;
             await supaFetch('rutas_incidencias','POST',{
               empresa:EMPRESA,
               odoo_picking_id:f.odoo_order_id,
@@ -2424,7 +2424,7 @@ async function verificarFotosDelDia(){
               repartidor:f.repartidor,
               fecha,
               tipo_error:'falta_producto',
-              descripcion:`[IA · ${analisis.confianza}] ${alerta}`,
+              descripcion:`[IA · ${analisis.confianza}] ${alertaStr}`,
               creado_por:'ia_verificacion',
             });
             alertasTotal++;
