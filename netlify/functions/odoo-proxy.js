@@ -366,6 +366,17 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
         }
       }
 
+      // Normalizar alertas — asegurar que son siempre strings
+      if (result && Array.isArray(result.alertas)) {
+        result.alertas = result.alertas.map(a => {
+          if (typeof a === 'string') return a;
+          if (typeof a === 'object' && a !== null) {
+            return a.descripcion || a.mensaje || a.texto || a.alerta || a.text || JSON.stringify(a);
+          }
+          return String(a);
+        });
+      }
+
     } else {
       throw new Error('Acción no reconocida: ' + action);
     }
