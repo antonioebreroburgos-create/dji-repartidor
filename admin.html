@@ -1291,19 +1291,32 @@ async function cargarIncidencias(){
     document.getElementById('inc-tabla').innerHTML=`
       <div class="tabla-wrap">
         <table>
-          <thead><tr><th>Fecha</th><th>Albarán</th><th>Cliente</th><th>Tipo de error</th><th>Responsable</th><th>Descripción</th><th></th></tr></thead>
+          <thead><tr><th>Fecha</th><th>Albarán</th><th>Cliente</th><th>Tipo</th><th>Responsable</th><th>Descripción</th><th>Fotos</th><th></th></tr></thead>
           <tbody>
             ${incs.map(i=>{
-              const albaranUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${i.odoo_picking_id}`;
+              const albaranUrl=`${ODOO_URL}/web#id=${i.odoo_picking_id}&model=sale.order&view_type=form`;
+              const pdfUrl=`${ODOO_URL}/report/pdf/stock.report_deliveryslip/${i.odoo_picking_id}`;
               const tipoLabel=TIPOS_ERROR[i.tipo_error]||i.tipo_error;
               const colorTipo={'falta_producto':'var(--danger)','producto_erroneo':'var(--danger)','cantidad_erronea':'var(--warn)','error_comercial':'#a78bfa','devolucion':'var(--warn)','otro':'var(--text2)'}[i.tipo_error]||'var(--text2)';
-              return`<tr>
-                <td style="white-space:nowrap;font-size:12px">${new Date(i.created_at).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</td>
-                <td><a class="albaran-link" href="${albaranUrl}" target="_blank">${i.odoo_picking_name}</a></td>
-                <td style="max-width:180px;font-size:13px">${i.partner_nombre}</td>
+              const esIA=i.creado_por==='ia_verificacion';
+              // Buscar fotos de almacén de esta incidencia desde el cache cargado
+              const fotosKey=`_fotos_inc_${i.odoo_picking_id}`;
+              return`<tr style="${esIA?'background:rgba(124,58,237,.04)':''}">
+                <td style="white-space:nowrap;font-size:12px">
+                  ${new Date(i.created_at).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
+                  ${esIA?'<br><span style="font-size:10px;color:#a78bfa;font-weight:700">🤖 IA</span>':''}
+                </td>
+                <td>
+                  <a class="albaran-link" href="${albaranUrl}" target="_blank">${i.odoo_picking_name}</a><br>
+                  <a class="albaran-link" href="${pdfUrl}" target="_blank" style="font-size:11px;opacity:.7">📄 PDF</a>
+                </td>
+                <td style="max-width:160px;font-size:13px">${i.partner_nombre}</td>
                 <td><span style="color:${colorTipo};font-weight:700;font-size:12px">${tipoLabel}</span></td>
                 <td style="font-size:13px">${i.repartidor||'—'}</td>
-                <td style="max-width:200px;font-size:12px;color:var(--text2)">${i.descripcion||'—'}</td>
+                <td style="max-width:220px;font-size:12px;color:var(--text2)">${i.descripcion||'—'}</td>
+                <td id="${fotosKey}" style="min-width:80px">
+                  <button onclick="cargarFotosIncidencia('${fotosKey}',${i.odoo_picking_id},'${i.fecha}')" style="background:none;border:1px solid var(--border);border-radius:6px;padding:3px 8px;color:var(--accent);cursor:pointer;font-size:11px">📷 Ver</button>
+                </td>
                 <td><button onclick="eliminarIncidencia('${i.id}')" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:12px">✕</button></td>
               </tr>`;
             }).join('')}
@@ -1314,6 +1327,21 @@ async function cargarIncidencias(){
   }catch(e){
     document.getElementById('inc-tabla').innerHTML=`<span style="color:var(--danger)">${e.message}</span>`;
   }
+}
+
+async function cargarFotosIncidencia(elId, orderId, fecha){
+  const cel=document.getElementById(elId);
+  if(!cel) return;
+  cel.innerHTML='<div class="spinner-sm"></div>';
+  try{
+    const fotos=await supaFetch(`rutas_fotos_almacen?empresa=eq.${EMPRESA}&odoo_order_id=eq.${orderId}&fecha=eq.${fecha}&select=foto_urls`);
+    const urls=(fotos||[]).flatMap(f=>f.foto_urls||[]);
+    if(!urls.length){ cel.innerHTML='<span style="font-size:11px;color:var(--text3)">Sin fotos</span>'; return; }
+    cel.innerHTML=urls.map((url,i)=>
+      `<img src="${url}" onclick="openLightbox('${url}',${JSON.stringify(urls)},'Foto almacén ${i+1}/${urls.length}')"
+        style="width:44px;height:44px;object-fit:cover;border-radius:4px;cursor:pointer;border:1px solid var(--warn);margin:1px"/>`
+    ).join('');
+  }catch(e){ cel.innerHTML='<span style="font-size:11px;color:var(--danger)">Error</span>'; }
 }
 
 async function eliminarIncidencia(id){
