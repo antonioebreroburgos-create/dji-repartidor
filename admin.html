@@ -463,6 +463,18 @@
 
     </div><div id="sec-mantenimiento" class="admin-section">
     <!-- MANTENIMIENTO -->
+      <div class="section-title">🧹 Mantenimiento</div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div>
+          <div style="font-size:14px;font-weight:700">🤖 Verificar fotos de almacén con IA</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">Analiza las fotos de almacén del día con Claude Vision y crea incidencias automáticas</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;margin-left:auto">
+          <input type="date" id="ia-fecha-verificar" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-size:13px;outline:none"/>
+          <button class="btn-refresh" style="background:#7c3aed" onclick="verificarFotosDelDia()">🤖 Verificar con IA</button>
+        </div>
+        <div id="ia-verificar-resultado" style="width:100%;font-size:13px;color:var(--text2);display:none"></div>
+      </div>
     <div class="section-title">🧹 Mantenimiento</div>
     <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
       <div>
@@ -1587,6 +1599,7 @@ function init(){
   document.getElementById('inc-desde').value = hace7;
   document.getElementById('inc-hasta').value = hoy2;
   document.getElementById('sinfotos-fecha').value = hoy2;
+  document.getElementById('ia-fecha-verificar').value = hoy2;
 }
 
 async function sincronizarEntregados(fecha){
@@ -2236,6 +2249,88 @@ document.getElementById('login-pass').addEventListener('keydown', e=>{
 });
 
 // ── LIMPIEZA DE FOTOS ────────────────────────────────────
+async function verificarFotosDelDia(){
+  const fecha = document.getElementById('ia-fecha-verificar').value;
+  if(!fecha){ alert('Selecciona una fecha'); return; }
+  const resultado = document.getElementById('ia-verificar-resultado');
+  resultado.style.display='block';
+  resultado.textContent='Cargando fotos del día...';
+
+  try{
+    // Cargar todas las fotos de almacén del día
+    const fotos = await supaFetch(`rutas_fotos_almacen?empresa=eq.${EMPRESA}&fecha=eq.${fecha}&select=*`);
+    if(!fotos?.length){ resultado.textContent='Sin fotos de almacén para esta fecha.'; return; }
+
+    resultado.textContent=`Verificando ${fotos.length} pedidos con IA...`;
+
+    let procesados=0, alertasTotal=0, errores=0;
+
+    for(const f of fotos){
+      if(!f.foto_urls?.length) continue;
+      try{
+        // Obtener líneas del pedido desde Odoo
+        const r=await fetch(PROXY_URL_ADMIN,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({empresa:EMPRESA,action:'search_read',params:{
+            model:'sale.order.line',
+            domain:[['order_id','=',f.odoo_order_id]],
+            fields:['product_id','product_uom_qty'],
+            limit:50
+          }})
+        });
+        const j=await r.json();
+        if(!j.ok||!j.result?.length){ procesados++; continue; }
+
+        const lineasPedido=j.result.map(l=>({nombre:l.product_id[1],cantidad:l.product_uom_qty}));
+
+        // Llamar a verificación IA
+        const resp=await fetch(PROXY_URL_ADMIN,{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({empresa:EMPRESA,action:'verificar_carga_ia',params:{
+            orderId:f.odoo_order_id,
+            orderName:f.odoo_order_name,
+            partnerNombre:f.partner_nombre,
+            fotoUrls:f.foto_urls,
+            lineasPedido
+          }})
+        });
+        const res=await resp.json();
+        if(!res.ok) { errores++; procesados++; continue; }
+        const analisis=res.result;
+
+        // Si hay alertas → crear incidencias
+        if(!analisis.ok && analisis.alertas?.length){
+          for(const alerta of analisis.alertas){
+            // Evitar duplicados — comprobar si ya existe esta incidencia IA
+            const existentes=await supaFetch(`rutas_incidencias?empresa=eq.${EMPRESA}&odoo_picking_name=eq.${encodeURIComponent(f.odoo_order_name)}&creado_por=eq.ia_verificacion&fecha=eq.${fecha}&select=id`);
+            if(existentes?.length) continue; // ya procesado
+
+            await supaFetch('rutas_incidencias','POST',{
+              empresa:EMPRESA,
+              odoo_picking_id:f.odoo_order_id,
+              odoo_picking_name:f.odoo_order_name,
+              partner_nombre:f.partner_nombre,
+              repartidor:f.repartidor,
+              fecha,
+              tipo_error:'falta_producto',
+              descripcion:`[IA · ${analisis.confianza}] ${alerta}`,
+              creado_por:'ia_verificacion',
+            });
+            alertasTotal++;
+          }
+        }
+        procesados++;
+        resultado.textContent=`Verificando... ${procesados}/${fotos.length} pedidos · ${alertasTotal} alertas detectadas`;
+      }catch(e){ errores++; procesados++; }
+    }
+
+    resultado.style.color = alertasTotal>0?'var(--warn)':'var(--success)';
+    resultado.textContent=`✓ Verificación completada: ${procesados} pedidos analizados · ${alertasTotal} alertas generadas${errores>0?` · ${errores} errores`:''}`;
+
+  }catch(e){
+    resultado.style.color='var(--danger)';
+    resultado.textContent=`Error: ${e.message}`;
+  }
+}
+
 async function limpiarFotosAntiguas(){
   const dias = 45;
   const resultado = document.getElementById('limpieza-resultado');
