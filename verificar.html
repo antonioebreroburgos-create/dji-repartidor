@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Verificación IA — DJI</title>
+  <style>
+    :root{--bg:#0f1923;--bg2:#162230;--bg3:#1e2f40;--card:#1a2a38;--border:#2a4055;--accent:#00c9a7;--warn:#f59e0b;--danger:#ef4444;--success:#22c55e;--morado:#7c3aed;--text:#e8f4f8;--text2:#8ab4c4;--text3:#5a8a9a;--radius:10px}
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+    .topbar{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:10}
+    .topbar-logo{font-size:16px;font-weight:800;color:var(--accent)}
+    .badge-ia{background:rgba(124,58,237,.2);border:1px solid var(--morado);color:var(--morado);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700}
+    .layout{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:calc(100vh - 53px)}
+    @media(max-width:768px){.layout{grid-template-columns:1fr}}
+    .panel{padding:24px;overflow-y:auto}
+    .panel-left{border-right:1px solid var(--border)}
+    .section-title{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
+    .info-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+    .info-row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(42,80,102,.4);font-size:13px}
+    .info-row:last-child{border-bottom:none}
+    .info-label{color:var(--text2)}
+    .info-val{font-weight:600;text-align:right;max-width:60%}
+    .linea-row{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:var(--bg3);border-radius:8px;margin-bottom:6px}
+    .linea-nombre{font-size:13px;font-weight:600;flex:1}
+    .linea-qty{font-size:14px;font-weight:800;color:var(--accent);min-width:60px;text-align:right}
+    .alerta-item{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-size:13px;color:var(--danger)}
+    .ok-item{background:rgba(34,197,94,.08);border:1px solid rgba(34,197,94,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--success)}
+    .fotos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px}
+    .foto-item{border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid var(--warn);aspect-ratio:1;position:relative}
+    .foto-item img{width:100%;height:100%;object-fit:cover;transition:transform .2s}
+    .foto-item:hover img{transform:scale(1.03)}
+    .foto-num{position:absolute;top:6px;left:6px;background:rgba(0,0,0,.6);color:#fff;font-size:11px;font-weight:700;border-radius:4px;padding:2px 6px}
+    .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:40px auto}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .btn-odoo{display:inline-flex;align-items:center;gap:6px;background:var(--morado);color:#fff;border:none;border-radius:8px;padding:10px 16px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;margin-bottom:16px}
+    .confianza{display:inline-flex;align-items:center;gap:6px;border-radius:20px;padding:4px 12px;font-size:12px;font-weight:700}
+    .confianza.ALTO{background:rgba(34,197,94,.15);color:var(--success)}
+    .confianza.MEDIO{background:rgba(245,158,11,.15);color:var(--warn)}
+    .confianza.BAJO{background:rgba(239,68,68,.15);color:var(--danger)}
+
+    /* LIGHTBOX */
+    #lightbox{display:none;position:fixed;inset:0;background:rgba(0,0,0,.96);z-index:999;flex-direction:column;align-items:center;justify-content:center}
+    #lightbox.show{display:flex}
+    #lb-toolbar{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(rgba(0,0,0,.7),transparent)}
+    #lb-toolbar button{background:rgba(255,255,255,.15);border:none;color:#fff;padding:6px 12px;border-radius:20px;cursor:pointer;font-size:14px}
+    #lb-vp{flex:1;width:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:grab;position:relative}
+    #lb-vp.grabbing{cursor:grabbing}
+    #lb-img{max-width:96vw;max-height:85vh;object-fit:contain;user-select:none;transform-origin:center center}
+    #lb-nav-prev,#lb-nav-next{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);border:none;color:#fff;font-size:28px;width:48px;height:48px;border-radius:50%;cursor:pointer}
+    #lb-nav-prev{left:12px}#lb-nav-next{right:12px}
+    #lb-caption{position:absolute;bottom:0;left:0;right:0;padding:12px;background:linear-gradient(transparent,rgba(0,0,0,.7));color:rgba(255,255,255,.7);font-size:13px;text-align:center}
+    #lb-zoom{position:absolute;bottom:48px;left:50%;transform:translateX(-50%);display:flex;gap:8px;background:rgba(0,0,0,.5);border-radius:20px;padding:5px 12px;align-items:center}
+    #lb-zoom button{background:rgba(255,255,255,.2);border:none;color:#fff;font-size:16px;width:30px;height:30px;border-radius:50%;cursor:pointer}
+    #lb-zoom-level{color:#fff;font-size:12px;min-width:36px;text-align:center}
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">DJI</div>
+  <span class="badge-ia">🤖 Verificación IA</span>
+  <span id="topbar-pedido" style="font-size:14px;font-weight:700;margin-left:8px"></span>
+  <a id="btn-odoo" href="#" target="_blank" class="btn-odoo" style="margin-left:auto;margin-bottom:0">🔗 Ver en Odoo</a>
+</div>
+
+<div class="layout">
+  <!-- PANEL IZQUIERDO: pedido + análisis IA -->
+  <div class="panel panel-left">
+    <div id="panel-izq-content"><div class="spinner"></div></div>
+  </div>
+
+  <!-- PANEL DERECHO: fotos -->
+  <div class="panel">
+    <div class="section-title">📷 Fotos de almacén</div>
+    <div id="fotos-grid" class="fotos-grid"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <div id="lb-toolbar">
+    <div style="display:flex;gap:8px">
+      <button onclick="lbZoom(1.5)">🔍+</button>
+      <button onclick="lbZoom(0.667)">🔍−</button>
+      <button onclick="lbReset()">⟲</button>
+      <button onclick="lbDescargar()">⬇</button>
+    </div>
+    <span id="lb-titulo" style="color:rgba(255,255,255,.7);font-size:13px"></span>
+    <button onclick="closeLb()" style="font-size:18px">✕</button>
+  </div>
+  <div id="lb-vp">
+    <button id="lb-nav-prev" onclick="lbNav(-1)">‹</button>
+    <img id="lb-img" src="" alt="" draggable="false"/>
+    <button id="lb-nav-next" onclick="lbNav(1)">›</button>
+  </div>
+  <div id="lb-zoom">
+    <button onclick="lbZoom(1.5)">+</button>
+    <span id="lb-zoom-level">100%</span>
+    <button onclick="lbZoom(0.667)">−</button>
+  </div>
+  <div id="lb-caption"></div>
+</div>
+
+<script>
+const SUPABASE_URL='https://pkxjsbgizxntmgtixbwt.supabase.co';
+const SUPABASE_KEY='sb_publishable_7RsdYecYwSQhsI_PAbhczQ_49wMNVID';
+const ODOO_URL='https://distribucionesjoaquininfante.es';
+const PROXY_URL='/.netlify/functions/odoo-proxy';
+const EMPRESA='DJI';
+
+async function supaFetch(path){
+  const r=await fetch(SUPABASE_URL+'/rest/v1/'+path,{headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`}});
+  if(!r.ok) throw new Error(await r.text());
+  return r.json();
+}
+
+async function odooProxy(action,params){
+  const r=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({empresa:EMPRESA,action,params})});
+  const j=await r.json();
+  if(!j.ok) throw new Error(j.error);
+  return j.result;
+}
+
+// Leer parámetros de la URL
+const params=new URLSearchParams(location.search);
+const orderId=parseInt(params.get('order_id'));
+const orderName=params.get('order_name')||'';
+const fecha=params.get('fecha')||new Date().toISOString().split('T')[0];
+const descripcionIA=decodeURIComponent(params.get('desc')||'');
+const confianza=params.get('confianza')||'MEDIO';
+const partnerNombre=decodeURIComponent(params.get('partner')||'');
+
+document.title=`Verificación ${orderName} — DJI`;
+document.getElementById('topbar-pedido').textContent=orderName;
+document.getElementById('btn-odoo').href=`${ODOO_URL}/web#id=${orderId}&model=sale.order&view_type=form`;
+
+async function cargarTodo(){
+  try{
+    // Cargar líneas del pedido desde Odoo
+    const lineas=await odooProxy('search_read',{
+      model:'sale.order.line',
+      domain:[['order_id','=',orderId]],
+      fields:['product_id','product_uom_qty','price_unit','price_subtotal'],
+      limit:50
+    });
+
+    // Cargar incidencias IA de este pedido
+    const incidencias=await supaFetch(`rutas_incidencias?empresa=eq.${EMPRESA}&odoo_picking_id=eq.${orderId}&creado_por=eq.ia_verificacion&fecha=eq.${fecha}&select=descripcion,created_at&order=created_at.asc`);
+
+    // Renderizar panel izquierdo
+    const alertas=(incidencias||[]).map(i=>i.descripcion).filter(Boolean);
+    const hayAlertas=alertas.length>0;
+
+    document.getElementById('panel-izq-content').innerHTML=`
+      <!-- INFO PEDIDO -->
+      <div class="section-title">📦 Pedido</div>
+      <div class="info-card" style="margin-bottom:16px">
+        <div class="info-row"><span class="info-label">Pedido</span><span class="info-val" style="color:var(--accent)">${orderName}</span></div>
+        <div class="info-row"><span class="info-label">Cliente</span><span class="info-val">${partnerNombre}</span></div>
+        <div class="info-row"><span class="info-label">Fecha</span><span class="info-val">${fecha}</span></div>
+        <div class="info-row"><span class="info-label">Artículos</span><span class="info-val">${lineas?.length||0} líneas</span></div>
+      </div>
+
+      <!-- ANÁLISIS IA -->
+      <div class="section-title" style="margin-top:16px">🤖 Análisis IA</div>
+      <div style="margin-bottom:12px">
+        <span class="confianza ${confianza}">Confianza: ${confianza}</span>
+      </div>
+      ${hayAlertas
+        ? alertas.map(a=>`<div class="alerta-item">⚠️ ${a.replace(/^\[IA[^\]]*\]\s*/,'')}</div>`).join('')
+        : `<div class="ok-item">✅ Sin alertas detectadas por la IA</div>`
+      }
+
+      <!-- LÍNEAS DEL PEDIDO -->
+      <div class="section-title" style="margin-top:24px">📋 Líneas del pedido</div>
+      ${(lineas||[]).map(l=>{
+        const nombre=Array.isArray(l.product_id)?l.product_id[1]:'-';
+        const qty=l.product_uom_qty;
+        const precio=(l.price_subtotal||0).toLocaleString('es-ES',{style:'currency',currency:'EUR'});
+        return`<div class="linea-row">
+          <div class="linea-nombre">${nombre}</div>
+          <div style="display:flex;gap:12px;align-items:center">
+            <span style="font-size:12px;color:var(--text2)">${precio}</span>
+            <span class="linea-qty">${qty} uds</span>
+          </div>
+        </div>`;
+      }).join('')}
+    `;
+
+    // Cargar fotos de almacén
+    const fotos=await supaFetch(`rutas_fotos_almacen?empresa=eq.${EMPRESA}&odoo_order_id=eq.${orderId}&fecha=eq.${fecha}&select=foto_urls,repartidor`);
+    const urls=(fotos||[]).flatMap(f=>f.foto_urls||[]);
+    const repartidor=(fotos||[])[0]?.repartidor||'';
+
+    if(!urls.length){
+      document.getElementById('fotos-grid').innerHTML='<div style="color:var(--text3);padding:24px;text-align:center">Sin fotos de almacén para este pedido</div>';
+    } else {
+      document.getElementById('fotos-grid').innerHTML=`
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px;grid-column:1/-1">
+          ${urls.length} foto${urls.length>1?'s':''} · ${repartidor}
+        </div>
+        ${urls.map((url,i)=>`
+          <div class="foto-item" onclick="openLb(${i})">
+            <img src="${url}" alt="Foto ${i+1}" loading="lazy"/>
+            <div class="foto-num">${i+1}</div>
+          </div>
+        `).join('')}
+      `;
+      window._lbUrls=urls;
+    }
+
+  }catch(e){
+    document.getElementById('panel-izq-content').innerHTML=`<div style="color:var(--danger);padding:24px">${e.message}</div>`;
+  }
+}
+
+cargarTodo();
+
+// LIGHTBOX
+let _lb={idx:0,scale:1,tx:0,ty:0,dragging:false,startX:0,startY:0};
+function openLb(i){ _lb.idx=i; _lb.scale=1;_lb.tx=0;_lb.ty=0; _lbLoad(); document.getElementById('lightbox').classList.add('show'); _lbBind(); }
+function _lbLoad(){
+  const urls=window._lbUrls||[]; if(!urls.length) return;
+  document.getElementById('lb-img').src=urls[_lb.idx];
+  document.getElementById('lb-titulo').textContent=`${_lb.idx+1} / ${urls.length}`;
+  document.getElementById('lb-caption').textContent=`Foto ${_lb.idx+1} de ${urls.length}`;
+  document.getElementById('lb-nav-prev').style.display=urls.length>1?'flex':'none';
+  document.getElementById('lb-nav-next').style.display=urls.length>1?'flex':'none';
+  _lbApply();
+}
+function _lbApply(){ const img=document.getElementById('lb-img'); img.style.transform=`translate(${_lb.tx}px,${_lb.ty}px) scale(${_lb.scale})`; document.getElementById('lb-zoom-level').textContent=Math.round(_lb.scale*100)+'%'; }
+function lbZoom(f){ _lb.scale=Math.max(0.5,Math.min(5,_lb.scale*f)); _lbApply(); }
+function lbReset(){ _lb.scale=1;_lb.tx=0;_lb.ty=0;_lbApply(); }
+function lbNav(d){ _lb.idx=(_lb.idx+d+(window._lbUrls?.length||1))%(window._lbUrls?.length||1); _lbLoad(); }
+function lbDescargar(){ const a=document.createElement('a'); a.href=(window._lbUrls||[])[_lb.idx]; a.download='foto_'+Date.now()+'.jpg'; a.target='_blank'; a.click(); }
+function closeLb(){ document.getElementById('lightbox').classList.remove('show'); document.getElementById('lb-img').src=''; _lbUnbind(); }
+function _lbBind(){
+  const vp=document.getElementById('lb-vp'),img=document.getElementById('lb-img');
+  img.ondblclick=()=>{ if(_lb.scale>1) lbReset(); else{_lb.scale=2.5;_lbApply();} };
+  vp.onmousedown=e=>{ _lb.dragging=true;_lb.startX=e.clientX-_lb.tx;_lb.startY=e.clientY-_lb.ty;vp.classList.add('grabbing'); };
+  vp.onmousemove=e=>{ if(!_lb.dragging) return;_lb.tx=e.clientX-_lb.startX;_lb.ty=e.clientY-_lb.startY;_lbApply(); };
+  vp.onmouseup=vp.onmouseleave=()=>{_lb.dragging=false;vp.classList.remove('grabbing');};
+  vp.onwheel=e=>{ e.preventDefault();_lb.scale=Math.max(0.5,Math.min(5,_lb.scale*(e.deltaY<0?1.15:0.87)));_lbApply(); };
+  let id=0,is=1;
+  vp.ontouchstart=e=>{ if(e.touches.length===2){id=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);is=_lb.scale;} else{_lb.dragging=true;_lb.startX=e.touches[0].clientX-_lb.tx;_lb.startY=e.touches[0].clientY-_lb.ty;} };
+  vp.ontouchmove=e=>{ e.preventDefault();if(e.touches.length===2){const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX,e.touches[0].clientY-e.touches[1].clientY);_lb.scale=Math.max(0.5,Math.min(5,is*(d/id)));_lbApply();}else if(_lb.dragging){_lb.tx=e.touches[0].clientX-_lb.startX;_lb.ty=e.touches[0].clientY-_lb.startY;_lbApply();} };
+  vp.ontouchend=()=>{_lb.dragging=false;};
+  document._lbKey=e=>{ if(e.key==='Escape') closeLb();else if(e.key==='ArrowRight') lbNav(1);else if(e.key==='ArrowLeft') lbNav(-1); };
+  document.addEventListener('keydown',document._lbKey);
+}
+function _lbUnbind(){ if(document._lbKey){document.removeEventListener('keydown',document._lbKey);delete document._lbKey;} }
+</script>
+</body>
+</html>
