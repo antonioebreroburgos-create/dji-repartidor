@@ -1299,9 +1299,8 @@ async function cargarIncidencias(){
               const tipoLabel=TIPOS_ERROR[i.tipo_error]||i.tipo_error;
               const colorTipo={'falta_producto':'var(--danger)','producto_erroneo':'var(--danger)','cantidad_erronea':'var(--warn)','error_comercial':'#a78bfa','devolucion':'var(--warn)','otro':'var(--text2)'}[i.tipo_error]||'var(--text2)';
               const esIA=i.creado_por==='ia_verificacion';
-              // Buscar fotos de almacén de esta incidencia desde el cache cargado
-              const fotosKey=`_fotos_inc_${i.odoo_picking_id}`;
-              return`<tr style="${esIA?'background:rgba(124,58,237,.04)':''}">
+              const verUrl=esIA?`/verificar.html?order_id=${i.odoo_picking_id}&order_name=${encodeURIComponent(i.odoo_picking_name)}&fecha=${i.fecha}&partner=${encodeURIComponent(i.partner_nombre||'')}&desc=${encodeURIComponent(i.descripcion||'')}&confianza=${(i.descripcion||'').match(/ALTO|MEDIO|BAJO/)?.[0]||'MEDIO'}`:'';
+              return`<tr style="${esIA?'background:rgba(124,58,237,.04);cursor:pointer':''}" ${esIA?`onclick="window.open('${verUrl}','_blank')" title="Ver verificación completa"`:''}>
                 <td style="white-space:nowrap;font-size:12px">
                   ${new Date(i.created_at).toLocaleDateString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
                   ${esIA?'<br><span style="font-size:10px;color:#a78bfa;font-weight:700">🤖 IA</span>':''}
