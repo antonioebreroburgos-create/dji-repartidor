@@ -145,11 +145,11 @@ async function cargarTodo(){
       limit:50
     });
 
-    // Cargar incidencias IA de este pedido
+    // Cargar incidencias IA de este pedido directamente de Supabase
     const incidencias=await supaFetch(`rutas_incidencias?empresa=eq.${EMPRESA}&odoo_picking_id=eq.${orderId}&creado_por=eq.ia_verificacion&fecha=eq.${fecha}&select=descripcion,created_at&order=created_at.asc`);
 
     // Renderizar panel izquierdo
-    const alertas=(incidencias||[]).map(i=>i.descripcion).filter(Boolean);
+    const alertas=(incidencias||[]).map(i=>typeof i.descripcion==='string'?i.descripcion:JSON.stringify(i.descripcion||'')).filter(Boolean);
     const hayAlertas=alertas.length>0;
 
     document.getElementById('panel-izq-content').innerHTML=`
