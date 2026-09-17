@@ -234,7 +234,16 @@ function lbZoom(f){ _lb.scale=Math.max(0.5,Math.min(5,_lb.scale*f)); _lbApply();
 function lbReset(){ _lb.scale=1;_lb.tx=0;_lb.ty=0;_lbApply(); }
 function lbNav(d){ _lb.idx=(_lb.idx+d+(window._lbUrls?.length||1))%(window._lbUrls?.length||1); _lbLoad(); }
 function lbDescargar(){ const a=document.createElement('a'); a.href=(window._lbUrls||[])[_lb.idx]; a.download='foto_'+Date.now()+'.jpg'; a.target='_blank'; a.click(); }
-function closeLb(){ document.getElementById('lightbox').classList.remove('show'); document.getElementById('lb-img').src=''; _lbUnbind(); }
+function closeLb(){ 
+  document.getElementById('lightbox').classList.remove('show'); 
+  document.getElementById('lb-img').src=''; 
+  _lbUnbind(); 
+}
+
+// Cerrar al pulsar fuera de la imagen
+document.getElementById('lightbox').addEventListener('click', function(e){
+  if(e.target === this || e.target === document.getElementById('lb-vp')) closeLb();
+});
 function _lbBind(){
   const vp=document.getElementById('lb-vp'),img=document.getElementById('lb-img');
   img.ondblclick=()=>{ if(_lb.scale>1) lbReset(); else{_lb.scale=2.5;_lbApply();} };
