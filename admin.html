@@ -732,7 +732,7 @@ async function cargarAsignaciones(){
     if(j.ok){
       repsACargar.forEach(([nombre, rutaOdoo])=>{
         j.result.presupuestos
-          .filter(p=>{ const ruta=(Array.isArray(p.route_id)?p.route_id[1]:'')||''; return ruta.startsWith(rutaOdoo); })
+          .filter(p=>{ const ruta=(Array.isArray(p.route_id)?p.route_id[1]:'')||''; return ruta.includes(rutaOdoo); })
           .forEach(p=>{ todosPedidos.push({...p, _repartidor:nombre}); });
       });
     }
@@ -922,7 +922,7 @@ async function generarRuta(){
     const rutaOdoo=RUTAS_REPARTIDORES[rep];
     const pedidosDia=j.result.presupuestos.filter(p=>{
       const ruta=(Array.isArray(p.route_id)?p.route_id[1]:'')||'';
-      return ruta.startsWith(rutaOdoo)&&getDiaTagAdmin(p.tag_names)===dia;
+      return ruta.includes(rutaOdoo)&&getDiaTagAdmin(p.tag_names)===dia;
     });
     if(!pedidosDia.length){ resultado.innerHTML=`<div style="color:var(--warn);padding:16px">No hay pedidos asignados a ${rep} para el ${dia}</div>`; return; }
     resultado.innerHTML=`<div style="color:var(--text2);padding:8px">📍 Cargando coordenadas de ${pedidosDia.length} pedidos...</div>`;
@@ -1989,7 +1989,7 @@ function _lbUnbindEvents(){
 
 // ── PEDIDOS PENDIENTES ADMIN ──────────────────────────────
 const RUTAS_REPARTIDORES = {
-  'JUAN PEDRO':    'Pedro Juan',
+  'JUAN PEDRO':    'Juan Pedro',
   'JAVIER':        'Javier',
   'ALFONSO':       'Alfonso',
   'JUANLU':        'Juanlu',
@@ -2543,7 +2543,7 @@ async function cargarPresupuestos(){
       const ruta=(Array.isArray(p.route_id)?p.route_id[1]:'')||'';
       // Buscar el nombre exacto de la ruta del repartidor
       const RUTAS_EXACTAS = {
-        'JUAN PEDRO':    'Pedro Juan',
+        'JUAN PEDRO':    'Juan Pedro',
         'JAVIER':        'Javier',
         'ALFONSO':       'Alfonso',
         'JUANLU':        'Juanlu',
@@ -2551,7 +2551,7 @@ async function cargarPresupuestos(){
         'ZEKY':          'Zeky',
       };
       const rutaExacta = RUTAS_EXACTAS[filtroRep];
-      return rutaExacta ? ruta.startsWith(rutaExacta) : ruta.toLowerCase().includes(filtroRep.toLowerCase());
+      return rutaExacta ? ruta.includes(rutaExacta) : ruta.toLowerCase().includes(filtroRep.toLowerCase());
     });
 
     if(filtroDia) presupuestos=presupuestos.filter(p=>{
