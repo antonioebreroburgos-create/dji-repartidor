@@ -109,7 +109,7 @@ exports.handler = async (event) => {
 
     if (action === 'get_pickings_hoy' || action === 'get_pickings_pendientes') {
       const { rutaNombre, fecha } = params;
-      const rutas = await odooCallKw(cfg, cookie, 'stock.location.route', 'search_read',
+      const rutas = await odooCallKw(cfg, cookie, 'stock.route', 'search_read',
         [[['name', 'ilike', rutaNombre]]], { fields: ['id', 'name'], limit: 5 });
       if (!rutas.length) throw new Error(`Ruta "${rutaNombre}" no encontrada en Odoo`);
       const rutaId = rutas[0].id;
@@ -214,7 +214,7 @@ exports.handler = async (event) => {
       const { rutaNombre } = params;
 
       // Buscar ruta por nombre
-      const rutas = await odooCallKw(cfg, cookie, 'stock.location.route', 'search_read',
+      const rutas = await odooCallKw(cfg, cookie, 'stock.route', 'search_read',
         [[['name', 'ilike', rutaNombre]]], { fields: ['id', 'name'], limit: 5 });
       if (!rutas.length) throw new Error(`Ruta "${rutaNombre}" no encontrada`);
       const rutaId = rutas[0].id;
