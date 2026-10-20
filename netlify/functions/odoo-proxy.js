@@ -5,7 +5,7 @@ const https = require('https');
 const ODOOS = {
   DJI: {
     url:      'https://distribucionesjoaquininfante.es',
-    db:       'dji15',
+    db:       'dji19',
     user:     'aebrero.jinfante@amh.es',
     password: '123456Zx@@',
   },
