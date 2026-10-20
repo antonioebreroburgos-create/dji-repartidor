@@ -132,7 +132,7 @@ exports.handler = async (event) => {
       else domain.push(['id', '=', -1]);
 
       const pickings = await odooCallKw(cfg, cookie, 'stock.picking', 'search_read',
-        [domain], { fields: ['id', 'name', 'partner_id', 'scheduled_date', 'move_ids_without_package', 'sale_id', 'note'], limit: 100 });
+        [domain], { fields: ['id', 'name', 'partner_id', 'scheduled_date', 'move_ids', 'sale_id', 'note'], limit: 100 });
 
       // Enriquecer pickings con la dirección de entrega de la sale.order
       const saleIds = pickings.map(p => Array.isArray(p.sale_id) ? p.sale_id[0] : p.sale_id).filter(Boolean);
