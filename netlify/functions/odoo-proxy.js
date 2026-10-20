@@ -115,7 +115,7 @@ exports.handler = async (event) => {
       const rutaId = rutas[0].id;
 
       const orders = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
-        [[['route_id', '=', rutaId], ['state', 'in', ['sale', 'done']]]],
+        [[['route_ids', 'in', [rutaId]], ['state', 'in', ['sale', 'done']]]],
         { fields: ['id', 'name'], limit: 500 });
       const orderIds = orders.map(o => o.id);
 
@@ -221,13 +221,13 @@ exports.handler = async (event) => {
 
       // Traer presupuestos (draft/sent) con esa ruta
       const presupuestos = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
-        [[['route_id', '=', rutaId], ['state', 'in', ['draft', 'sent']]]],
+        [[['route_ids', 'in', [rutaId]], ['state', 'in', ['draft', 'sent']]]],
         { fields: ['id', 'name', 'partner_id', 'so_tag_ids', 'amount_total', 'date_order', 'state'], limit: 200 }
       );
 
       // Traer pedidos confirmados con picking asignado (no done) — para foto de almacén
       const confirmados = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
-        [[['route_id', '=', rutaId], ['state', 'in', ['sale', 'done']], ['picking_ids.state', '=', 'assigned']]],
+        [[['route_ids', 'in', [rutaId]], ['state', 'in', ['sale', 'done']], ['picking_ids.state', '=', 'assigned']]],
         { fields: ['id', 'name', 'partner_id', 'so_tag_ids', 'amount_total', 'date_order', 'state'], limit: 200 }
       );
 
@@ -249,17 +249,33 @@ exports.handler = async (event) => {
     } else if (action === 'get_presupuestos_todos') {
       // Presupuestos (draft/sent) con ruta asignada
       const presupuestos = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
-        [[['route_id','!=',false],['state','in',['draft','sent']]]],
-        { fields:['id','name','partner_id','route_id','so_tag_ids','amount_total','date_order','state'], limit:500 }
+        [[['route_ids','!=',false],['state','in',['draft','sent']]]],
+        { fields:['id','name','partner_id','route_ids','so_tag_ids','amount_total','date_order','state'], limit:500 }
       );
 
       // Confirmados con picking assigned (no entregados aún)
       const confirmados = await odooCallKw(cfg, cookie, 'sale.order', 'search_read',
-        [[['route_id','!=',false],['state','in',['sale','done']],['picking_ids.state','=','assigned']]],
-        { fields:['id','name','partner_id','route_id','so_tag_ids','amount_total','date_order','state'], limit:500 }
+        [[['route_ids','!=',false],['state','in',['sale','done']],['picking_ids.state','=','assigned']]],
+        { fields:['id','name','partner_id','route_ids','so_tag_ids','amount_total','date_order','state'], limit:500 }
       );
 
       const todos = [...presupuestos, ...confirmados];
+
+      // Resolver IDs de rutas → nombres
+      const allRouteIds2 = [...new Set(todos.flatMap(p => p.route_ids||[]))];
+      let routeNamesMap2 = {};
+      if(allRouteIds2.length){
+        try{
+          const routeObjs2 = await odooCallKw(cfg, cookie, 'stock.route', 'read',
+            [allRouteIds2], {fields:['id','name']});
+          routeObjs2.forEach(r=>{ routeNamesMap2[r.id]=r.name; });
+        }catch(_){}
+      }
+      todos.forEach(p=>{
+        const firstId = p.route_ids?.[0];
+        p.route_name = firstId ? (routeNamesMap2[firstId]||'') : '';
+      });
+
       const allTagIds2 = [...new Set(todos.flatMap(p => p.so_tag_ids||[]))];
       let tagMap2 = {};
       if(allTagIds2.length > 0){
@@ -289,8 +305,19 @@ exports.handler = async (event) => {
       let routeMap = {};
       if(saleIds.length){
         const sales = await odooCallKw(cfg, cookie, 'sale.order', 'read',
-          [saleIds], { fields: ['id', 'route_id'] });
-        sales.forEach(s=>{ routeMap[s.id] = Array.isArray(s.route_id)?s.route_id[1]:''; });
+          [saleIds], { fields: ['id', 'route_ids'] });
+        // Recoger todos los route IDs únicos para obtener sus nombres
+        const allRouteIds = [...new Set(sales.flatMap(s=>s.route_ids||[]))];
+        let routeNamesMap = {};
+        if(allRouteIds.length){
+          const routeObjs = await odooCallKw(cfg, cookie, 'stock.route', 'read',
+            [allRouteIds], { fields: ['id', 'name'] });
+          routeObjs.forEach(r=>{ routeNamesMap[r.id] = r.name; });
+        }
+        sales.forEach(s=>{
+          const firstRouteId = s.route_ids?.[0];
+          routeMap[s.id] = firstRouteId ? (routeNamesMap[firstRouteId]||'') : '';
+        });
       }
       pickings.forEach(p=>{
         const saleId = Array.isArray(p.sale_id)?p.sale_id[0]:p.sale_id;
