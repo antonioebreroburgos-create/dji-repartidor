@@ -47,7 +47,11 @@ function odooRequest(cfg, path, payload) {
       let data = '';
       res.on('data', d => data += d);
       res.on('end', () => {
-        try { resolve({ json: JSON.parse(data), cookie }); }
+        if (data.trimStart().startsWith('<')) {
+          resolve({ json: null, cookie, statusCode: res.statusCode, isHtml: true });
+          return;
+        }
+        try { resolve({ json: JSON.parse(data), cookie, statusCode: res.statusCode }); }
         catch(e) { reject(new Error('Parse error: ' + data.slice(0, 200))); }
       });
     });
@@ -64,11 +68,27 @@ async function odooLogin(cfg) {
   return { cookie, uid: json.result.uid };
 }
 
+// Endpoint RPC — se detecta automáticamente en la primera llamada
+let _rpcEndpoint = null;
+const RPC_CANDIDATES = ['/web/dataset/call_kw', '/web/dataset/call'];
+
 async function odooCallKw(cfg, cookie, model, method, args, kwargs = {}) {
-  const { json } = await odooRequest({ ...cfg, cookie }, '/web/dataset/call',
-    { jsonrpc: '2.0', method: 'call', id: 1, params: { model, method, args, kwargs } });
-  if (json.error) throw new Error(json.error.data?.message || JSON.stringify(json.error));
-  return json.result;
+  const payload = { jsonrpc: '2.0', method: 'call', id: 1, params: { model, method, args, kwargs } };
+  if (_rpcEndpoint) {
+    const { json } = await odooRequest({ ...cfg, cookie }, _rpcEndpoint, payload);
+    if (json?.error) throw new Error(json.error.data?.message || JSON.stringify(json.error));
+    return json.result;
+  }
+  // Auto-detectar endpoint válido
+  for (const endpoint of RPC_CANDIDATES) {
+    const { json, isHtml } = await odooRequest({ ...cfg, cookie }, endpoint, payload);
+    if (!isHtml && json !== null) {
+      _rpcEndpoint = endpoint;
+      if (json.error) throw new Error(json.error.data?.message || JSON.stringify(json.error));
+      return json.result;
+    }
+  }
+  throw new Error('Ningún endpoint RPC disponible en este Odoo');
 }
 
 exports.handler = async (event) => {
