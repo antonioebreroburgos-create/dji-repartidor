@@ -732,7 +732,7 @@ async function cargarAsignaciones(){
     if(j.ok){
       repsACargar.forEach(([nombre, rutaOdoo])=>{
         j.result.presupuestos
-          .filter(p=>{ const ruta=(Array.isArray(p.route_id)?p.route_id[1]:'')||''; return ruta.includes(rutaOdoo); })
+          .filter(p=>{ const ruta=(p.route_name||'')||''; return ruta.includes(rutaOdoo); })
           .forEach(p=>{ todosPedidos.push({...p, _repartidor:nombre}); });
       });
     }
@@ -921,7 +921,7 @@ async function generarRuta(){
     if(!j.ok) throw new Error(j.error);
     const rutaOdoo=RUTAS_REPARTIDORES[rep];
     const pedidosDia=j.result.presupuestos.filter(p=>{
-      const ruta=(Array.isArray(p.route_id)?p.route_id[1]:'')||'';
+      const ruta=(p.route_name||'')||'';
       return ruta.includes(rutaOdoo)&&getDiaTagAdmin(p.tag_names)===dia;
     });
     if(!pedidosDia.length){ resultado.innerHTML=`<div style="color:var(--warn);padding:16px">No hay pedidos asignados a ${rep} para el ${dia}</div>`; return; }
@@ -2540,7 +2540,7 @@ async function cargarPresupuestos(){
     const filtroDia=document.getElementById('filtro-dia-pres').value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
 
     if(filtroRep) presupuestos=presupuestos.filter(p=>{
-      const ruta=(Array.isArray(p.route_id)?p.route_id[1]:'')||'';
+      const ruta=(p.route_name||'')||'';
       // Buscar el nombre exacto de la ruta del repartidor
       const RUTAS_EXACTAS = {
         'JUAN PEDRO':    'Pedro Juan',
@@ -2573,7 +2573,7 @@ async function cargarPresupuestos(){
 
     document.getElementById('pres-body').innerHTML=presupuestos.map(p=>{
       const cliente=Array.isArray(p.partner_id)?p.partner_id[1]:'-';
-      const ruta=Array.isArray(p.route_id)?p.route_id[1]:'-';
+      const ruta=p.route_name||'-';
       const rep=ruta.split(':')[0].trim();
       const dia=getDiaTagA(p.tag_names);
       const diaLabel=dia?dia.charAt(0).toUpperCase()+dia.slice(1):'—';
