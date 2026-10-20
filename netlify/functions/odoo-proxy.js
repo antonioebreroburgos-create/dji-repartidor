@@ -65,7 +65,7 @@ async function odooLogin(cfg) {
 }
 
 async function odooCallKw(cfg, cookie, model, method, args, kwargs = {}) {
-  const { json } = await odooRequest({ ...cfg, cookie }, '/web/dataset/call_kw',
+  const { json } = await odooRequest({ ...cfg, cookie }, '/web/dataset/call',
     { jsonrpc: '2.0', method: 'call', id: 1, params: { model, method, args, kwargs } });
   if (json.error) throw new Error(json.error.data?.message || JSON.stringify(json.error));
   return json.result;
