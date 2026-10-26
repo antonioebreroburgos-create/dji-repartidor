@@ -466,6 +466,36 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
       );
       result = { fotos };
 
+    } else if (action === 'guardar_foto_almacen_por_sale') {
+      // Busca el picking (assigned) de una sale.order y crea dji.picking.foto
+      const { saleId, url, subida_por } = params;
+      if (!saleId || !url) throw new Error('Faltan parámetros: saleId, url');
+
+      // Buscar picking outgoing assigned para esta sale
+      const pickings = await odooCallKw(cfg, cookie, 'stock.picking', 'search_read',
+        [[['sale_id', '=', saleId], ['state', '=', 'assigned'], ['picking_type_code', '=', 'outgoing']]],
+        { fields: ['id', 'name'], limit: 1 });
+
+      if (!pickings.length) {
+        // Si no hay picking assigned, buscar cualquier outgoing (puede estar en otro estado)
+        const pickingsAny = await odooCallKw(cfg, cookie, 'stock.picking', 'search_read',
+          [[['sale_id', '=', saleId], ['picking_type_code', '=', 'outgoing']]],
+          { fields: ['id', 'name'], limit: 1, order: 'id desc' });
+        if (!pickingsAny.length) throw new Error(`No se encontró picking para sale.order ${saleId}`);
+        pickings.push(pickingsAny[0]);
+      }
+
+      const pickingId = pickings[0].id;
+      const vals = {
+        picking_id: pickingId,
+        tipo: 'carga',
+        url,
+        subida_por: subida_por || '',
+        ia_estado: 'pendiente',
+      };
+      const fotoId = await odooCallKw(cfg, cookie, 'dji.picking.foto', 'create', [vals], {});
+      result = { fotoId, pickingId, pickingName: pickings[0].name };
+
     } else if (action === 'guardar_gps_partner') {
       // Escribe dji_latitud / dji_longitud en res.partner (dirección de entrega)
       const { partnerId, latitud, longitud } = params;
