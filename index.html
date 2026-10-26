@@ -281,6 +281,16 @@
       <button class="btn btn-primary" style="margin-top:12px" onclick="guardarFichaIntegrada()">💾 Guardar ficha</button>
     </div>
 
+    <!-- FOTOS DE CARGA (almacén) — vinculadas al albarán Odoo -->
+    <div class="section-label">📦 Fotos de carga (almacén)</div>
+    <div id="carga-alerta" style="display:none;background:rgba(239,68,68,.1);border:1px solid var(--danger);border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:8px;font-size:12px;color:var(--danger)"></div>
+    <div class="foto-preview" id="carga-preview"></div>
+    <input type="file" id="input-carga" accept="image/*" capture="environment" style="display:none" onchange="procesarFotoCarga(this)"/>
+    <button class="btn btn-secondary" id="btn-fotos-carga" onclick="document.getElementById('input-carga').click()" style="margin-bottom:4px;padding:12px">
+      📦 Añadir foto de carga <span id="carga-count" style="font-size:12px;opacity:.7"></span>
+    </button>
+    <div id="carga-ia-resultado" style="display:none;border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:12px"></div>
+
     <!-- FOTO -->
     <div class="section-label">📷 Fotos de la entrega</div>
     <div class="foto-preview" id="foto-preview"></div>
@@ -373,7 +383,7 @@ const SUPABASE_URL = 'https://pkxjsbgizxntmgtixbwt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_7RsdYecYwSQhsI_PAbhczQ_49wMNVID';
 const PROXY_URL    = '/.netlify/functions/odoo-proxy';
 const ODOO_URL     = 'https://distribucionesjoaquininfante.es';
-const EMPRESA      = 'DJI';
+const EMPRESA      = new URLSearchParams(window.location.search).get('empresa') || 'DJI';
 
 const REPARTIDORES = [
   { nombre:'JUAN PEDRO',    rutaOdoo:'Pedro Juan' },
@@ -631,6 +641,12 @@ async function abrirParada(i){
   document.getElementById('parada-dir').textContent=p.punto?.direccion_texto||'Sin dirección';
   document.getElementById('parada-comentario').value='';
   document.getElementById('foto-preview').innerHTML='';
+  // Resetear sección fotos de carga
+  document.getElementById('carga-preview').innerHTML='';
+  document.getElementById('carga-ia-resultado').style.display='none';
+  document.getElementById('carga-ia-resultado').innerHTML='';
+  document.getElementById('carga-alerta').style.display='none';
+  const cargaCnt=document.getElementById('carga-count'); if(cargaCnt) cargaCnt.textContent='';
   document.getElementById('btn-whatsapp-wrap').style.display='none';
   document.getElementById('btn-whatsapp-wrap').innerHTML='';
   document.getElementById('tiempo-wrap').style.display='none';
@@ -645,6 +661,8 @@ async function abrirParada(i){
   cerrarFicha();
   await cargarFichaIntegrada(p);
   irA('parada');
+  // Cargar fotos de carga ya registradas en Odoo (async, sin bloquear)
+  cargarFotosCargaExistentes(p).catch(()=>{});
   const yaEntregado=p.estado==='entregada';
   document.getElementById('acciones-wrap').style.display=yaEntregado?'none':'block';
   const firmaBtn=document.querySelector('button[onclick="abrirOdooAlbaran()"]');
@@ -818,6 +836,13 @@ async function marcarEntregado(){
     try{
       await fetch(SUPABASE_URL+'/rest/v1/rutas_entregas_dia?on_conflict=odoo_picking_id,repartidor',{method:'POST',headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},body:JSON.stringify({empresa:EMPRESA,repartidor:E.usuario.nombre,odoo_picking_id:p.id,odoo_picking_name:p.name,odoo_sale_id:Array.isArray(p.sale_id)?p.sale_id[0]:p.sale_id||null,partner_nombre:p.partnerNombre,delivery_id:p.deliveryId,foto_urls:E.fotoUrls,comentario:p.comentario||null,estado:'entregada',hora_entrega:new Date().toISOString()})});
     }catch(err){ console.warn('No se pudo guardar entrega:',err.message); }
+    // Registrar fotos de entrega en Odoo (dji.picking.foto) — silencioso
+    for(const url of E.fotoUrls){
+      odooProxy('guardar_foto_picking',{
+        pickingId:p.id, tipo:'entrega', url,
+        subida_por:E.usuario?.nombre||'', ia_estado:'pendiente',
+      }).catch(()=>{});
+    }
     try{ sessionStorage.setItem('dji_pedidos_'+E.usuario.rutaOdoo,JSON.stringify(E.pedidos)); }catch(_){}
     toast('✓ Entrega registrada'); renderPedidos(); mostrarBotonesWhatsApp(p);
   }catch(e){ toast('Error: '+e.message,'err'); }
@@ -833,6 +858,165 @@ async function guardarTiempoReal(){
 async function marcarFallido(){
   const p=E.pedidos[E.pedidoActual]; p.estado='fallida'; p.comentario=document.getElementById('parada-comentario').value;
   toast('✗ Marcado como no entregado','err'); renderPedidos(); irA('pedidos');
+}
+
+// ── FOTOS DE CARGA (vinculadas al stock.picking / albarán Odoo) ────────────
+async function procesarFotoCarga(input){
+  const file=input.files[0]; if(!file) return;
+  const p=E.pedidos[E.pedidoActual]; if(!p) return;
+  const btn=document.getElementById('btn-fotos-carga');
+  btn.textContent='Subiendo...'; btn.disabled=true;
+
+  try{
+    // 1. Subir a Supabase Storage
+    const nombre=`${EMPRESA}/carga/${(p.name||'picking').replace(/\//g,'_')}_${Date.now()}.jpg`;
+    const r=await fetch(`${SUPABASE_URL}/storage/v1/object/entregas/${nombre}`,{
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':`Bearer ${SUPABASE_KEY}`,
+                'Content-Type':file.type||'image/jpeg','x-upsert':'true'},
+      body:file
+    });
+    if(!r.ok) throw new Error('Error subiendo foto de carga');
+    const url=`${SUPABASE_URL}/storage/v1/object/public/entregas/${nombre}`;
+
+    // 2. Guardar en Odoo (dji.picking.foto) — silencioso si falla
+    try{
+      await odooProxy('guardar_foto_picking',{
+        pickingId: p.id,
+        tipo: 'carga',
+        url,
+        subida_por: E.usuario?.nombre || '',
+        ia_estado: 'pendiente',
+      });
+    }catch(e){ console.warn('Odoo guardar_foto_picking:', e.message); }
+
+    // 3. Mostrar miniatura en la UI
+    const preview=document.getElementById('carga-preview');
+    const img=document.createElement('img'); img.src=url; img.className='foto-thumb';
+    const idx=preview.querySelectorAll('img').length;
+    img.onclick=()=>openPwaLightbox(url,`Foto carga ${idx+1}`);
+    preview.appendChild(img);
+
+    // 4. Guardar url en estado del pedido para IA
+    if(!p.fotosCargaUrls) p.fotosCargaUrls=[];
+    p.fotosCargaUrls.push(url);
+    const cnt=document.getElementById('carga-count');
+    if(cnt) cnt.textContent=`(${p.fotosCargaUrls.length})`;
+
+    // 5. Ocultar alerta si había
+    const alerta=document.getElementById('carga-alerta');
+    if(alerta){ alerta.style.display='none'; }
+
+    toast('Foto de carga guardada ✓ — verificando con IA...');
+
+    // 6. Verificación IA con debounce 4s (igual que en presupuestos)
+    clearTimeout(window._verificarCargarTimer?.[p.id]);
+    if(!window._verificarCargarTimer) window._verificarCargarTimer={};
+    window._verificarCargarTimer[p.id]=setTimeout(()=>verificarCargaIAPicking(p),4000);
+
+  }catch(e){ toast('Error: '+e.message,'err'); }
+  btn.textContent='📦 Añadir foto de carga'; btn.disabled=false; input.value='';
+}
+
+async function verificarCargaIAPicking(p){
+  const fotoUrls=p.fotosCargaUrls||[];
+  if(!fotoUrls.length) return;
+  const iaDiv=document.getElementById('carga-ia-resultado');
+
+  try{
+    // Obtener líneas del pedido de Odoo (sale.order lines a través del picking)
+    const saleId=Array.isArray(p.sale_id)?p.sale_id[0]:p.sale_id;
+    if(!saleId){ console.warn('Sin sale_id para IA'); return; }
+
+    const r=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({empresa:EMPRESA,action:'search_read',params:{
+        model:'sale.order.line',
+        domain:[['order_id','=',saleId]],
+        fields:['product_id','product_uom_qty'],
+        limit:50
+      }})
+    });
+    const j=await r.json();
+    if(!j.ok||!j.result?.length){ console.warn('Sin líneas de pedido para IA'); return; }
+
+    const lineasPedido=j.result.map(l=>({nombre:l.product_id[1],cantidad:l.product_uom_qty}));
+
+    const resp=await fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({empresa:EMPRESA,action:'verificar_carga_ia',params:{
+        orderId:saleId,orderName:p.name,
+        partnerNombre:Array.isArray(p.partner_id)?p.partner_id[1]:'-',
+        fotoUrls,lineasPedido
+      }})
+    });
+    const resultado=await resp.json();
+    if(!resultado.ok) return;
+    const r2=resultado.result;
+
+    // Actualizar registros Odoo con resultado IA
+    const iaEstado=r2.ok?'ok':'incidencia';
+    const iaAnalisis=r2.ok?r2.resumen:(r2.alertas||[]).join(' | ');
+    try{
+      const fotosRes=await odooProxy('get_fotos_picking',{pickingId:p.id});
+      const fotos=(fotosRes.fotos||[]).filter(f=>f.tipo==='carga');
+      for(const foto of fotos){
+        await odooProxy('actualizar_foto_picking',{fotoId:foto.id,ia_analisis:iaAnalisis,ia_estado:iaEstado});
+      }
+    }catch(_){}
+
+    // Mostrar resultado en UI
+    if(iaDiv){
+      if(!r2.ok&&r2.alertas?.length){
+        iaDiv.style.cssText='display:block;background:rgba(239,68,68,.12);border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:12px';
+        iaDiv.innerHTML=`⚠️ <strong>IA [${r2.confianza}]:</strong>${r2.alertas.map(a=>`<br>• ${a}`).join('')}`;
+        toast(`⚠️ IA detectó ${r2.alertas.length} alerta(s) en la carga`,'err');
+      }else if(r2.ok){
+        iaDiv.style.cssText='display:block;background:rgba(34,197,94,.1);border:1px solid var(--success);border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:12px;color:var(--success)';
+        iaDiv.innerHTML=`✅ <strong>IA [${r2.confianza}]:</strong> ${r2.resumen}`;
+        toast(`✅ Carga verificada por IA (${r2.confianza})`);
+      }
+    }
+  }catch(e){
+    console.warn('verificarCargaIAPicking:',e.message);
+  }
+}
+
+// Carga de fotos de carga existentes al abrir la pantalla de parada
+async function cargarFotosCargaExistentes(p){
+  if(!p?.id) return;
+  try{
+    const res=await odooProxy('get_fotos_picking',{pickingId:p.id});
+    const fotos=(res.fotos||[]).filter(f=>f.tipo==='carga');
+    if(!fotos.length) return;
+
+    const preview=document.getElementById('carga-preview');
+    if(!preview) return;
+    preview.innerHTML=''; // limpiar
+
+    p.fotosCargaUrls=fotos.map(f=>f.url);
+    fotos.forEach((f,i)=>{
+      const img=document.createElement('img'); img.src=f.url; img.className='foto-thumb';
+      img.onclick=()=>openPwaLightbox(f.url,`Foto carga ${i+1}`);
+      preview.appendChild(img);
+    });
+    const cnt=document.getElementById('carga-count');
+    if(cnt) cnt.textContent=`(${fotos.length})`;
+
+    // Mostrar último análisis IA si existe
+    const conIA=fotos.filter(f=>f.ia_analisis);
+    if(conIA.length){
+      const iaDiv=document.getElementById('carga-ia-resultado');
+      const ultima=conIA[conIA.length-1];
+      if(iaDiv){
+        if(ultima.ia_estado==='incidencia'){
+          iaDiv.style.cssText='display:block;background:rgba(239,68,68,.12);border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:12px';
+          iaDiv.innerHTML=`⚠️ <strong>IA:</strong> ${ultima.ia_analisis}`;
+        }else if(ultima.ia_estado==='ok'){
+          iaDiv.style.cssText='display:block;background:rgba(34,197,94,.1);border:1px solid var(--success);border-radius:6px;padding:8px 10px;margin-bottom:8px;font-size:12px;color:var(--success)';
+          iaDiv.innerHTML=`✅ <strong>IA:</strong> ${ultima.ia_analisis}`;
+        }
+      }
+    }
+  }catch(e){ console.warn('cargarFotosCargaExistentes:',e.message); }
 }
 
 // WHATSAPP
