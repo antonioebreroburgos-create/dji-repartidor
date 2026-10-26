@@ -9,6 +9,13 @@ const ODOOS = {
     user:     'aebrero.jinfante@amh.es',
     password: '123456Zx@@',
   },
+  DJITEST: {
+    url:      'https://pre-dji19.xtd.es',
+    db:       'dji19',
+    user:     'aebrero.jinfante@amh.es',
+    password: '123456Zx@@',
+    rejectUnauthorized: false,  // por si el certificado de pre es autofirmado
+  },
   SYL: {
     url:      'https://sylonuba.com',
     db:       'devel',
@@ -423,6 +430,41 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
           return String(a);
         });
       }
+
+    } else if (action === 'guardar_foto_picking') {
+      // Guarda un registro dji.picking.foto en Odoo (foto de carga o entrega)
+      const { pickingId, tipo, url, subida_por, ia_analisis, ia_estado } = params;
+      if (!pickingId || !tipo || !url) throw new Error('Faltan parámetros: pickingId, tipo, url');
+
+      const vals = {
+        picking_id: pickingId,
+        tipo,                // 'carga' o 'entrega'
+        url,
+        subida_por: subida_por || '',
+        ia_analisis: ia_analisis || false,
+        ia_estado: ia_estado || 'pendiente',
+      };
+      const fotoId = await odooCallKw(cfg, cookie, 'dji.picking.foto', 'create', [vals], {});
+      result = { fotoId };
+
+    } else if (action === 'actualizar_foto_picking') {
+      // Actualiza campos de análisis IA en un registro dji.picking.foto existente
+      const { fotoId, ia_analisis, ia_estado } = params;
+      if (!fotoId) throw new Error('Falta fotoId');
+      const vals = {};
+      if (ia_analisis !== undefined) vals.ia_analisis = ia_analisis;
+      if (ia_estado   !== undefined) vals.ia_estado   = ia_estado;
+      await odooCallKw(cfg, cookie, 'dji.picking.foto', 'write', [[fotoId], vals], {});
+      result = { ok: true };
+
+    } else if (action === 'get_fotos_picking') {
+      // Devuelve las fotos registradas en Odoo para un picking
+      const { pickingId } = params;
+      const fotos = await odooCallKw(cfg, cookie, 'dji.picking.foto', 'search_read',
+        [[['picking_id', '=', pickingId]]],
+        { fields: ['id', 'tipo', 'url', 'fecha_subida', 'subida_por', 'ia_estado', 'ia_analisis'], order: 'fecha_subida asc' }
+      );
+      result = { fotos };
 
     } else {
       throw new Error('Acción no reconocida: ' + action);
