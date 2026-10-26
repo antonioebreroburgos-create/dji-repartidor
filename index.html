@@ -781,6 +781,14 @@ async function guardarFichaIntegrada(){
       if(!r.ok) throw new Error('Error Supabase: '+await r.text());
       try{ const pts=await supaFetch(`rutas_puntos_entrega?odoo_delivery_id=eq.${p.partnerId}&select=*`); p.punto=pts?.[0]||{...datos,odoo_delivery_id:p.partnerId}; }catch(_){}
     }
+    // Sincronizar GPS con Odoo (res.partner) — silencioso, no bloquea
+    if(E.coordsGPS && p.deliveryId){
+      odooProxy('guardar_gps_partner',{
+        partnerId: p.deliveryId,
+        latitud:   E.coordsGPS.lat,
+        longitud:  E.coordsGPS.lng,
+      }).catch(err=>console.warn('GPS Odoo sync:', err.message));
+    }
     toast('Ficha guardada ✓'); renderPedidos();
   }catch(e){ toast('Error: '+e.message,'err'); }
 }
@@ -1153,6 +1161,14 @@ async function subirFotoAlmacen(input,orderId,orderName,partnerNombre){
     img.onclick=()=>openPwaLightbox(url,`Foto almacén ${fotoCount+1}`);
     preview.appendChild(img);
     toast('Foto guardada ✓ — verificando carga...');
+
+    // Registrar foto en Odoo (dji.picking.foto) — silencioso, no bloquea
+    fetch(PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({empresa:EMPRESA,action:'guardar_foto_almacen_por_sale',params:{
+        saleId:orderId, url, subida_por:E.usuario?.nombre||''
+      }})
+    }).then(r=>r.json()).then(j=>{ if(!j.ok) console.warn('Odoo foto almacén:',j.error); })
+      .catch(err=>console.warn('Odoo foto almacén:',err.message));
 
     // Verificación automática con IA — debounce 4 segundos
     // Si el repartidor sube varias fotos seguidas, solo verifica la última vez
