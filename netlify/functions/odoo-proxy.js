@@ -11,9 +11,9 @@ const ODOOS = {
   },
   DJITEST: {
     url:      'https://pre-dji19.xtd.es',
-    db:       'dji19',
-    user:     'aebrero.jinfante@amh.es',
-    password: '123456Zx@@',
+    db:       'dji_19_pre',
+    user:     'antonioebreroburgos@gmail.com',
+    password: '1234',
     rejectUnauthorized: false,  // por si el certificado de pre es autofirmado
   },
   SYL: {
@@ -465,6 +465,15 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
         { fields: ['id', 'tipo', 'url', 'fecha_subida', 'subida_por', 'ia_estado', 'ia_analisis'], order: 'fecha_subida asc' }
       );
       result = { fotos };
+
+    } else if (action === 'guardar_gps_partner') {
+      // Escribe dji_latitud / dji_longitud en res.partner (dirección de entrega)
+      const { partnerId, latitud, longitud } = params;
+      if (!partnerId || latitud === undefined || longitud === undefined)
+        throw new Error('Faltan parámetros: partnerId, latitud, longitud');
+      await odooCallKw(cfg, cookie, 'res.partner', 'write',
+        [[partnerId], { dji_latitud: latitud, dji_longitud: longitud }], {});
+      result = { ok: true };
 
     } else {
       throw new Error('Acción no reconocida: ' + action);
