@@ -1207,6 +1207,17 @@ async function verificarCargaIA(orderId, orderName, partnerNombre, fotoUrls){
     if(!resultado.ok) return; // error del proxy, silencioso
     const r2=resultado.result;
 
+    // Guardar resultado IA en Odoo (busca fotos por sale.order, funciona antes y después de confirmar)
+    const iaEstadoAlm = r2.ok ? 'ok' : 'incidencia';
+    const iaAnalisisAlm = r2.ok ? r2.resumen : (r2.alertas||[]).join(' | ');
+    try{
+      const fotosRes = await odooProxy('get_fotos_por_sale', {saleId: orderId});
+      const fotos = (fotosRes.fotos||[]).filter(f=>f.tipo==='carga');
+      for(const foto of fotos){
+        await odooProxy('actualizar_foto_picking', {fotoId: foto.id, ia_analisis: iaAnalisisAlm, ia_estado: iaEstadoAlm});
+      }
+    }catch(_){}
+
     // Si hay alertas → incidencia automática
     if(!r2.ok && r2.alertas?.length){
       const fecha=new Date().toISOString().split('T')[0];

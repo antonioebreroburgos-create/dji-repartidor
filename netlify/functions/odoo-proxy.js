@@ -466,6 +466,25 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
       );
       result = { fotos };
 
+    } else if (action === 'get_fotos_por_sale') {
+      // Devuelve fotos de dji.picking.foto para una sale.order (busca vía picking)
+      const { saleId } = params;
+      if (!saleId) throw new Error('Falta saleId');
+      // Primero buscar pickings outgoing de esta sale
+      const pickings = await odooCallKw(cfg, cookie, 'stock.picking', 'search_read',
+        [[['sale_id', '=', saleId], ['picking_type_code', '=', 'outgoing']]],
+        { fields: ['id'], order: 'id desc' }
+      );
+      let fotos = [];
+      if (pickings.length) {
+        const pickingIds = pickings.map(p => p.id);
+        fotos = await odooCallKw(cfg, cookie, 'dji.picking.foto', 'search_read',
+          [[['picking_id', 'in', pickingIds]]],
+          { fields: ['id', 'tipo', 'url', 'fecha_subida', 'subida_por', 'ia_estado', 'ia_analisis'], order: 'fecha_subida asc' }
+        );
+      }
+      result = { fotos };
+
     } else if (action === 'guardar_foto_almacen_por_sale') {
       // Busca el picking (assigned) de una sale.order y crea dji.picking.foto
       const { saleId, url, subida_por } = params;
