@@ -1,4 +1,4 @@
-// netlify/functions/odoo-proxy.js — v4 con caché de sesión
+// netlify/functions/odoo-proxy.js — v4 con caché de sesión + logs debug
 
 const https = require('https');
 
@@ -106,8 +106,12 @@ exports.handler = async (event) => {
   };
   if (event.httpMethod === 'OPTIONS') return { statusCode: 204, headers, body: '' };
 
+  let action = '?', params = {};
   try {
-    const { empresa, action, params } = JSON.parse(event.body || '{}');
+    const body = JSON.parse(event.body || '{}');
+    action = body.action;
+    params = body.params || {};
+    const empresa = body.empresa;
     const cfg = ODOOS[empresa];
     if (!cfg) throw new Error('Empresa no válida: ' + empresa);
 
@@ -436,6 +440,8 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
       const { pickingId, tipo, url, subida_por, ia_analisis, ia_estado } = params;
       if (!pickingId || !tipo || !url) throw new Error('Faltan parámetros: pickingId, tipo, url');
 
+      console.log('[guardar_foto_picking] pickingId=' + pickingId + ' tipo=' + tipo + ' subida_por=' + subida_por);
+
       const vals = {
         picking_id: pickingId,
         tipo,                // 'carga' o 'entrega'
@@ -445,6 +451,7 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
         ia_estado: ia_estado || 'pendiente',
       };
       const fotoId = await odooCallKw(cfg, cookie, 'dji.picking.foto', 'create', [vals], {});
+      console.log('[guardar_foto_picking] OK fotoId=' + fotoId);
       result = { fotoId };
 
     } else if (action === 'actualizar_foto_picking') {
@@ -490,6 +497,8 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
       const { saleId, url, subida_por } = params;
       if (!saleId || !url) throw new Error('Faltan parámetros: saleId, url');
 
+      console.log('[guardar_foto_almacen_por_sale] saleId=' + saleId + ' subida_por=' + subida_por);
+
       // Buscar picking outgoing assigned para esta sale
       const pickings = await odooCallKw(cfg, cookie, 'stock.picking', 'search_read',
         [[['sale_id', '=', saleId], ['state', '=', 'assigned'], ['picking_type_code', '=', 'outgoing']]],
@@ -505,6 +514,8 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
       }
 
       const pickingId = pickings[0].id;
+      console.log('[guardar_foto_almacen_por_sale] pickingId=' + pickingId + ' name=' + pickings[0].name);
+
       const vals = {
         picking_id: pickingId,
         tipo: 'carga',
@@ -513,6 +524,7 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
         ia_estado: 'pendiente',
       };
       const fotoId = await odooCallKw(cfg, cookie, 'dji.picking.foto', 'create', [vals], {});
+      console.log('[guardar_foto_almacen_por_sale] OK fotoId=' + fotoId);
       result = { fotoId, pickingId, pickingName: pickings[0].name };
 
     } else if (action === 'guardar_gps_partner') {
@@ -530,6 +542,7 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
 
     return { statusCode: 200, headers, body: JSON.stringify({ ok: true, result }) };
   } catch(e) {
+    console.error('odoo-proxy ERROR action=' + action + ' params=' + JSON.stringify(params).slice(0, 300) + ' err=' + e.message);
     return { statusCode: 200, headers, body: JSON.stringify({ ok: false, error: e.message }) };
   }
 };
