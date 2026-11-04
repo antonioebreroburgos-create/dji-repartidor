@@ -474,10 +474,12 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
       result = { fotos };
 
     } else if (action === 'get_fotos_por_sale') {
-      // Devuelve fotos de dji.picking.foto para una sale.order (busca vía picking)
+      // Devuelve fotos de dji.picking.foto para una sale.order
+      // Busca tanto por picking vinculado como por sale_id directo (fotos subidas antes del picking)
       const { saleId } = params;
       if (!saleId) throw new Error('Falta saleId');
-      // Primero buscar pickings outgoing de esta sale
+
+      // Fotos vinculadas a pickings de esta sale
       const pickings = await odooCallKw(cfg, cookie, 'stock.picking', 'search_read',
         [[['sale_id', '=', saleId], ['picking_type_code', '=', 'outgoing']]],
         { fields: ['id'], order: 'id desc' }
@@ -490,42 +492,64 @@ Responde SOLO en este formato JSON exacto, sin texto adicional:
           { fields: ['id', 'tipo', 'url', 'fecha_subida', 'subida_por', 'ia_estado', 'ia_analisis'], order: 'fecha_subida asc' }
         );
       }
-      result = { fotos };
+
+      // Fotos huérfanas vinculadas directamente a la sale (subidas antes del picking)
+      const fotosHuerfanas = await odooCallKw(cfg, cookie, 'dji.picking.foto', 'search_read',
+        [[['sale_id', '=', saleId], ['picking_id', '=', false]]],
+        { fields: ['id', 'tipo', 'url', 'fecha_subida', 'subida_por', 'ia_estado', 'ia_analisis'], order: 'fecha_subida asc' }
+      );
+
+      // Combinar y deduplicar por id
+      const todasMap = {};
+      [...fotos, ...fotosHuerfanas].forEach(f => { todasMap[f.id] = f; });
+      const todas = Object.values(todasMap).sort((a, b) => a.fecha_subida < b.fecha_subida ? -1 : 1);
+      result = { fotos: todas };
 
     } else if (action === 'guardar_foto_almacen_por_sale') {
-      // Busca el picking (assigned) de una sale.order y crea dji.picking.foto
+      // Busca el picking (outgoing) de una sale.order y crea dji.picking.foto.
+      // Si el pedido aún no tiene picking (está en presupuesto), guarda la foto
+      // vinculada al pedido (sale_id). Al confirmar el pedido, Odoo la vinculará
+      // automáticamente al picking mediante _link_orphan_fotos().
       const { saleId, url, subida_por } = params;
       if (!saleId || !url) throw new Error('Faltan parámetros: saleId, url');
 
       console.log('[guardar_foto_almacen_por_sale] saleId=' + saleId + ' subida_por=' + subida_por);
 
-      // Buscar picking outgoing assigned para esta sale
+      // Buscar picking outgoing (assigned o done) para esta sale
       const pickings = await odooCallKw(cfg, cookie, 'stock.picking', 'search_read',
-        [[['sale_id', '=', saleId], ['state', '=', 'assigned'], ['picking_type_code', '=', 'outgoing']]],
+        [[['sale_id', '=', saleId], ['picking_type_code', '=', 'outgoing'], ['state', 'in', ['assigned', 'done']]]],
         { fields: ['id', 'name'], limit: 1 });
 
-      if (!pickings.length) {
-        // Si no hay picking assigned, buscar cualquier outgoing (puede estar en otro estado)
-        const pickingsAny = await odooCallKw(cfg, cookie, 'stock.picking', 'search_read',
-          [[['sale_id', '=', saleId], ['picking_type_code', '=', 'outgoing']]],
-          { fields: ['id', 'name'], limit: 1, order: 'id desc' });
-        if (!pickingsAny.length) throw new Error(`No se encontró picking para sale.order ${saleId}`);
-        pickings.push(pickingsAny[0]);
+      if (pickings.length > 0) {
+        // Caso A: ya existe picking → guardar vinculado al picking
+        const pickingId = pickings[0].id;
+        console.log('[guardar_foto_almacen_por_sale] picking encontrado id=' + pickingId + ' name=' + pickings[0].name);
+        const fotoId = await odooCallKw(cfg, cookie, 'dji.picking.foto', 'create', [{
+          picking_id: pickingId,
+          tipo: 'carga',
+          url,
+          subida_por: subida_por || '',
+          ia_estado: 'pendiente',
+        }], {});
+        console.log('[guardar_foto_almacen_por_sale] OK fotoId=' + fotoId + ' (con picking)');
+        result = { ok: true, fotoId, pickingId, pickingName: pickings[0].name };
+
+      } else {
+        // Caso B: no hay picking (pedido en borrador/presupuesto)
+        // → guardar vinculado al pedido de venta (sale_id)
+        // Cuando se confirme el pedido y se cree el picking, Odoo lo vinculará
+        // automáticamente mediante _link_orphan_fotos() en stock.picking
+        console.log('[guardar_foto_almacen_por_sale] sin picking, guardando con sale_id=' + saleId);
+        const fotoId = await odooCallKw(cfg, cookie, 'dji.picking.foto', 'create', [{
+          sale_id: saleId,
+          tipo: 'carga',
+          url,
+          subida_por: subida_por || '',
+          ia_estado: 'pendiente',
+        }], {});
+        console.log('[guardar_foto_almacen_por_sale] OK fotoId=' + fotoId + ' (sin picking, sale_id)');
+        result = { ok: true, fotoId, saleId, pendiente: true };
       }
-
-      const pickingId = pickings[0].id;
-      console.log('[guardar_foto_almacen_por_sale] pickingId=' + pickingId + ' name=' + pickings[0].name);
-
-      const vals = {
-        picking_id: pickingId,
-        tipo: 'carga',
-        url,
-        subida_por: subida_por || '',
-        ia_estado: 'pendiente',
-      };
-      const fotoId = await odooCallKw(cfg, cookie, 'dji.picking.foto', 'create', [vals], {});
-      console.log('[guardar_foto_almacen_por_sale] OK fotoId=' + fotoId);
-      result = { fotoId, pickingId, pickingName: pickings[0].name };
 
     } else if (action === 'guardar_gps_partner') {
       // Escribe dji_latitud / dji_longitud en res.partner (dirección de entrega)
